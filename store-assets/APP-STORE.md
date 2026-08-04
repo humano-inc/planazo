@@ -1,8 +1,12 @@
-# Planazo — iOS App Store submission
+# Planazo — App Store and Play Store submission
 
-Everything needed for the 1.0 submission. Assets in this folder are generated —
-`pnpm assets:brand` and `pnpm assets:screenshots` rebuild them from the design
-system, so never hand-edit the PNGs.
+Everything needed for the 1.0 submission. §1–§6 are the iOS App Store, §7 is
+Google Play, and the two share the listing copy, the demo account and the legal
+URLs — change one and check the other.
+
+Assets in this folder are generated — `pnpm assets:brand` and
+`pnpm assets:screenshots` rebuild them from the design system, so never
+hand-edit the PNGs.
 
 ---
 
@@ -262,10 +266,157 @@ submission, re-run `pnpm assets:screenshots`.
 
 ---
 
-## 7. Not done, on purpose
+## 7. Google Play
 
-- **Android / Play Store.** The adaptive icon and its `#F2542D` background are
-  generated and correct, but nothing else here targets Play.
+The app is a managed Expo prebuild — `apps/mobile/.gitignore` ignores both
+`/ios` and `/android`, so EAS generates the Android project and there is no
+native folder to maintain. Expo SDK 54 targets API 35, which is current for
+Play's target-API requirement.
+
+### 7.1 Before you build
+
+| Item | State | Where |
+| --- | --- | --- |
+| Adaptive icon on `#F2542D` | done | `apps/mobile/assets/adaptive-icon.png`, `app.json` |
+| Notification icon, white on transparent | done | `apps/mobile/assets/notification-icon.png`, `app.json` → `expo-notifications` |
+| `default` notification channel | done | `lib/push.ts`, matched by `channelId` in `supabase/functions/send-push` |
+| Listing icon, 512² | done | `store-assets/play/icon-512.png` |
+| Feature graphic, 1024×500 | done | `store-assets/play/feature-graphic.png` |
+| Phone screenshots, 1290×2580 | done | `store-assets/screenshots/android-phone/` |
+| Package `com.planazo.app` | done | `app.json` |
+| Edge-to-edge (API 35) | done | `app.json` → `edgeToEdgeEnabled` |
+| Privacy / terms / support URLs | done | same three as §1 |
+| Play Console account, as the **organisation** | **you** | needs the company D-U-N-S; an org account is exempt from the closed-testing gate that personal accounts must clear |
+| `google-services.json` | **you** | Firebase → download → commit to `apps/mobile/google-services.json`. `app.json` already points at it, so an Android build fails until it lands |
+| FCM V1 service account key | **you** | see §7.2 — without it every Android push silently fails |
+| Demo account for review | **you** | the same `review@planazo.me` as §5 |
+
+### 7.2 Firebase and FCM
+
+Two different files, and mixing them up is the usual way this goes wrong:
+
+- **`google-services.json`** — client config. Ships inside the APK, so it is
+  not a secret and is committed to the repo. From Firebase → Project settings →
+  Your apps → Android app with package `com.planazo.app`.
+- **The FCM V1 service account key** — a private key. Never commit it. From
+  Firebase → Project settings → Service accounts → Generate new private key,
+  then upload it to Expo once:
+
+```bash
+cd apps/mobile
+eas credentials --platform android    # → FCM V1 → upload the JSON
+```
+
+Expo's push service holds the key and signs the sends; `send-push` keeps
+talking to `exp.host` exactly as it does for iOS, so no server change is needed
+beyond the `channelId` already there.
+
+### 7.3 Build and submit
+
+```bash
+cd apps/mobile
+eas build --platform android --profile production
+```
+
+**The first release has to be uploaded by hand.** The Google Play Developer API
+cannot create an app that does not exist yet, so `eas submit` has nothing to
+target until the listing exists and has taken one AAB through the console.
+Download the AAB from the EAS build page and upload it in Play Console →
+Production → Create new release. Afterwards:
+
+```bash
+eas submit --platform android --latest
+```
+
+As on iOS, `appVersionSource: remote` with `autoIncrement` means EAS owns the
+version code. Bump `expo.version` in `app.json` per release and leave it alone.
+
+### 7.4 Listing metadata
+
+Play's fields are shorter than Apple's and do not map one-to-one.
+
+**App name** (30) — `Planazo`
+
+**Short description** (80)
+
+> Put up a plan, set how many it needs, and let everyone answer in one place.
+
+**Full description** (4000) — the same body as §2, unchanged.
+
+**Category** — Social. **Tags** — Friends, Events, Messaging.
+
+**Contact details** — `hola@planazo.me`, `https://planazo.me/support`,
+`https://planazo.me`.
+
+**App access** — Play's equivalent of §5's review notes. Give the same demo
+account and the same walkthrough; reviewers hit the same sign-in wall.
+
+**Ads** — no ads. **In-app purchases** — none.
+
+### 7.5 Data safety
+
+Play's form is not Apple's questionnaire and is graded against the privacy
+policy, so it has to agree with `planazo.me/privacy` line for line.
+
+| Data type | Collected | Shared | Required | Purpose |
+| --- | --- | --- | --- | --- |
+| Personal info → Email address | Yes | No | Yes | App functionality, Account management |
+| Personal info → Name | Yes | No | Yes | App functionality |
+| Photos and videos → Photos | Yes | No | No | App functionality |
+| Messages → Other in-app messages | Yes | No | No | App functionality |
+| App activity → Other user-generated content | Yes | No | No | App functionality |
+| App info and performance → Crash logs | Yes | No | No | Analytics |
+| App info and performance → Diagnostics | Yes | No | No | Analytics |
+| Device or other IDs → Device or other IDs | Yes | No | No | App functionality |
+
+Security practices, all answerable yes: data is encrypted in transit; users can
+request deletion (Profile → Delete my account); data collection is not required
+for the app's core purpose beyond the account itself.
+
+**Crash logs and Diagnostics are Sentry, not the feedback form.** `initSentry()`
+runs before anything else in `app/_layout.tsx` and the production DSN is live in
+`eas.json`, so crashes are reported automatically. §3's note that diagnostics
+are "attached only to feedback you deliberately send" describes the feedback
+payload and understates Sentry — see §7.7.
+
+### 7.6 Content rating
+
+The IARC questionnaire, answered honestly:
+
+- Violence, sexuality, language, controlled substances, gambling — none.
+- **Users interact** — yes. Planazo is user-to-user inside private groups.
+- **Users share content** — yes: plan titles, descriptions, locations, group
+  names, photos.
+- **Shares location** — no. `plans.location` is free text a user types, not a
+  device location; the app requests no location permission.
+- **Digital purchases** — no.
+
+That lands around PEGI 3 / ESRB Everyone with an interactive-elements notice.
+The moderation stack in §6 is what backs the interaction answers, and Play asks
+for the same four things Apple does.
+
+### 7.7 Play-specific risks
+
+**The first upload is manual.** Covered in §7.3, and it is the single most
+common way a first Play release stalls — `eas submit` fails with a confusing
+"app not found" until the console has seen one AAB.
+
+**Data safety must match the privacy policy.** Play rejects on disagreement
+between the two, and unlike Apple it re-checks on later releases.
+
+**Sentry is under-declared on iOS.** §3 lists Diagnostics as feedback-only, but
+`initSentry()` reports crashes automatically in production. The Play form above
+declares it correctly. The App Store labels should be revisited to add crash
+data — it does not block this release, but it should not stay wrong.
+
+**No Android device has ever run this build.** Every Android code path here is
+reasoned from the source, not observed. Push in particular cannot be verified on
+an emulator at all: `registerPushToken` returns early on `!Device.isDevice`.
+
+---
+
+## 8. Not done, on purpose
+
 - **Localisation.** The app is English; planazo.me still renders Spanish
-  (`LANG` in `apps/web/lib/copy.ts`), and the legal pages follow it. The store
-  listing above is English. Worth deciding before launch.
+  (`LANG` in `apps/web/lib/copy.ts`), and the legal pages follow it. Both store
+  listings above are English. Worth deciding before launch.

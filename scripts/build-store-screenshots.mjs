@@ -1,24 +1,36 @@
-// Build the App Store gallery screenshots.
+// Build the App Store and Play Store gallery screenshots.
 //
 //   node scripts/build-store-screenshots.mjs
 //
-// Source: "Planazo Auth & Store Assets" 1d. Designed at 430 x 932 pt and
-// rendered at 3x for the 6.9" slot (1290 x 2796), which App Store Connect also
-// down-scales for every smaller iPhone — one set covers the whole listing.
+// Source: "Planazo Auth & Store Assets" 1d. Designed at 430 pt wide and
+// rendered at 3x, once per store:
+//
+//   ios-6.9        430 x 932 -> 1290 x 2796. App Store Connect down-scales this
+//                  for every smaller iPhone, so one set covers the whole listing.
+//   android-phone  430 x 860 -> 1290 x 2580. Play rejects phone screenshots
+//                  taller than 2:1, which the iOS slot (2.17:1) breaks — so the
+//                  Android set is the same design on a shorter canvas rather
+//                  than a copy of the iOS PNGs.
+//
+// Every shot is a flex column, so the 72 pt the Android slot gives up comes off
+// the card that fills the remaining space, not off the headline.
 //
 // Copy and component styling are lifted from the shipped screens (SlotBar,
 // Badge, DateOptionRow, AvatarStack, Button) rather than invented, because
-// App Store Review rejects galleries that don't show the actual app.
+// both stores reject galleries that don't show the actual app.
 
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { renderPng } from './render-html.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = join(ROOT, 'store-assets/screenshots/ios-6.9');
 
 const W = 430;
-const H = 932;
+
+const slots = [
+  { dir: 'ios-6.9', height: 932 },
+  { dir: 'android-phone', height: 860 },
+];
 
 const c = {
   ink: '#171215',
@@ -146,7 +158,7 @@ const dateRow = (label, meta, selected) => `
     <span class="caption" style="color:${selected ? c.accentPressed : c.stone}">${meta}</span>
   </div>`;
 
-const shots = [
+const shots = (H) => [
   {
     file: '01-one-plan.png',
     body: `
@@ -270,10 +282,13 @@ const shots = [
   },
 ];
 
-for (const shot of shots) {
-  const out = join(OUT, shot.file);
-  renderPng({ body: shot.body, css, width: W, height: H, scale: 3, out });
-  console.log(`  ${out.replace(`${ROOT}/`, '')}  —  1290 x 2796`);
+for (const slot of slots) {
+  for (const shot of shots(slot.height)) {
+    const out = join(ROOT, 'store-assets/screenshots', slot.dir, shot.file);
+    renderPng({ body: shot.body, css, width: W, height: slot.height, scale: 3, out });
+    console.log(`  ${out.replace(`${ROOT}/`, '')}  —  ${W * 3} x ${slot.height * 3}`);
+  }
 }
 
-console.log('\nDone. Upload these to App Store Connect under iPhone 6.9".');
+console.log('\nDone. ios-6.9 goes to App Store Connect under iPhone 6.9";');
+console.log('android-phone goes to Play Console under Phone screenshots.');

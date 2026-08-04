@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
@@ -5,6 +6,13 @@ import { supabase } from './supabase';
 
 // onAuthStateChange also fires on token refresh — one write per app run is enough.
 let registeredFor: string | null = null;
+
+/**
+ * Must match the `channelId` send-push puts on every message. Android drops a
+ * notification naming a channel that doesn't exist, so the two are one setting
+ * written in two repos.
+ */
+const ANDROID_CHANNEL_ID = 'default';
 
 /** Foreground pushes show as a banner; the in-app feed is the noisy surface. */
 export function initNotificationPresentation(): void {
@@ -17,6 +25,28 @@ export function initNotificationPresentation(): void {
         shouldSetBadge: false,
       }),
   });
+
+  // The handler above is iOS's foreground presentation and nothing else. On
+  // Android 8+ every notification is routed through a channel, and the channel
+  // — not this process — owns whether it pops a heads-up and whether it makes a
+  // sound, permanently and under the user's control. Declare none and the OS
+  // files pushes under a generic fallback with no heads-up at all.
+  //
+  // HIGH is the analogue of `shouldShowBanner`, and the sound is left on to
+  // match iOS in the background, where `shouldPlaySound: false` does not apply
+  // and send-push asks for `sound: 'default'`.
+  //
+  // Fire-and-forget: the caller is a sync effect, and nothing downstream waits
+  // on the channel existing — a push can't arrive before the app has launched.
+  if (Platform.OS === 'android') {
+    void Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
+      name: 'Plan updates',
+      importance: Notifications.AndroidImportance.HIGH,
+      lightColor: '#F2542D',
+    }).catch((error) => {
+      console.warn('Could not create the Android notification channel.', error);
+    });
+  }
 }
 
 /**
