@@ -375,9 +375,9 @@ for the app's core purpose beyond the account itself.
 
 **Crash logs and Diagnostics are Sentry, not the feedback form.** `initSentry()`
 runs before anything else in `app/_layout.tsx` and the production DSN is live in
-`eas.json`, so crashes are reported automatically. §3's note that diagnostics
-are "attached only to feedback you deliberately send" describes the feedback
-payload and understates Sentry — see §7.7.
+`eas.json`, so crashes are reported automatically in release builds. The
+feedback form's app version and device model are the smaller, separate half of
+those two rows.
 
 ### 7.6 Content rating
 
@@ -403,11 +403,6 @@ common way a first Play release stalls — `eas submit` fails with a confusing
 
 **Data safety must match the privacy policy.** Play rejects on disagreement
 between the two, and unlike Apple it re-checks on later releases.
-
-**Sentry is under-declared on iOS.** §3 lists Diagnostics as feedback-only, but
-`initSentry()` reports crashes automatically in production. The Play form above
-declares it correctly. The App Store labels should be revisited to add crash
-data — it does not block this release, but it should not stay wrong.
 
 **No Android device has ever run this build.** Every Android code path here is
 reasoned from the source, not observed. Push in particular cannot be verified on
