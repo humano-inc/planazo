@@ -8,7 +8,6 @@ import {
   linkUnavailable,
   requestedBlurb,
   requestedEyebrow,
-  requestedTitle,
   whoCanInviteOf,
 } from '../groupDoor';
 
@@ -71,12 +70,8 @@ describe('the copy', () => {
     expect(joinBlurb('approval')).toMatch(/An admin has to let you in/);
   });
 
-  // The deep-link screen shows the eyebrow above the group's name; the paste-a-
-  // code alert has only a title and has to carry both. Same sentence either way,
-  // which is what the shared constant is for.
-  it('says the ask is filed the same way on both surfaces', () => {
-    expect(requestedTitle('Piso Gràcia')).toBe(`${requestedEyebrow} Piso Gràcia`);
-    expect(requestedTitle('Piso Gràcia')).toBe('You’ve asked to join Piso Gràcia');
+  it('names the ask without naming the door it came through', () => {
+    expect(requestedEyebrow).toBe('You’ve asked to join');
   });
 
   // Deliberately a constant answer and not a function of anything: a decline is
@@ -117,7 +112,6 @@ it('uses no em dash anywhere', () => {
     joinBlurb('open'),
     joinBlurb('approval'),
     requestedEyebrow,
-    requestedTitle('X'),
     requestedBlurb(),
     linkUnavailable('admins', 'member'),
     linkUnavailable('members', 'member'),

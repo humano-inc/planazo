@@ -1,5 +1,4 @@
-import { Alert } from 'react-native';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, screen, fireEvent } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import GroupsScreen from '../groups';
 import { inviteCodeFrom } from '../../../../lib/inviteCode';
@@ -86,7 +85,6 @@ async function renderGroups() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   memberships = [];
   counts = [];
   plans = [];
@@ -258,75 +256,20 @@ describe('GroupsScreen', () => {
     expect(mockPush).toHaveBeenCalledTimes(2);
   });
 
-  // PLA-35: joining is one server-side call. The screen hands over the code
-  // and never touches group_members itself.
-  it('joins from a pasted invite link', async () => {
-    mockRpc.mockResolvedValue({
-      data: { status: 'joined', group_id: 'g9', name: 'Padel Dilluns' },
-      error: null,
-    });
-
+  // PLA-80: a pasted link and a tapped one end on the same screen, which is the
+  // one that shows the group before anybody is added to it. What that screen
+  // does with the code is its own test file's business; the point here is that
+  // this one does none of it.
+  it('hands a pasted invite link to the join screen instead of joining', async () => {
     await renderGroups();
 
     const input = await screen.findByTestId('join-input');
     await fireEvent.changeText(input, 'planazo://join/ABCD2345');
     await fireEvent.press(screen.getByTestId('join-button'));
 
-    await waitFor(() =>
-      expect(mockRpc).toHaveBeenCalledWith('join_group_by_invite_code', { p_code: 'ABCD2345' })
-    );
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/(app)/group/g9'));
+    expect(mockPush).toHaveBeenCalledWith('/(app)/join/ABCD2345');
+    expect(mockRpc).not.toHaveBeenCalled();
     expect(gmInserts.every((ins) => ins.mock.calls.length === 0)).toBe(true);
   });
 
-  // PLA-49: an approval door files a request, so there is no group to open
-  // yet. Same words whether this is a first ask or one quietly turned down.
-  it('an approval door says the ask went in, and opens nothing', async () => {
-    mockRpc.mockResolvedValue({
-      data: { status: 'requested', group_id: 'g9', name: 'Padel Dilluns' },
-      error: null,
-    });
-
-    await renderGroups();
-
-    await fireEvent.changeText(await screen.findByTestId('join-input'), 'planazo://join/ABCD2345');
-    await fireEvent.press(screen.getByTestId('join-button'));
-
-    await waitFor(() =>
-      expect((Alert.alert as jest.Mock).mock.calls.at(-1)![0]).toBe(
-        'You’ve asked to join Padel Dilluns'
-      )
-    );
-    expect(mockPush).not.toHaveBeenCalledWith('/(app)/group/g9');
-  });
-
-  it('an unknown code is reported, not swallowed as a join', async () => {
-    mockRpc.mockResolvedValue({ data: { status: 'not_found' }, error: null });
-
-    await renderGroups();
-
-    await fireEvent.changeText(await screen.findByTestId('join-input'), 'ABCD2345');
-    await fireEvent.press(screen.getByTestId('join-button'));
-
-    await waitFor(() =>
-      expect(Alert.alert).toHaveBeenCalledWith('Couldn’t join', 'That link doesn’t work')
-    );
-    expect(mockPush).not.toHaveBeenCalled();
-  });
-
-  it('a code for a group you are already in says so', async () => {
-    mockRpc.mockResolvedValue({
-      data: { status: 'already_member', group_id: 'g9', name: 'Padel Dilluns' },
-      error: null,
-    });
-
-    await renderGroups();
-
-    await fireEvent.changeText(await screen.findByTestId('join-input'), 'ABCD2345');
-    await fireEvent.press(screen.getByTestId('join-button'));
-
-    await waitFor(() =>
-      expect(Alert.alert).toHaveBeenCalledWith('Couldn’t join', 'You’re already in this group')
-    );
-  });
 });
