@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { inviteCodeFrom } from '../../lib/inviteCode';
 import { requestedBlurb, requestedTitle } from '../../lib/groupDoor';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
+import { invalidateMyGroups } from '../../lib/useMyGroups';
 import { GroupTiles } from './GroupTiles';
 import { ThemedText, Button } from '../ui';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
@@ -47,6 +48,7 @@ export function GroupsEmptyState() {
         return;
       }
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      invalidateMyGroups(queryClient);
       router.push(`/(app)/group/${group.id}`);
     },
     onError: (error: Error) => Alert.alert('Couldn’t join', error.message),

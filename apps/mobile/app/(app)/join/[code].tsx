@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import { stashPendingJoin } from '../../../lib/pendingJoin';
+import { invalidateMyGroups } from '../../../lib/useMyGroups';
 import {
   joinBlurb,
   joinLabel,
@@ -90,6 +91,7 @@ export default function JoinByInviteScreen() {
       // were already in a group you just asked to join is a correction nobody
       // needs; the group appearing is the answer.
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      invalidateMyGroups(queryClient);
       router.replace(`/(app)/group/${result.group_id}`);
     },
   });

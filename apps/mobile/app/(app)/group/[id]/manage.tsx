@@ -25,6 +25,7 @@ import {
 } from '../../../../lib/moderation';
 import { canInvite } from '../../../../lib/groupDoor';
 import { useDoorSettings, useJoinRequests } from '../../../../lib/useGroupDoor';
+import { invalidateMyGroups } from '../../../../lib/useMyGroups';
 import { MemberList, type GroupMemberRow } from '../../../../components/group/MemberList';
 import { GroupPrefsCard } from '../../../../components/group/GroupPrefsCard';
 import { DoorSettings } from '../../../../components/group/DoorSettings';
@@ -130,6 +131,7 @@ export default function ManageGroupScreen() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      invalidateMyGroups(queryClient);
       queryClient.invalidateQueries({ queryKey: ['home-plans'] });
       router.navigate('/(app)/(tabs)/groups');
     },

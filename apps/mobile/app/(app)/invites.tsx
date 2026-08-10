@@ -17,6 +17,7 @@ import {
   type PendingGroupInvite,
 } from '../../lib/usePendingInvites';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
+import { invalidateMyGroups } from '../../lib/useMyGroups';
 import { ThemedText, Badge, Button, Avatar, GroupTile } from '../../components/ui';
 import { colors, fonts, sheetDetents, spacing } from '../../theme/tokens';
 
@@ -49,6 +50,7 @@ export default function InvitesSheet() {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['invites'] });
     queryClient.invalidateQueries({ queryKey: ['groups'] });
+    invalidateMyGroups(queryClient);
     queryClient.invalidateQueries({ queryKey: ['friends'] });
     queryClient.invalidateQueries({ queryKey: ['home-plans'] });
   };

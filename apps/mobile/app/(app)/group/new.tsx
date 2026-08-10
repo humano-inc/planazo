@@ -18,6 +18,7 @@ import { contentViolation } from '../../../lib/moderation';
 import { uploadGroupPhoto } from '../../../lib/images';
 import { captureError } from '../../../lib/sentry';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
+import { invalidateMyGroups } from '../../../lib/useMyGroups';
 import { FriendPicker } from '../../../components/group/FriendPicker';
 import {
   ThemedText,
@@ -101,6 +102,7 @@ export default function NewGroupScreen() {
     },
     onSuccess: (group) => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
+      invalidateMyGroups(queryClient);
       leaveFor(`/(app)/group/${group.id}`);
     },
     onError: (error: Error) => Alert.alert('Error', error.message),
