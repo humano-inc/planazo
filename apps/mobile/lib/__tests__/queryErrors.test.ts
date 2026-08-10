@@ -3,6 +3,7 @@ import {
   errorCopy,
   isAuthError,
   isInvalidSessionError,
+  isLastAdminError,
   isNotFoundError,
   isOfflineError,
   isPlanFullError,
@@ -313,5 +314,33 @@ describe('isPlanFullError / actionErrorCopy', () => {
   it('keeps the diagnosis errorCopy already makes for shared cases', () => {
     expect(actionErrorCopy(expiredJwt).title).toBe('Your sign-in expired');
     expect(actionErrorCopy(new RequestTimeoutError(15000)).title).toBe('That took too long');
+  });
+});
+
+describe('isLastAdminError / actionErrorCopy', () => {
+  /** enforce_last_admin_floor's RAISE, through the same PTxyz mapping (PLA-86). */
+  const lastAdmin = {
+    code: 'PT422',
+    message: 'A group needs at least one admin',
+    hint: 'Make someone else an admin first.',
+  };
+
+  it('recognises the floor rejection', () => {
+    expect(isLastAdminError(lastAdmin)).toBe(true);
+    expect(isLastAdminError(forbidden)).toBe(false);
+    expect(isLastAdminError(new Error('boom'))).toBe(false);
+  });
+
+  // The two PT codes are neighbours in the same convention, so the thing worth
+  // pinning is that neither answers for the other.
+  it('does not confuse the floor with a full plan', () => {
+    expect(isPlanFullError(lastAdmin)).toBe(false);
+    expect(isLastAdminError({ code: 'PT409', message: 'This plan is full' })).toBe(false);
+  });
+
+  it('says what the group needs rather than repeating the raw message', () => {
+    const copy = actionErrorCopy(lastAdmin);
+    expect(copy.title).toBe('A group needs an admin');
+    expect(copy.body).toBe("You're the only admin left. Make someone else one first.");
   });
 });

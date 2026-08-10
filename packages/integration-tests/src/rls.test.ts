@@ -191,6 +191,14 @@ describe('create_group and join_group_by_invite_code', () => {
   });
 });
 
+/** Every member's role in a group, by the service role's unfiltered view. */
+async function rolesOf(groupId: string): Promise<Record<string, string | null>> {
+  const rows = ok(
+    await bed.service.from('group_members').select('user_id, role').eq('group_id', groupId),
+  );
+  return Object.fromEntries(rows.map((r) => [r.user_id, r.role]));
+}
+
 // PLA-50: the Admins screen promotes and demotes with a plain UPDATE on
 // group_members, so the only thing between a member and someone else's role
 // is "Admins can update memberships" (USING is_group_admin, no WITH CHECK).
@@ -211,13 +219,7 @@ describe('group_members role UPDATE', () => {
     await bed.join(g.id, plain);
   });
 
-  /** Every member's role, by the service role's unfiltered view. */
-  async function roles(): Promise<Record<string, string | null>> {
-    const rows = ok(
-      await bed.service.from('group_members').select('user_id, role').eq('group_id', g.id),
-    );
-    return Object.fromEntries(rows.map((r) => [r.user_id, r.role]));
-  }
+  const roles = () => rolesOf(g.id);
 
   it("a plain member cannot change anyone's role, their own included", async () => {
     const [demoteAdmin, promoteSelf] = await Promise.all([
@@ -264,18 +266,138 @@ describe('group_members role UPDATE', () => {
     expect(await roles()).toEqual({ [admin.id]: 'member', [plain.id]: 'admin' });
   });
 
-  // The last-admin rule lives in the client (settled in the PLA-50 handoff):
-  // the database lets the only admin step down. If this test starts failing,
-  // an RPC took over the write and the Admins screen needs to move onto it.
-  it('the database permits even the last admin to step down', async () => {
+  // The last-admin rule used to live only in the client (the PLA-50 handoff),
+  // and this test asserted the database's side of that: it let the only admin
+  // step down. PLA-86 moved the floor into the database, so the same write is
+  // now the refusal below. `plain` is the sole admin by the time this runs.
+  it('the database refuses the last admin stepping down', async () => {
+    const { error } = await plain.client
+      .from('group_members')
+      .update({ role: 'member' })
+      .eq('group_id', g.id)
+      .eq('user_id', plain.id);
+
+    expect(error?.code).toBe('PT422');
+    expect(await roles()).toEqual({ [admin.id]: 'member', [plain.id]: 'admin' });
+  });
+});
+
+// PLA-86: the floor itself, on both verbs that can shed an admin. The first two
+// are the bug; the last four are the departure paths the trigger now sits in
+// front of, which all worked before the migration and must still work after it.
+describe('the last-admin floor', () => {
+  let one: TestUser;
+  let two: TestUser;
+
+  beforeAll(async () => {
+    [one, two] = await Promise.all([bed.createUser('Floor One'), bed.createUser('Floor Two')]);
+  });
+
+  /** Two admins: the only shape that can race its way to zero. */
+  async function twoAdminGroup() {
+    const g = await bed.createGroup(one, { name: 'Floor Two Admins' });
+    await bed.join(g.id, two, 'admin');
+    return g;
+  }
+
+  /** One admin, one member: the shape where the admin is the last one. */
+  async function soleAdminGroup() {
+    const g = await bed.createGroup(one, { name: 'Floor Sole Admin' });
+    await bed.join(g.id, two);
+    return g;
+  }
+
+  const stepDown = (u: TestUser, groupId: string) =>
+    u.client
+      .from('group_members')
+      .update({ role: 'member' })
+      .eq('group_id', groupId)
+      .eq('user_id', u.id);
+
+  it('lets two admins race to step down and keeps the second one', async () => {
+    const g = await twoAdminGroup();
+
+    // The reported bug. Both clients see two admins, so both render the control
+    // and both writes pass RLS; the group row lock is what makes the loser
+    // re-count after the winner commits instead of alongside it.
+    const results = await Promise.all([stepDown(one, g.id), stepDown(two, g.id)]);
+
+    const refused = results.map((r) => r.error).filter((e) => e !== null);
+    expect(refused).toHaveLength(1);
+    expect(refused[0]!.code).toBe('PT422');
+    expect(Object.values(await rolesOf(g.id)).filter((r) => r === 'admin')).toHaveLength(1);
+  });
+
+  it('refuses a delete that would take the last admin, whoever is asking', async () => {
+    const g = await soleAdminGroup();
+
+    // Not a client, because no client can delete a membership row since PLA-49
+    // dropped the policy (group-door.test.ts pins that). The service role
+    // stands in for the surface that CAN: a SECURITY DEFINER function, which
+    // RLS does not apply to and triggers do. leave_group and
+    // remove_group_member get it right today; this is what the next one
+    // inherits.
+    const { error } = await bed.service
+      .from('group_members')
+      .delete()
+      .eq('group_id', g.id)
+      .eq('user_id', one.id);
+
+    expect(error?.code).toBe('PT422');
+    expect(await rolesOf(g.id)).toEqual({ [one.id]: 'admin', [two.id]: 'member' });
+  });
+
+  it('still lets the last admin leave, handing admin to the heir', async () => {
+    const g = await soleAdminGroup();
+    ok(await one.client.rpc('leave_group', { p_group_id: g.id }));
+    expect(await rolesOf(g.id)).toEqual({ [two.id]: 'admin' });
+  });
+
+  it('still lets the only member leave, taking the group with them', async () => {
+    const g = await bed.createGroup(one, { name: 'Floor Alone' });
+
+    // The "nobody left to strand" exemption: this delete does leave the group
+    // admin-less, for the instant before leave_group deletes the group too.
+    ok(await one.client.rpc('leave_group', { p_group_id: g.id }));
+    expect(ok(await bed.service.from('groups').select('id').eq('id', g.id))).toEqual([]);
+  });
+
+  it("still lets an operator delete the account of a group's only admin", async () => {
+    const doomed = await bed.createUser('Floor Doomed');
+    // `two` creates it and hands admin over, because groups.created_by is
+    // RESTRICT: the account being deleted can never be the one that created it.
+    const g = await bed.createGroup(two, { name: 'Floor Orphan' });
+    await bed.join(g.id, doomed, 'admin');
     ok(
-      await plain.client
+      await two.client
         .from('group_members')
         .update({ role: 'member' })
         .eq('group_id', g.id)
-        .eq('user_id', plain.id),
+        .eq('user_id', two.id),
     );
-    expect(await roles()).toEqual({ [admin.id]: 'member', [plain.id]: 'member' });
+
+    // Deleting an account cascades auth.users -> profiles -> group_members and
+    // promotes nobody. Without the "the person is going" exemption this is a
+    // PT422 raised three levels down, and the sole admin of a group can never
+    // be deleted — a reported user being exactly who you need to delete.
+    const { error } = await bed.service.auth.admin.deleteUser(doomed.id);
+    expect(error).toBeNull();
+    expect(await rolesOf(g.id)).toEqual({ [two.id]: 'member' });
+  });
+
+  it('still lets an admin remove the other admin', async () => {
+    const g = await twoAdminGroup();
+    ok(await one.client.rpc('remove_group_member', { p_group_id: g.id, p_user_id: two.id }));
+    expect(await rolesOf(g.id)).toEqual({ [one.id]: 'admin' });
+  });
+
+  it('still lets an admin delete the group, memberships and all', async () => {
+    const g = await twoAdminGroup();
+
+    // The cascade exemption, and the one every suite's teardown depends on:
+    // group_members rows arrive at the trigger with their group already gone.
+    ok(await one.client.from('groups').delete().eq('id', g.id));
+    expect(await rolesOf(g.id)).toEqual({});
   });
 });
 
