@@ -1,8 +1,6 @@
-import { Alert } from 'react-native';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, screen, fireEvent } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import GroupsScreen from '../groups';
-import { inviteCodeFrom } from '../../../../lib/inviteCode';
 import { useAuthStore } from '../../../../stores/authStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -26,16 +24,14 @@ let plans: any[] = [];
 let groupInvites: any[] = [];
 let pendingRequests: any[] = [];
 let acceptedFriendships: any[] = [];
-let gmInserts: jest.Mock[] = [];
 
 /**
- * group_members serves three queries on this screen; which result a chain
+ * group_members serves two queries on this screen; which result a chain
  * resolves to depends on how it was built (eq user_id = memberships,
- * in group_id = counts, insert = join). friendships resolves by the
- * status filter (pending = requests, accepted = friends).
+ * in group_id = counts). friendships resolves by the status filter
+ * (pending = requests, accepted = friends).
  */
 function primeSupabase() {
-  gmInserts = [];
   mockFrom.mockImplementation((table: string) => {
     const c: any = {};
     let kind = table;
@@ -51,24 +47,17 @@ function primeSupabase() {
       if (table === 'group_members') kind = 'counts';
       return c;
     });
-    c.insert = jest.fn(() => {
-      kind = 'insert';
-      return c;
-    });
-    if (table === 'group_members') gmInserts.push(c.insert);
     c.then = (resolve: (v: unknown) => void) => {
       const result =
-        kind === 'insert'
-          ? { error: null }
-          : kind === 'counts'
-            ? { data: counts, error: null }
-            : table === 'group_invites'
-              ? { data: groupInvites, error: null }
-              : table === 'friendships'
-                ? { data: status === 'pending' ? pendingRequests : acceptedFriendships, error: null }
-                : kind === 'group_members'
-                  ? { data: memberships, error: null }
-                  : { data: plans, error: null };
+        kind === 'counts'
+          ? { data: counts, error: null }
+          : table === 'group_invites'
+            ? { data: groupInvites, error: null }
+            : table === 'friendships'
+              ? { data: status === 'pending' ? pendingRequests : acceptedFriendships, error: null }
+              : kind === 'group_members'
+                ? { data: memberships, error: null }
+                : { data: plans, error: null };
       return Promise.resolve(result).then(resolve);
     };
     return c;
@@ -86,7 +75,6 @@ async function renderGroups() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   memberships = [];
   counts = [];
   plans = [];
@@ -94,20 +82,9 @@ beforeEach(() => {
   pendingRequests = [];
   acceptedFriendships = [];
   primeSupabase();
-  mockRpc.mockResolvedValue({ data: null, error: null });
   useAuthStore.setState({
     user: { id: 'me' } as any,
     profile: { id: 'me', display_name: 'Rocío', avatar_url: null } as any,
-  });
-});
-
-describe('inviteCodeFrom', () => {
-  it('finds a code in a link, a raw code, and rejects garbage', () => {
-    expect(inviteCodeFrom('planazo://join/ABCD2345')).toBe('ABCD2345');
-    expect(inviteCodeFrom('abcd2345')).toBe('ABCD2345');
-    expect(inviteCodeFrom('join my group!')).toBeNull();
-    // 0, 1, I and O are not in the code alphabet
-    expect(inviteCodeFrom('ABC10OI2')).toBeNull();
   });
 });
 
@@ -258,75 +235,19 @@ describe('GroupsScreen', () => {
     expect(mockPush).toHaveBeenCalledTimes(2);
   });
 
-  // PLA-35: joining is one server-side call. The screen hands over the code
-  // and never touches group_members itself.
-  it('joins from a pasted invite link', async () => {
-    mockRpc.mockResolvedValue({
-      data: { status: 'joined', group_id: 'g9', name: 'Padel Dilluns' },
-      error: null,
-    });
-
+  // PLA-80: a pasted link and a tapped one end on the same screen, which is the
+  // one that shows the group before anybody is added to it. What that screen
+  // does with the code is its own test file's business; the point here is that
+  // this one does none of it.
+  it('hands a pasted invite link to the join screen instead of joining', async () => {
     await renderGroups();
 
     const input = await screen.findByTestId('join-input');
     await fireEvent.changeText(input, 'planazo://join/ABCD2345');
     await fireEvent.press(screen.getByTestId('join-button'));
 
-    await waitFor(() =>
-      expect(mockRpc).toHaveBeenCalledWith('join_group_by_invite_code', { p_code: 'ABCD2345' })
-    );
-    await waitFor(() => expect(mockPush).toHaveBeenCalledWith('/(app)/group/g9'));
-    expect(gmInserts.every((ins) => ins.mock.calls.length === 0)).toBe(true);
+    expect(mockPush).toHaveBeenCalledWith('/(app)/join/ABCD2345');
+    expect(mockRpc).not.toHaveBeenCalled();
   });
 
-  // PLA-49: an approval door files a request, so there is no group to open
-  // yet. Same words whether this is a first ask or one quietly turned down.
-  it('an approval door says the ask went in, and opens nothing', async () => {
-    mockRpc.mockResolvedValue({
-      data: { status: 'requested', group_id: 'g9', name: 'Padel Dilluns' },
-      error: null,
-    });
-
-    await renderGroups();
-
-    await fireEvent.changeText(await screen.findByTestId('join-input'), 'planazo://join/ABCD2345');
-    await fireEvent.press(screen.getByTestId('join-button'));
-
-    await waitFor(() =>
-      expect((Alert.alert as jest.Mock).mock.calls.at(-1)![0]).toBe(
-        'You’ve asked to join Padel Dilluns'
-      )
-    );
-    expect(mockPush).not.toHaveBeenCalledWith('/(app)/group/g9');
-  });
-
-  it('an unknown code is reported, not swallowed as a join', async () => {
-    mockRpc.mockResolvedValue({ data: { status: 'not_found' }, error: null });
-
-    await renderGroups();
-
-    await fireEvent.changeText(await screen.findByTestId('join-input'), 'ABCD2345');
-    await fireEvent.press(screen.getByTestId('join-button'));
-
-    await waitFor(() =>
-      expect(Alert.alert).toHaveBeenCalledWith('Couldn’t join', 'That link doesn’t work')
-    );
-    expect(mockPush).not.toHaveBeenCalled();
-  });
-
-  it('a code for a group you are already in says so', async () => {
-    mockRpc.mockResolvedValue({
-      data: { status: 'already_member', group_id: 'g9', name: 'Padel Dilluns' },
-      error: null,
-    });
-
-    await renderGroups();
-
-    await fireEvent.changeText(await screen.findByTestId('join-input'), 'ABCD2345');
-    await fireEvent.press(screen.getByTestId('join-button'));
-
-    await waitFor(() =>
-      expect(Alert.alert).toHaveBeenCalledWith('Couldn’t join', 'You’re already in this group')
-    );
-  });
 });
