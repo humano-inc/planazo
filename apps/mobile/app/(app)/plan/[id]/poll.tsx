@@ -63,14 +63,14 @@ export default function NewPollScreen() {
       contentContainerStyle={styles.content}
       testID="poll"
       footer={
-      <Button
-        label={add.isPending ? 'Adding…' : 'Add the poll'}
-        variant={valid ? 'primary' : 'secondary'}
-        disabled={!valid || add.isPending}
-        haptic={valid}
-        onPress={() => add.mutate()}
-        testID="ask"
-      />
+        <Button
+          label={add.isPending ? 'Adding…' : 'Add the poll'}
+          variant={valid ? 'primary' : 'secondary'}
+          disabled={!valid || add.isPending}
+          haptic={valid}
+          onPress={() => add.mutate()}
+          testID="ask"
+        />
       }
     >
       <View style={styles.titleBlock}>
@@ -135,8 +135,9 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   headerTitle: {
+    // fonts.display is already the 700 weight; the fontWeight that used to sit
+    // here restated it.
     fontFamily: fonts.display,
-    fontWeight: '700',
     fontSize: 17,
     lineHeight: 21,
     color: colors.textPrimary,

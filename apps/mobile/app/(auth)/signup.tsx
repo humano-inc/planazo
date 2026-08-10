@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
-import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { decode } from 'base64-arraybuffer';
@@ -12,8 +12,15 @@ import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
 import { useAuthStore } from '../../stores/authStore';
 import { ConfirmEmailStep } from '../../components/auth/ConfirmEmailStep';
-import { Avatar, Button, FormField, FormScreen, ThemedText } from '../../components/ui';
-import { colors, fonts, spacing } from '../../theme/tokens';
+import {
+  Avatar,
+  Button,
+  FooterPrompt,
+  FormField,
+  FormScreen,
+  ThemedText,
+} from '../../components/ui';
+import { colors, spacing } from '../../theme/tokens';
 
 const MIN_PASSWORD = 6;
 
@@ -218,23 +225,19 @@ export default function SignupScreen() {
       testID="signup"
       footer={
         <>
-        <Button
-          label={loading ? 'Making your account…' : step.label}
-          variant={step.ready ? 'primary' : 'secondary'}
-          disabled={!step.ready || loading}
-          onPress={handleSignup}
-          testID="create-account"
-        />
-        <View style={styles.footerRow}>
-          <ThemedText variant="sub">Already have an account?</ThemedText>
-          <Link href="/(auth)/login" asChild>
-            <Pressable accessibilityRole="button" hitSlop={LINK_HIT_SLOP} testID="login-link">
-              <ThemedText variant="sub" color={colors.accentText} style={styles.footerLink}>
-                Sign in
-              </ThemedText>
-            </Pressable>
-          </Link>
-        </View>
+          <Button
+            label={loading ? 'Making your account…' : step.label}
+            variant={step.ready ? 'primary' : 'secondary'}
+            disabled={!step.ready || loading}
+            onPress={handleSignup}
+            testID="create-account"
+          />
+          <FooterPrompt
+            prompt="Already have an account?"
+            action="Sign in"
+            href="/(auth)/login"
+            testID="login-link"
+          />
         </>
       }
     >
@@ -365,17 +368,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // At accessibility text sizes "First time here?" and its link no longer
-    // fit side by side; wrapping stacks them instead of running off-screen.
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  footerLink: {
-    fontFamily: fonts.bodyBold,
   },
 });

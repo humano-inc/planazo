@@ -1,7 +1,7 @@
 import { Text, StyleSheet } from 'react-native';
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { FormScreen, focusClearance } from '../FormScreen';
+import { FormScreen } from '../FormScreen';
 import { spacing } from '../../../theme/tokens';
 
 const FOOTER_HEIGHT = 96;
@@ -26,26 +26,6 @@ const measureFooter = async (height = FOOTER_HEIGHT) =>
   fireEvent(screen.getByTestId('form-footer'), 'layout', {
     nativeEvent: { layout: { x: 0, y: 0, width: 390, height } },
   });
-
-describe('focusClearance', () => {
-  it('leaves a gap even when there is no footer to clear', () => {
-    expect(focusClearance(0)).toBe(spacing.md);
-  });
-
-  it('clears a measured footer and then some', () => {
-    expect(focusClearance(FOOTER_HEIGHT)).toBe(FOOTER_HEIGHT + spacing.md);
-  });
-
-  // Two stacked actions at an accessibility text size. The number this replaces
-  // was a hardcoded 140 that had no idea (PLA-74).
-  it('grows with the bar rather than assuming a height', () => {
-    expect(focusClearance(212)).toBeGreaterThan(focusClearance(FOOTER_HEIGHT));
-  });
-
-  it('survives the fractional heights onLayout actually reports', () => {
-    expect(focusClearance(95.66666412353516)).toBeCloseTo(95.66666412353516 + spacing.md);
-  });
-});
 
 describe('FormScreen', () => {
   it('renders the header, the content and the footer', async () => {
@@ -110,6 +90,15 @@ describe('FormScreen', () => {
       await measureFooter(212);
 
       expect(scroll().props.bottomOffset).toBe(212 + spacing.md);
+    });
+
+    // onLayout reports sub-pixel heights, so the offset is never a round number
+    // in practice. The hardcoded 140 this replaces had no idea (PLA-74).
+    it('survives the fractional heights onLayout actually reports', async () => {
+      await renderScreen({ footer: <Text>Post</Text> });
+      await measureFooter(95.66666412353516);
+
+      expect(scroll().props.bottomOffset).toBeCloseTo(95.66666412353516 + spacing.md);
     });
 
     /**

@@ -1,13 +1,20 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { supabase } from '../../lib/supabase';
 import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
-import { Button, ConfirmCard, FormField, FormScreen, ThemedText } from '../../components/ui';
-import { colors, fonts, spacing } from '../../theme/tokens';
+import {
+  Button,
+  ConfirmCard,
+  FooterPrompt,
+  FormField,
+  FormScreen,
+  ThemedText,
+} from '../../components/ui';
+import { colors, spacing } from '../../theme/tokens';
 
 /**
  * Where the recovery email lands the user back in the app. Supabase only
@@ -143,16 +150,12 @@ export default function ForgotPasswordScreen() {
             testID="send-link"
           />
 
-          <View style={styles.footer}>
-            <ThemedText variant="sub">Remembered it?</ThemedText>
-            <Link href="/(auth)/login" asChild>
-              <Pressable accessibilityRole="button" hitSlop={LINK_HIT_SLOP} testID="login-link">
-                <ThemedText variant="sub" color={colors.accentText} style={styles.footerLink}>
-                  Sign in
-                </ThemedText>
-              </Pressable>
-            </Link>
-          </View>
+          <FooterPrompt
+            prompt="Remembered it?"
+            action="Sign in"
+            href="/(auth)/login"
+            testID="login-link"
+          />
         </>
       }
     >
@@ -227,18 +230,6 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // At accessibility text sizes "First time here?" and its link no longer
-    // fit side by side; wrapping stacks them instead of running off-screen.
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  footerLink: {
-    fontFamily: fonts.bodyBold,
   },
   sentBody: {
     flex: 1,

@@ -5,9 +5,9 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { SafeAreaView, SafeAreaInsetsContext, type Edge } from 'react-native-safe-area-context';
+import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
-import { FooterBar } from './FooterBar';
+import { FooterBar, indicatorPadding } from './FooterBar';
 import { colors, spacing } from '../../theme/tokens';
 
 /**
@@ -19,18 +19,13 @@ import { colors, spacing } from '../../theme/tokens';
  * guessed: the bar is one or two stacked actions and grows with text size, which
  * is exactly the sort of number `paddingBottom: 140` used to stand in for.
  */
-export function focusClearance(footerHeight: number): number {
+function focusClearance(footerHeight: number): number {
   return footerHeight + spacing.md;
 }
 
+const SCREEN_EDGES = ['top'] as const;
+
 type Props = {
-  /**
-   * Safe-area edges for the screen frame. `bottom` is excluded by the type
-   * rather than by a comment: whatever sits at the bottom also has to clear the
-   * keyboard, so the footer (or the content, when there is no footer) owns that
-   * padding, and two owners is how you get 34pt of dead space above a keyboard.
-   */
-  edges?: readonly Exclude<Edge, 'bottom'>[];
   /** Fixed above the scroll. Nav rows and header actions live here. */
   header?: ReactNode;
   /**
@@ -41,7 +36,8 @@ type Props = {
   contentContainerStyle?: StyleProp<ViewStyle>;
   /** Restores a scroll position, for deep-link QA (`?y=`). */
   contentOffset?: { x: number; y: number };
-  testID?: string;
+  /** Required: the scroll, the sticky wrapper and the bar each derive theirs. */
+  testID: string;
   children: ReactNode;
 };
 
@@ -69,7 +65,6 @@ type Props = {
  *   worth nothing if the keyboard answering it covers it up.
  */
 export function FormScreen({
-  edges = ['top'],
   header,
   footer,
   contentContainerStyle,
@@ -85,7 +80,11 @@ export function FormScreen({
     setFooterHeight(event.nativeEvent.layout.height);
 
   return (
-    <SafeAreaView style={styles.screen} edges={edges}>
+    // `top` only, and there is no prop to change it. Whatever sits at the
+    // bottom also has to clear the keyboard, so the footer (or the content,
+    // when there is no footer) owns that padding. Two owners is how you get
+    // 34pt of dead space above a raised keyboard.
+    <SafeAreaView style={styles.screen} edges={SCREEN_EDGES}>
       {header}
 
       <KeyboardAwareScrollView
@@ -94,7 +93,7 @@ export function FormScreen({
           styles.content,
           // With a footer the bar itself clears the indicator. Without one the
           // content is the last thing on screen, so it does.
-          !footer && { paddingBottom: Math.max(insets?.bottom ?? 0, spacing.lg) },
+          !footer && { paddingBottom: indicatorPadding(insets) },
           contentContainerStyle,
         ]}
         contentOffset={contentOffset}
@@ -109,7 +108,7 @@ export function FormScreen({
         extraKeyboardSpace={footerHeight}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
-        testID={testID ? `${testID}-scroll` : undefined}
+        testID={`${testID}-scroll`}
       >
         {children}
       </KeyboardAwareScrollView>
@@ -126,13 +125,9 @@ export function FormScreen({
         <KeyboardStickyView
           style={styles.sticky}
           offset={{ closed: 0, opened: insets?.bottom ?? 0 }}
-          testID={testID ? `${testID}-sticky` : undefined}
+          testID={`${testID}-sticky`}
         >
-          <FooterBar
-            insetBottom
-            onLayout={measureFooter}
-            testID={testID ? `${testID}-footer` : undefined}
-          >
+          <FooterBar insetBottom onLayout={measureFooter} testID={`${testID}-footer`}>
             {footer}
           </FooterBar>
         </KeyboardStickyView>

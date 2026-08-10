@@ -353,6 +353,12 @@ function RootLayout() {
         sit outside the router: (auth) and (app) have their own layouts, and a
         provider in either would leave the other guessing at the keyboard the
         way all twelve form screens used to.
+
+        `preload` is left at its default (on), which builds UIKit's keyboard
+        once during launch. The app opens onto the feed, which has no input, so
+        that work is spent on a screen that will not raise one. It buys the
+        first tap into a field an animation that is not janky, and this is the
+        issue about forms feeling right.
       */}
       <KeyboardProvider>
         <QueryClientProvider client={queryClient}>

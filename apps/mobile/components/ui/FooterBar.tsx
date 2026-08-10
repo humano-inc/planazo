@@ -1,7 +1,23 @@
 import { useContext, type ReactNode } from 'react';
 import { View, StyleSheet, type LayoutChangeEvent } from 'react-native';
-import { SafeAreaInsetsContext } from 'react-native-safe-area-context';
+import { SafeAreaInsetsContext, type EdgeInsets } from 'react-native-safe-area-context';
 import { colors, spacing } from '../../theme/tokens';
+
+/**
+ * The bottom padding that clears the home indicator.
+ *
+ * The floor does as much work as the inset. A phone without an indicator
+ * reports 0, and content sitting flush against the bottom edge reads as
+ * unfinished rather than as deliberate, which is why four screens used to
+ * hardcode a flat 30 here.
+ *
+ * Exported because `FormScreen` needs the same number for the screens that have
+ * no footer to carry it, and two spellings of "clear the indicator" is how the
+ * two drift apart.
+ */
+export function indicatorPadding(insets: EdgeInsets | null): number {
+  return Math.max(insets?.bottom ?? 0, spacing.lg);
+}
 
 type Props = {
   /** Sit at `bottom: 0` of the screen instead of at the end of the layout. */
@@ -41,7 +57,7 @@ export function FooterBar({ pinned, insetBottom, testID, onLayout, children }: P
       style={[
         styles.bar,
         pinned && styles.pinned,
-        clearsIndicator && { paddingBottom: Math.max(insets?.bottom ?? 0, spacing.lg) },
+        clearsIndicator && { paddingBottom: indicatorPadding(insets) },
       ]}
       onLayout={onLayout}
       testID={testID}

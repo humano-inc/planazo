@@ -4,8 +4,15 @@ import { Link, useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
 import { useAuthStore } from '../../stores/authStore';
-import { BrandMark, Button, FormField, FormScreen, ThemedText } from '../../components/ui';
-import { colors, fonts, spacing } from '../../theme/tokens';
+import {
+  BrandMark,
+  Button,
+  FooterPrompt,
+  FormField,
+  FormScreen,
+  ThemedText,
+} from '../../components/ui';
+import { colors, spacing } from '../../theme/tokens';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -74,7 +81,7 @@ export default function LoginScreen() {
 
   return (
     <FormScreen
-      contentContainerStyle={styles.scroll}
+      contentContainerStyle={styles.body}
       testID="login"
       footer={
         <>
@@ -85,82 +92,73 @@ export default function LoginScreen() {
             testID="sign-in"
           />
 
-          <View style={styles.footerRow} testID="login-footer-row">
-            <ThemedText variant="sub">First time here?</ThemedText>
-            <Link href="/(auth)/signup" asChild>
-              <Pressable accessibilityRole="button" hitSlop={LINK_HIT_SLOP} testID="signup-link">
-                <ThemedText variant="sub" color={colors.accentText} style={styles.footerLink}>
-                  Sign up
-                </ThemedText>
-              </Pressable>
-            </Link>
-          </View>
+          <FooterPrompt
+            prompt="First time here?"
+            action="Sign up"
+            href="/(auth)/signup"
+            testID="signup-link"
+          />
         </>
       }
     >
-      <View style={styles.body} testID="login-body">
-        <BrandMark size={52} />
+      <BrandMark size={52} />
 
-        <ThemedText variant="screenTitle" style={styles.title}>
-          Welcome back
-        </ThemedText>
+      <ThemedText variant="screenTitle" style={styles.title}>
+        Welcome back
+      </ThemedText>
 
-        <View style={styles.fields}>
-          <FormField
-            label="Email"
-            value={email}
-            onChangeText={setEmail}
-            placeholder="your@email.com"
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            autoComplete="email"
-            testID="email-input"
-          />
+      <View style={styles.fields}>
+        <FormField
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          placeholder="your@email.com"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          autoComplete="email"
+          testID="email-input"
+        />
 
-          <FormField
-            label="Password"
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Your password"
-            autoCapitalize="none"
-            autoComplete="password"
-            secure
-            testID="password-input"
-          />
+        <FormField
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          placeholder="Your password"
+          autoCapitalize="none"
+          autoComplete="password"
+          secure
+          testID="password-input"
+        />
 
-          <View style={styles.forgotRow}>
-            <Link href="/(auth)/forgot" asChild>
-              <Pressable accessibilityRole="button" hitSlop={LINK_HIT_SLOP} testID="forgot-link">
-                <ThemedText variant="caption" color={colors.accentText}>
-                  Forgot your password?
-                </ThemedText>
-              </Pressable>
-            </Link>
-          </View>
+        <View style={styles.forgotRow}>
+          <Link href="/(auth)/forgot" asChild>
+            <Pressable accessibilityRole="button" hitSlop={LINK_HIT_SLOP} testID="forgot-link">
+              <ThemedText variant="caption" color={colors.accentText}>
+                Forgot your password?
+              </ThemedText>
+            </Pressable>
+          </Link>
         </View>
-
-        {error ? (
-          <View
-            style={styles.errorBox}
-            accessibilityRole="alert"
-            accessibilityLiveRegion="assertive"
-            testID="login-error"
-          >
-            <ThemedText variant="bodyStrong" color={colors.accentText}>
-              {error}
-            </ThemedText>
-          </View>
-        ) : null}
       </View>
+
+      {error ? (
+        <View
+          style={styles.errorBox}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive"
+          testID="login-error"
+        >
+          <ThemedText variant="bodyStrong" color={colors.accentText}>
+            {error}
+          </ThemedText>
+        </View>
+      ) : null}
     </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flexGrow: 1,
-  },
   body: {
     // flexGrow, not flex. `flex: 1` clamps this to the ScrollView's height, so
     // at large text sizes the content overflowed instead of making the view
@@ -191,17 +189,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // At accessibility text sizes "First time here?" and its link no longer
-    // fit side by side; wrapping stacks them instead of running off-screen.
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  footerLink: {
-    fontFamily: fonts.bodyBold,
   },
 });

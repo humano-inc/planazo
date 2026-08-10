@@ -3,8 +3,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { AuthError, Session } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
-import { Button, FormField, FormScreen, ThemedText } from '../ui';
-import { colors, fonts, radii, spacing } from '../../theme/tokens';
+import { Button, FooterPrompt, FormField, FormScreen, ThemedText } from '../ui';
+import { colors, radii, spacing } from '../../theme/tokens';
 
 const CODE_LENGTH = 6;
 
@@ -169,19 +169,12 @@ export function ConfirmEmailStep({ email, autoSend = false, onVerified, onBack }
             onPress={handleVerify}
             testID="confirm-code"
           />
-          <View style={styles.footerRow}>
-            <ThemedText variant="sub">Wrong email?</ThemedText>
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={LINK_HIT_SLOP}
-              onPress={onBack}
-              testID="confirm-back"
-            >
-              <ThemedText variant="sub" color={colors.accentText} style={styles.footerLink}>
-                Go back
-              </ThemedText>
-            </Pressable>
-          </View>
+          <FooterPrompt
+            prompt="Wrong email?"
+            action="Go back"
+            onPress={onBack}
+            testID="confirm-back"
+          />
         </>
       }
     >
@@ -288,15 +281,5 @@ const styles = StyleSheet.create({
   },
   noticeBoxInfo: {
     backgroundColor: colors.confirmedSoft,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  footerLink: {
-    fontFamily: fonts.bodyBold,
   },
 });

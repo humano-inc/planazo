@@ -102,15 +102,23 @@ test; the moment it grows a branch, it does.
 hand-rolled `SafeAreaView > KeyboardAvoidingView > ScrollView`, and not a
 neighbour copied because it was nearest.
 
+One input is not behind it yet: `JoinByCodeField` on the groups tab's empty
+state, which is centred in a non-scrolling view. It is a tab rather than a form
+screen, so it needs restructuring rather than wrapping (PLA-74 follow-up).
+
 ```tsx
 <FormScreen
-  header={<HeaderRow title="New plan" onCancel={cancel} />}
+  header={header}            // the screen's own Cancel / title / Save row
   footer={<Button label={ctaLabel} onPress={post} />}
   testID="create"
 >
   {/* fields */}
 </FormScreen>
 ```
+
+`header` is whatever JSX that screen already had above its scroll, hoisted into
+a `const`. There is no shared header component yet, and twelve screens hand-roll
+the same row.
 
 It owns four things so no screen has to: the safe area, a scroll that insets
 itself by the real keyboard height and scrolls the focused field into view, a
@@ -124,14 +132,16 @@ Three rules follow from that, and they are the ones worth remembering:
   at the bottom of a `ScrollView` that the keyboard pushed below the fold, and
   signed in instead of signing up (PLA-69). An action inside the scroll is an
   action you are betting the user will scroll for.
-- **Never pass `bottom` in `edges`.** The type already refuses it. Two things
-  padding for the same home indicator is how you get a strip of background
-  floating above a raised keyboard.
-- **No constant exists to make room for the keyboard.** If you are reaching for
-  `paddingBottom: 140`, `marginTop: 'auto'` or a `flexGrow` to keep something
-  visible, the layout is guessing at a number `FormScreen` measures. Twelve
-  screens used to carry those, tuned by eye on whichever phone the author had
-  (PLA-74).
+- **Nothing else pads for the home indicator.** `FormScreen` takes the `top`
+  safe-area edge and no other, on purpose, and there is no prop to change it.
+  Two things padding for the same indicator is how you get a strip of
+  background floating above a raised keyboard.
+- **No constant makes room for the keyboard.** A `paddingBottom: 140` is a
+  guess at a number `FormScreen` measures, and twelve screens carried one tuned
+  by eye on whichever phone the author had (PLA-74). This is about what the
+  number is *for*, not about the property: `marginTop: 'auto'` pushing a
+  privacy line to the bottom of a short screen is fine, and several screens
+  still do it.
 
 `react-native-keyboard-controller` is the engine underneath, and
 `KeyboardProvider` sits in `app/_layout.tsx` above the router because `(auth)`

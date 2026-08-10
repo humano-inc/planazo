@@ -132,26 +132,26 @@ export default function GroupAdminsScreen() {
     // covers the screen when it opens and must not scroll with the list.
     <>
       <FormScreen header={navRow} contentContainerStyle={styles.content} testID="admins">
-          <ThemedText variant="sub">
-            Admins edit the group, remove people, and make other admins.
-          </ThemedText>
+        <ThemedText variant="sub">
+          Admins edit the group, remove people, and make other admins.
+        </ThemedText>
 
-          <AdminsCard
-            admins={admins}
-            myId={user?.id}
-            createdBy={group.created_by ?? null}
-            viewerIsAdmin={viewerIsAdmin}
+        <AdminsCard
+          admins={admins}
+          myId={user?.id}
+          createdBy={group.created_by ?? null}
+          viewerIsAdmin={viewerIsAdmin}
+          disabled={setRole.isPending}
+          onDemote={setDemoting}
+        />
+
+        {viewerIsAdmin ? (
+          <PromoteCard
+            candidates={candidates}
             disabled={setRole.isPending}
-            onDemote={setDemoting}
+            onPromote={(m) => setRole.mutate({ userId: m.user_id, role: 'admin' })}
           />
-
-          {viewerIsAdmin ? (
-            <PromoteCard
-              candidates={candidates}
-              disabled={setRole.isPending}
-              onPromote={(m) => setRole.mutate({ userId: m.user_id, role: 'admin' })}
-            />
-          ) : null}
+        ) : null}
       </FormScreen>
 
       <ConfirmSheet

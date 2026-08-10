@@ -2,14 +2,19 @@ import { useState } from 'react';
 import { View, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../../lib/supabase';
 import { useDismissTo } from '../../../../lib/navigation';
 import { contentViolation } from '../../../../lib/moderation';
 import { removeGroupPhoto, uploadGroupPhoto } from '../../../../lib/images';
 import { captureError } from '../../../../lib/sentry';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
-import { ThemedText, GroupTile, GroupPhotoField, colorForName } from '../../../../components/ui';
+import {
+  ThemedText,
+  FormScreen,
+  GroupTile,
+  GroupPhotoField,
+  colorForName,
+} from '../../../../components/ui';
 import { colors, fonts, groupColors, spacing } from '../../../../theme/tokens';
 
 type PhotoDraft = { kind: 'keep' } | { kind: 'remove' } | { kind: 'new'; uri: string };
@@ -93,102 +98,95 @@ export default function EditGroupScreen() {
     onError: (error: Error) => Alert.alert('Error', error.message),
   });
 
+  const header = (
+    <View style={styles.header}>
+      <Pressable
+        onPress={leave}
+        accessibilityRole="button"
+        testID="cancel"
+        style={styles.headerAction}
+      >
+        <ThemedText variant="bodyStrong" color={colors.textMuted}>
+          Cancel
+        </ThemedText>
+      </Pressable>
+      <ThemedText style={styles.headerTitle}>Group profile</ThemedText>
+      <Pressable
+        onPress={() => save.mutate()}
+        disabled={!dirty || !valid || save.isPending}
+        accessibilityRole="button"
+        testID="save"
+        style={[styles.headerAction, styles.headerActionEnd]}
+      >
+        <ThemedText variant="bodyStrong" color={dirty && valid ? colors.accent : colors.textFaint}>
+          Save
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={leave}
-          accessibilityRole="button"
-          testID="cancel"
-          style={styles.headerAction}
-        >
-          <ThemedText variant="bodyStrong" color={colors.textMuted}>
-            Cancel
-          </ThemedText>
-        </Pressable>
-        <ThemedText style={styles.headerTitle}>Group profile</ThemedText>
-        <Pressable
-          onPress={() => save.mutate()}
-          disabled={!dirty || !valid || save.isPending}
-          accessibilityRole="button"
-          testID="save"
-          style={[styles.headerAction, styles.headerActionEnd]}
-        >
-          <ThemedText
-            variant="bodyStrong"
-            color={dirty && valid ? colors.accent : colors.textFaint}
-          >
-            Save
-          </ThemedText>
-        </Pressable>
+    <FormScreen header={header} contentContainerStyle={styles.content} testID="group-edit">
+      <View style={styles.nameRow}>
+        <GroupTile
+          name={valid ? draftName : '?'}
+          color={draftColor}
+          imageUrl={draftImage}
+          size={52}
+        />
+        <View style={styles.nameBlock}>
+          <TextInput
+            style={styles.nameInput}
+            placeholder="Name the group"
+            placeholderTextColor={colors.textFaint}
+            value={draftName}
+            onChangeText={setName}
+            testID="name-input"
+          />
+          <View style={styles.rule} />
+        </View>
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.nameRow}>
-          <GroupTile
-            name={valid ? draftName : '?'}
-            color={draftColor}
-            imageUrl={draftImage}
-            size={52}
-          />
-          <View style={styles.nameBlock}>
-            <TextInput
-              style={styles.nameInput}
-              placeholder="Name the group"
-              placeholderTextColor={colors.textFaint}
-              value={draftName}
-              onChangeText={setName}
-              testID="name-input"
-            />
-            <View style={styles.rule} />
+      <GroupPhotoField
+        uri={draftImage}
+        uploading={save.isPending && photo.kind === 'new'}
+        caption="Remove it and the letter comes back, on the colour you had."
+        onPick={(uri) => setPhoto({ kind: 'new', uri })}
+        onRemove={() => setPhoto({ kind: 'remove' })}
+      />
+
+      {draftImage ? (
+        // The colour is still stored, and still what the feed's card stripe
+        // and the group dots use. It just has nothing to do on a tile the
+        // photo has taken over, so picking one here would be a lie.
+        <ThemedText variant="sub">
+          Colour is hidden while a photo is set. It comes back the moment the photo goes.
+        </ThemedText>
+      ) : (
+        <View style={styles.section}>
+          <ThemedText variant="sectionLabel">Colour</ThemedText>
+          <View style={styles.swatches}>
+            {groupColors.map((swatch) => (
+              <Pressable
+                key={swatch}
+                accessibilityRole="button"
+                accessibilityState={{ selected: swatch === draftColor }}
+                onPress={() => setColor(swatch)}
+                style={[
+                  styles.swatch,
+                  { backgroundColor: swatch },
+                  swatch === draftColor && styles.swatchSelected,
+                ]}
+              />
+            ))}
           </View>
         </View>
-
-        <GroupPhotoField
-          uri={draftImage}
-          uploading={save.isPending && photo.kind === 'new'}
-          caption="Remove it and the letter comes back, on the colour you had."
-          onPick={(uri) => setPhoto({ kind: 'new', uri })}
-          onRemove={() => setPhoto({ kind: 'remove' })}
-        />
-
-        {draftImage ? (
-          // The colour is still stored, and still what the feed's card stripe
-          // and the group dots use. It just has nothing to do on a tile the
-          // photo has taken over, so picking one here would be a lie.
-          <ThemedText variant="sub">
-            Colour is hidden while a photo is set. It comes back the moment the photo goes.
-          </ThemedText>
-        ) : (
-          <View style={styles.section}>
-            <ThemedText variant="sectionLabel">Colour</ThemedText>
-            <View style={styles.swatches}>
-              {groupColors.map((swatch) => (
-                <Pressable
-                  key={swatch}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: swatch === draftColor }}
-                  onPress={() => setColor(swatch)}
-                  style={[
-                    styles.swatch,
-                    { backgroundColor: swatch },
-                    swatch === draftColor && styles.swatchSelected,
-                  ]}
-                />
-              ))}
-            </View>
-          </View>
-        )}
-      </View>
-    </SafeAreaView>
+      )}
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -213,7 +211,6 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   content: {
-    paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
     gap: spacing.xxl,
   },
