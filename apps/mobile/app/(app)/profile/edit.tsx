@@ -8,9 +8,9 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
+import { useDismissTo } from '../../../lib/navigation';
 import { contentViolation } from '../../../lib/moderation';
 import { useAuthStore } from '../../../stores/authStore';
 import { pickFromLibrary, takePhoto, uploadAvatar } from '../../../lib/images';
@@ -28,7 +28,7 @@ const PHOTO_SHEET_TITLE = 'Your photo is what friends see next to your yes';
  * initial" as the honest default.
  */
 export default function ProfileEdit() {
-  const router = useRouter();
+  const leave = useDismissTo('/(app)/profile');
   const { profile, setProfile } = useAuthStore();
   const [name, setName] = useState(profile?.display_name ?? '');
   const [photo, setPhoto] = useState<PhotoDraft>({ kind: 'keep' });
@@ -62,7 +62,7 @@ export default function ProfileEdit() {
     },
     onSuccess: (data) => {
       setProfile(data);
-      router.back();
+      leave();
     },
     onError: (error: Error) => Alert.alert('Error', error.message),
   });
@@ -110,7 +110,7 @@ export default function ProfileEdit() {
     <View style={styles.header}>
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.back()}
+        onPress={leave}
         testID="cancel"
         style={styles.headerAction}
       >

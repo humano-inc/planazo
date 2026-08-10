@@ -9,6 +9,38 @@ export interface MyGroup {
 }
 
 /**
+ * Deliberately a child of `['groups']`, not a key of its own.
+ *
+ * Caching this query at all (see below) means something has to say when it is
+ * wrong, and the honest list of writes that make it wrong is longer than it
+ * looks: create, join by code, join by link, accept an invite, leave — and
+ * renaming or recolouring a group, which changes the `name` and `color` cached
+ * right here and reaches no realtime listener at all, because `groups` is not
+ * in SUBSCRIBED_TABLES.
+ *
+ * Every one of those already invalidates `['groups']` for the Groups tab. Being
+ * a child means they invalidate this too, without knowing it exists. The
+ * alternative — a key of its own plus a helper each of those sites has to
+ * remember — was written first and had already missed the rename by the time it
+ * was reviewed, which is the argument against it.
+ *
+ * The cost is a handful of extra refetches on manage-screen actions that do not
+ * touch your own membership (promoting an admin, toggling notifications). The
+ * sibling under this prefix, `['groups', userId]` in the Groups tab, is heavier
+ * and already pays exactly that.
+ */
+const myGroupsKey = (userId: string | undefined) => ['groups', 'mine', userId];
+
+/**
+ * How long "which groups am I in" is trusted without asking again.
+ *
+ * Staleness is pushed here, not polled for: the key above rides every
+ * `['groups']` invalidation. Five minutes is the backstop for a path none of
+ * those reach, not the mechanism.
+ */
+export const MY_GROUPS_STALE_MS = 5 * 60_000;
+
+/**
  * The groups you're in, and whether we know yet.
  *
  * Three surfaces ask the same question and have to give the same answer: the
@@ -18,12 +50,21 @@ export interface MyGroup {
  * to handle rather than a case that cannot happen (PLA-68). One query key
  * means they cannot disagree, and a screen that already warmed the cache does
  * not refetch.
+ *
+ * The tab bar mounts for the whole signed-in session, so this query always has
+ * an observer. Under the app-wide `refetchOnWindowFocus: 'always'` (see
+ * app/_layout.tsx) that meant one fetch per foreground, forever, for the most
+ * static thing the app knows. Both settings below exist to undo that, and
+ * neither works alone: `'always'` ignores staleTime by design, so dropping to
+ * `true` is what lets the staleTime below be read at all (PLA-78).
  */
 export function useMyGroups() {
   const { user } = useAuthStore();
 
   const { data, isPending } = useQuery({
-    queryKey: ['my-groups', user?.id],
+    queryKey: myGroupsKey(user?.id),
+    staleTime: MY_GROUPS_STALE_MS,
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<MyGroup[]> => {
       const { data: rows, error } = await supabase
         .from('group_members')

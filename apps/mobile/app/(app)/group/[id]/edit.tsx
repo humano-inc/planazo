@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { View, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../../lib/supabase';
+import { useDismissTo } from '../../../../lib/navigation';
 import { contentViolation } from '../../../../lib/moderation';
 import { removeGroupPhoto, uploadGroupPhoto } from '../../../../lib/images';
 import { captureError } from '../../../../lib/sentry';
@@ -16,8 +17,8 @@ type PhotoDraft = { kind: 'keep' } | { kind: 'remove' } | { kind: 'new'; uri: st
 /** 6e "Group profile" — the photo, the name and the colour, nothing else. */
 export default function EditGroupScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const queryClient = useQueryClient();
+  const leave = useDismissTo(`/(app)/group/${id}`);
   const [name, setName] = useState<string | null>(null);
   const [color, setColor] = useState<string | null>(null);
   const [photo, setPhoto] = useState<PhotoDraft>({ kind: 'keep' });
@@ -87,7 +88,7 @@ export default function EditGroupScreen() {
       queryClient.invalidateQueries({ queryKey: ['group-edit', id] });
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['home-plans'] });
-      router.back();
+      leave();
     },
     onError: (error: Error) => Alert.alert('Error', error.message),
   });
@@ -96,7 +97,7 @@ export default function EditGroupScreen() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={leave}
           accessibilityRole="button"
           testID="cancel"
           style={styles.headerAction}

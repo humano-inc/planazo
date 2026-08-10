@@ -12,25 +12,34 @@ import { useRouter, type Href } from 'expo-router';
  * Returns whether a screen was actually popped, because that is the only case
  * where anything meant to happen *after* the dismissal has to wait for the
  * animation. A replace has already arrived.
+ *
+ * `layers` is for a screen that was opened on top of another sheet and has to
+ * take both with it. The fallback branch ignores it on purpose: with nothing
+ * behind you there are no layers to count, and the replace lands in the same
+ * place whether one sheet was skipped or two.
  */
 function useDismiss() {
   const router = useRouter();
 
-  return (target: Href) => {
+  return (target: Href, layers = 1) => {
     if (!router.canGoBack()) {
       router.replace(target);
       return false;
     }
-    router.back();
+    // `back()` rather than `dismiss(1)` for the ordinary case: it is what every
+    // call site did before this hook existed, and the two are not synonyms on a
+    // pushed screen inside a nested stack.
+    if (layers > 1) router.dismiss(layers);
+    else router.back();
     return true;
   };
 }
 
 /** Dismissing to a destination known when the screen renders, e.g. Cancel. */
-export function useDismissTo(fallback: Href) {
+export function useDismissTo(fallback: Href, layers = 1) {
   const dismiss = useDismiss();
 
-  return () => dismiss(fallback);
+  return () => dismiss(fallback, layers);
 }
 
 /**

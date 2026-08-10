@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../../lib/supabase';
+import { useDismissTo } from '../../../../lib/navigation';
 import { contentViolation } from '../../../../lib/moderation';
 import { FormScreen, ThemedText } from '../../../../components/ui';
 import { colors, fonts, radii, spacing, type } from '../../../../theme/tokens';
@@ -22,8 +23,8 @@ import { colors, fonts, radii, spacing, type } from '../../../../theme/tokens';
  */
 export default function EditPlanScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const queryClient = useQueryClient();
+  const leave = useDismissTo(`/(app)/plan/${id}`);
 
   // null means "untouched, show what's stored" — so a field the host never
   // visits can't overwrite a value that changed under them.
@@ -103,14 +104,14 @@ export default function EditPlanScreen() {
       if (plan?.group_id) {
         queryClient.invalidateQueries({ queryKey: ['group-plans', plan.group_id] });
       }
-      router.back();
+      leave();
     },
     onError: (error: Error) => Alert.alert('Error', error.message),
   });
 
   const header = (
     <View style={styles.header}>
-      <Pressable onPress={() => router.back()} accessibilityRole="button" testID="cancel">
+      <Pressable onPress={leave} accessibilityRole="button" testID="cancel">
         <ThemedText variant="bodyStrong" color={colors.textMuted}>
           Cancel
         </ThemedText>
@@ -122,7 +123,10 @@ export default function EditPlanScreen() {
         accessibilityRole="button"
         testID="save"
       >
-        <ThemedText variant="bodyStrong" color={dirty && valid ? colors.accent : colors.textFaint}>
+        <ThemedText
+          variant="bodyStrong"
+          color={dirty && valid ? colors.accent : colors.textFaint}
+        >
           Save
         </ThemedText>
       </Pressable>

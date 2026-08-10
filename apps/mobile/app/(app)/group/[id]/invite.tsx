@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { GroupRole } from '@planazo/shared';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,14 +11,15 @@ import { useFriends } from '../../../../lib/useFriends';
 import { inviteLinkFor } from '../../../../lib/shareLinks';
 import { linkBlurb, linkUnavailable } from '../../../../lib/groupDoor';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
+import { useDismissTo } from '../../../../lib/navigation';
 import { ThemedText, Avatar, Button } from '../../../../components/ui';
 import { colors, fonts, radii, spacing } from '../../../../theme/tokens';
 import { shareInviteLink } from './index';
 
 export default function InviteToGroupSheet() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const queryClient = useQueryClient();
+  const leave = useDismissTo(`/(app)/group/${id}`);
   const { user } = useAuthStore();
   const [picks, setPicks] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
@@ -108,7 +109,7 @@ export default function InviteToGroupSheet() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['group-invite-sheet', id] });
-      router.back();
+      leave();
     },
     onError: (error: Error) => Alert.alert('Error', error.message),
   });

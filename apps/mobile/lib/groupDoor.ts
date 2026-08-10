@@ -69,15 +69,12 @@ export function joinBlurb(joinMode: string | null | undefined): string {
 /**
  * What a requester is told once the ask is filed.
  *
- * Said the same way by the deep-link screen and by the paste-a-code field, and
- * said the same way whether this is a first ask or one that was quietly turned
- * down before: a decline is never announced (PLA-49).
+ * One surface says it, now that the paste field routes into the join screen
+ * instead of joining on its own (PLA-80). It reads the same whether this is a
+ * first ask or one that was quietly turned down before: a decline is never
+ * announced (PLA-49).
  */
 export const requestedEyebrow = 'You’ve asked to join';
-
-export function requestedTitle(groupName: string): string {
-  return `${requestedEyebrow} ${groupName}`;
-}
 
 export function requestedBlurb(): string {
   return 'An admin has your request. You’ll hear the moment they let you in.';

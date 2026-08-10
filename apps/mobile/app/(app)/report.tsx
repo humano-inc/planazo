@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import {
@@ -11,6 +11,7 @@ import {
   submitReport,
 } from '../../lib/moderation';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
+import { useDismissTo } from '../../lib/navigation';
 import { useAuthStore } from '../../stores/authStore';
 import { Card, FormScreen, ThemedText, showToast } from '../../components/ui';
 import { colors, fonts, spacing } from '../../theme/tokens';
@@ -32,7 +33,6 @@ const SUBJECT_NOUN: Record<ReportSubject, string> = {
  * for the second one in a settings screen is how apps end up with neither.
  */
 export default function ReportScreen() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const params = useLocalSearchParams<{
@@ -45,6 +45,14 @@ export default function ReportScreen() {
 
   const subjectType: ReportSubject = params.type ?? 'plan';
   const subjectId = params.id ?? '';
+  // A cold deep link has nothing behind this sheet, so it falls back to the
+  // thing being reported. A profile or a photo has no route of its own, and
+  // the feed is the honest answer for both.
+  const leave = useDismissTo(
+    subjectId && (subjectType === 'plan' || subjectType === 'group')
+      ? `/(app)/${subjectType}/${subjectId}`
+      : '/(app)/(tabs)'
+  );
   // Never offer to block yourself — reporting your own plan is a real thing
   // people do by accident, and the toggle would be nonsense.
   const personId = params.personId && params.personId !== user?.id ? params.personId : null;
@@ -80,7 +88,7 @@ export default function ReportScreen() {
         queryClient.invalidateQueries({ queryKey: ['group'] });
         queryClient.invalidateQueries({ queryKey: ['group-manage'] });
       }
-      router.back();
+      leave();
       showToast(
         alsoBlock && personId
           ? `Reported, and you won't see ${personName}'s plans again.`
@@ -94,7 +102,7 @@ export default function ReportScreen() {
     <View style={styles.header}>
       <Pressable
         accessibilityRole="button"
-        onPress={() => router.back()}
+        onPress={leave}
         testID="cancel"
         style={styles.headerAction}
       >

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '../../../../lib/supabase';
+import { useDismissTo } from '../../../../lib/navigation';
 import { ThemedText, Button, FormScreen } from '../../../../components/ui';
 import { colors, fonts, radii, spacing } from '../../../../theme/tokens';
 
@@ -14,8 +15,8 @@ import { colors, fonts, radii, spacing } from '../../../../theme/tokens';
  */
 export default function CancelPlanScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const queryClient = useQueryClient();
+  const leave = useDismissTo(`/(app)/plan/${id}`);
   const [reason, setReason] = useState('');
   const [focused, setFocused] = useState(false);
 
@@ -79,7 +80,7 @@ export default function CancelPlanScreen() {
         queryClient.invalidateQueries({ queryKey: ['group-plans', plan.group_id] });
       }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
-      router.back();
+      leave();
     },
     onError: (error: Error) => Alert.alert('Error', error.message),
   });
@@ -116,7 +117,7 @@ export default function CancelPlanScreen() {
           />
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.back()}
+            onPress={leave}
             style={styles.keepIt}
             testID="keep-it"
           >

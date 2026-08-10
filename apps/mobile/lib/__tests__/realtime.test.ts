@@ -114,10 +114,10 @@ describe('keysForChange', () => {
       'group_members insert/update',
       'group_members',
       { group_id: 'g2', user_id: 'u2' },
+      // No separate my-groups entry: useMyGroups keys under ['groups'] (PLA-78).
       [
         ['group', 'g2'],
         ['groups'],
-        ['my-groups'],
         ['home-plans'],
         ['plan-membership'],
         ['plan-group-member-ids', 'g2'],
@@ -130,7 +130,6 @@ describe('keysForChange', () => {
       [
         ['group'],
         ['groups'],
-        ['my-groups'],
         ['home-plans'],
         ['plan-membership'],
         ['plan-group-member-ids'],

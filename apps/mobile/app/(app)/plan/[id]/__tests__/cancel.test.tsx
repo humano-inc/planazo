@@ -10,7 +10,7 @@ jest.mock('../../../../../lib/supabase', () => ({
 const mockBack = jest.fn();
 jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({ id: 'plan-1' }),
-  useRouter: () => ({ push: jest.fn(), back: mockBack }),
+  useRouter: () => ({ push: jest.fn(), back: mockBack, replace: jest.fn(), canGoBack: () => true }),
 }));
 
 const mockFrom = supabase.from as jest.Mock;

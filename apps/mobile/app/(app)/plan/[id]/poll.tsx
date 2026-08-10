@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useDismissTo } from '../../../../lib/navigation';
 import { submitPollDraft, planPollKey } from '../../../../lib/usePlanPoll';
 import { emptyPollDraft, pollDraftValid } from '../../../../lib/pollDraft';
 import { PollOptionsEditor } from '../../../../components/PollComposer';
@@ -27,8 +28,8 @@ export default function NewPollScreen() {
     peopleIn?: string;
   }>();
   const peopleIn = Number(peopleInParam) || 0;
-  const router = useRouter();
   const queryClient = useQueryClient();
+  const leave = useDismissTo(`/(app)/plan/${id}`);
   const [draft, setDraft] = useState(emptyPollDraft());
 
   const add = useMutation({
@@ -36,7 +37,7 @@ export default function NewPollScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planPollKey(String(id)) });
       queryClient.invalidateQueries({ queryKey: ['home-plans'] });
-      router.back();
+      leave();
     },
     onError: (error: Error) => Alert.alert('Error', error.message),
   });
@@ -46,7 +47,7 @@ export default function NewPollScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Pressable onPress={() => router.back()} accessibilityRole="button" testID="cancel">
+      <Pressable onPress={leave} accessibilityRole="button" testID="cancel">
         <ThemedText variant="bodyStrong" color={colors.textMuted}>
           Cancel
         </ThemedText>
@@ -62,14 +63,14 @@ export default function NewPollScreen() {
       contentContainerStyle={styles.content}
       testID="poll"
       footer={
-        <Button
-          label={add.isPending ? 'Adding…' : 'Add the poll'}
-          variant={valid ? 'primary' : 'secondary'}
-          disabled={!valid || add.isPending}
-          haptic={valid}
-          onPress={() => add.mutate()}
-          testID="ask"
-        />
+      <Button
+        label={add.isPending ? 'Adding…' : 'Add the poll'}
+        variant={valid ? 'primary' : 'secondary'}
+        disabled={!valid || add.isPending}
+        haptic={valid}
+        onPress={() => add.mutate()}
+        testID="ask"
+      />
       }
     >
       <View style={styles.titleBlock}>

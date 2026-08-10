@@ -21,6 +21,7 @@ import { DateVoteList } from '../../../../components/plan/DateVoteList';
 import { PlanPeopleSections } from '../../../../components/plan/PlanPeopleSections';
 import { PlanDetailFooter } from '../../../../components/plan/PlanDetailFooter';
 import { fmtDay, fmtTime } from '../../../../lib/dates';
+import { useDismissTo } from '../../../../lib/navigation';
 import { errorCopy, isNotFoundError } from '../../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../../lib/usePullToRefresh';
 import { usePlanDetail } from '../../../../lib/usePlanDetail';
@@ -99,8 +100,7 @@ export default function PlanDetailScreen() {
     [plan, rsvps, dateOptions, availabilities, membership, memberIds, user?.id]
   );
 
-  const goBack = () =>
-    router.canGoBack() ? router.back() : router.replace('/(app)/(tabs)');
+  const goBack = useDismissTo('/(app)/(tabs)');
 
   // A shared link is the one way into this screen with no session behind it:
   // (app)/_layout has no guard, so it mounts and queries as nobody. RLS answers
