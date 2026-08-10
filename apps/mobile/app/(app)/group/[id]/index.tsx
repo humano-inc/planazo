@@ -27,6 +27,7 @@ import { useAuthStore } from '../../../../stores/authStore';
 import { errorCopy, isNotFoundError } from '../../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../../lib/usePullToRefresh';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
+import { useDismissTo } from '../../../../lib/navigation';
 import {
   ThemedText,
   Card,
@@ -47,6 +48,9 @@ export function shareInviteLink(groupName: string, inviteCode: string) {
 export default function GroupDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  // Deep links (push, QA) mount this as the first screen, so there is no
+  // history to pop and the back label has to mean something anyway.
+  const goBack = useDismissTo('/(app)/(tabs)/groups');
   const { user } = useAuthStore();
 
   const { data: group, isLoading, isError, error, refetch } = useQuery({
@@ -170,9 +174,7 @@ export default function GroupDetailScreen() {
           title={copy.title}
           body={copy.body}
           onRetry={notFound ? undefined : () => refetch()}
-          onBack={() =>
-            router.canGoBack() ? router.back() : router.replace('/(app)/(tabs)/groups')
-          }
+          onBack={goBack}
           testID="group-error"
         />
       </SafeAreaView>
@@ -210,11 +212,8 @@ export default function GroupDetailScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.navRow}>
-        {/* Deep links (push, QA) mount this as the first screen — no history */}
         <Pressable
-          onPress={() =>
-            router.canGoBack() ? router.back() : router.replace('/(app)/(tabs)/groups')
-          }
+          onPress={goBack}
           accessibilityRole="button"
           testID="back"
           style={styles.navAction}

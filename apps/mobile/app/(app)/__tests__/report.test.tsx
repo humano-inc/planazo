@@ -7,7 +7,7 @@ const mockBack = jest.fn();
 let mockParams: Record<string, string> = {};
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: mockBack }),
+  useRouter: () => ({ back: mockBack, replace: jest.fn(), canGoBack: () => true }),
   useLocalSearchParams: () => mockParams,
 }));
 

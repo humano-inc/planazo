@@ -1,8 +1,8 @@
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
+import { useDismissTo } from '../../../lib/navigation';
 import { BLOCKED_QUERY_KEY, fetchBlockedIds, unblockUser } from '../../../lib/moderation';
 import { useAuthStore } from '../../../stores/authStore';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
@@ -23,7 +23,7 @@ interface BlockedPerson {
  * the one place the app states what a block actually does.
  */
 export default function BlockedPeopleScreen() {
-  const router = useRouter();
+  const goBack = useDismissTo('/(app)/profile');
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
@@ -69,7 +69,7 @@ export default function BlockedPeopleScreen() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.navRow}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={goBack}
           accessibilityRole="button"
           testID="back"
           style={styles.backAction}

@@ -17,6 +17,7 @@ import { usePendingRemoval } from '../../../../lib/usePendingRemoval';
 import { groupManageQuery, invalidateGroup } from '../../../../lib/groupManageQuery';
 import { adminCount, adminSummary, byArrival, memberName } from '../../../../lib/groupAdmins';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
+import { useDismissTo } from '../../../../lib/navigation';
 import {
   BLOCKED_QUERY_KEY,
   blockUser,
@@ -37,6 +38,10 @@ type PendingConfirm = { kind: 'remove' | 'block'; userId: string; name: string }
 export default function ManageGroupScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const goBack = useDismissTo(`/(app)/group/${id}`);
+  // The error state is reached when the group is gone or unreadable, so the
+  // group route is exactly where not to send someone.
+  const leaveGone = useDismissTo('/(app)/(tabs)/groups');
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
@@ -151,9 +156,7 @@ export default function ManageGroupScreen() {
           title={copy.title}
           body={copy.body}
           onRetry={notFound ? undefined : () => refetch()}
-          onBack={() =>
-            router.canGoBack() ? router.back() : router.replace('/(app)/(tabs)/groups')
-          }
+          onBack={leaveGone}
           testID="group-manage-error"
         />
       </SafeAreaView>
@@ -224,7 +227,7 @@ export default function ManageGroupScreen() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.navRow}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={goBack}
           accessibilityRole="button"
           testID="back"
           style={styles.navAction}

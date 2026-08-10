@@ -6,7 +6,6 @@ import {
   Alert,
   useWindowDimensions,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeOutUp, LinearTransition } from 'react-native-reanimated';
@@ -17,6 +16,7 @@ import {
   type PendingGroupInvite,
 } from '../../lib/usePendingInvites';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
+import { useDismissTo } from '../../lib/navigation';
 import { ThemedText, Badge, Button, Avatar, GroupTile } from '../../components/ui';
 import { colors, fonts, sheetDetents, spacing } from '../../theme/tokens';
 
@@ -42,7 +42,7 @@ function memberLine(invite: PendingGroupInvite): string {
 }
 
 export default function InvitesSheet() {
-  const router = useRouter();
+  const done = useDismissTo('/(app)/(tabs)');
   const queryClient = useQueryClient();
   const { groupInvites, friendRequests, count } = usePendingInvites();
 
@@ -202,7 +202,7 @@ export default function InvitesSheet() {
       <View style={styles.header}>
         <ThemedText style={styles.headerTitle}>Invites</ThemedText>
         <Pressable
-          onPress={() => router.back()}
+          onPress={done}
           accessibilityRole="button"
           testID="done"
           style={styles.headerAction}

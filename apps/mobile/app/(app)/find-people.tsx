@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { useFriends } from '../../lib/useFriends';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
+import { useDismissTo } from '../../lib/navigation';
 import { ThemedText, Card, Avatar, SearchField } from '../../components/ui';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 
@@ -21,7 +21,8 @@ interface PersonRow {
 type Relation = 'friend' | 'requested' | 'incoming' | 'none';
 
 export default function FindPeopleScreen() {
-  const router = useRouter();
+  // The only way in is the Groups tab, which is where the chevron points.
+  const goBack = useDismissTo('/(app)/(tabs)/groups');
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const [query, setQuery] = useState('');
@@ -204,7 +205,7 @@ export default function FindPeopleScreen() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.navRow}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={goBack}
           accessibilityRole="button"
           testID="back"
           style={styles.backAction}
