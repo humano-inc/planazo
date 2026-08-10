@@ -104,7 +104,9 @@ neighbour copied because it was nearest.
 
 One input is not behind it yet: `JoinByCodeField` on the groups tab's empty
 state, which is centred in a non-scrolling view. It is a tab rather than a form
-screen, so it needs restructuring rather than wrapping (PLA-74 follow-up).
+screen, so it needs restructuring rather than wrapping, and nobody has yet
+looked at it with a keyboard up to see whether it needs anything at all
+(PLA-92).
 
 ```tsx
 <FormScreen
