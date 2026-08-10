@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { View, StyleSheet, Pressable, TextInput } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { filterByName, candidatesEmptyLine, memberName } from '../../lib/groupAdmins';
-import { ThemedText, Card, Avatar } from '../ui';
-import { colors, fonts, radii, spacing } from '../../theme/tokens';
+import { ThemedText, Card, Avatar, SearchField } from '../ui';
+import { colors, radii, spacing } from '../../theme/tokens';
 import { settingsStyles } from './PrefSwitchRow';
 import { adminRowStyles } from './AdminsCard';
 import type { GroupMemberRow } from './MemberList';
@@ -14,16 +14,6 @@ function PlusDot() {
     <View style={styles.plusDot}>
       <View style={styles.plusBarAcross} />
       <View style={styles.plusBarUp} />
-    </View>
-  );
-}
-
-/** The magnifier in the search box, same construction as Find people's. */
-function SearchGlyph() {
-  return (
-    <View style={styles.searchIcon}>
-      <View style={styles.searchCircle} />
-      <View style={styles.searchHandle} />
     </View>
   );
 }
@@ -48,19 +38,12 @@ export function PromoteCard({ candidates, disabled, onPromote }: Props) {
     <View style={settingsStyles.section}>
       <ThemedText variant="sectionLabel">Make someone an admin</ThemedText>
 
-      <View style={styles.searchBox}>
-        <SearchGlyph />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search members"
-          placeholderTextColor={colors.textFaint}
-          value={query}
-          onChangeText={setQuery}
-          autoCapitalize="none"
-          autoCorrect={false}
-          testID="admin-search"
-        />
-      </View>
+      <SearchField
+        placeholder="Search members"
+        value={query}
+        onChangeText={setQuery}
+        testID="admin-search"
+      />
 
       <Card padded={false}>
         {found.map((m, index) => (
@@ -100,43 +83,6 @@ const styles = StyleSheet.create({
   candidateName: {
     flex: 1,
     minWidth: 0,
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.borderStrong,
-    borderRadius: radii.input,
-    paddingHorizontal: 14,
-  },
-  searchIcon: {
-    width: 15,
-    height: 14,
-  },
-  searchCircle: {
-    width: 13,
-    height: 13,
-    borderRadius: radii.pill,
-    borderWidth: 1.5,
-    borderColor: colors.textFaint,
-  },
-  searchHandle: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    width: 7,
-    height: 1.5,
-    backgroundColor: colors.textFaint,
-    transform: [{ rotate: '45deg' }],
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 15,
-    color: colors.textPrimary,
-    paddingVertical: 13,
   },
   plusBox: {
     justifyContent: 'center',

@@ -16,7 +16,14 @@ import { useFriends } from '../../../lib/useFriends';
 import { errorCopy } from '../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../lib/usePullToRefresh';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
-import { ThemedText, Card, AvatarStack, GroupTile, ErrorState } from '../../../components/ui';
+import {
+  ThemedText,
+  Card,
+  AvatarStack,
+  GroupTile,
+  ErrorState,
+  SearchGlyph,
+} from '../../../components/ui';
 import { GroupsEmptyState } from '../../../components/group/GroupsEmptyState';
 import { InvitesRow } from '../../../components/group/InvitesRow';
 import { colors, fonts, radii, spacing } from '../../../theme/tokens';
@@ -113,10 +120,7 @@ export default function GroupsScreen() {
             style={({ pressed }) => [styles.findPill, pressed && styles.pressed]}
             testID="find-people"
           >
-            <View style={styles.findIcon}>
-              <View style={styles.findCircle} />
-              <View style={styles.findHandle} />
-            </View>
+            <SearchGlyph color={colors.ink} />
             <ThemedText variant="bodyStrong" style={styles.findLabel}>
               Find people
             </ThemedText>
@@ -252,29 +256,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     paddingVertical: spacing.sm,
     paddingHorizontal: 14,
-  },
-  findIcon: {
-    width: 15,
-    height: 14,
-  },
-  findCircle: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    width: 11,
-    height: 11,
-    borderRadius: radii.pill,
-    borderWidth: 1.5,
-    borderColor: colors.ink,
-  },
-  findHandle: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    width: 8,
-    height: 2,
-    backgroundColor: colors.ink,
-    transform: [{ rotate: '45deg' }],
   },
   findLabel: {
     fontSize: 14,
