@@ -1,12 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import {
-  MY_GROUPS_KEY,
-  MY_GROUPS_STALE_MS,
-  invalidateMyGroups,
-  useMyGroups,
-} from '../useMyGroups';
+import { MY_GROUPS_STALE_MS, useMyGroups } from '../useMyGroups';
 import { supabase } from '../supabase';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -149,9 +144,9 @@ describe('useMyGroups', () => {
     expect(fetches).toBe(1);
 
     // Backdate the fetch rather than wait five real minutes. This is the
-    // backstop for a membership change no invalidation reached, so it has to
-    // be a real refetch and not just a comment in useMyGroups.
-    const entry = client.getQueryCache().find({ queryKey: ['my-groups', 'user-1'] })!;
+    // backstop for a change no invalidation reached, so it has to be a real
+    // refetch and not just a comment in useMyGroups.
+    const entry = client.getQueryCache().find({ queryKey: ['groups', 'mine', 'user-1'] })!;
     entry.state = { ...entry.state, dataUpdatedAt: Date.now() - MY_GROUPS_STALE_MS - 1 };
 
     await foreground();
@@ -160,35 +155,59 @@ describe('useMyGroups', () => {
   });
 });
 
-describe('invalidateMyGroups', () => {
-  it('reaches the hook that keys on the user, not just the bare prefix', async () => {
+/**
+ * The reason the key is a child of `['groups']` rather than its own name. Every
+ * write that changes your groups already invalidates `['groups']`, and this is
+ * what makes that enough — no call site has to know this query exists.
+ */
+describe("riding on the writers' existing ['groups'] invalidation", () => {
+  it.each([
+    ['creating, joining or leaving a group', ['groups']],
+    ['renaming a group, which reaches no realtime listener', ['groups']],
+  ])('refetches after %s', async (_case, key) => {
     rows = [group('g1', 'Padel')];
     const client = makeClient();
     const { result } = await renderMyGroups(client);
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(fetches).toBe(1);
 
-    // The group you just created, arriving because the write said so and not
-    // because the cache went stale on its own.
     rows = [group('g1', 'Padel'), group('g2', 'Flatmates')];
-    invalidateMyGroups(client);
+    // Exactly what group/new.tsx, join/[code].tsx, invites.tsx, manage.tsx and
+    // group/[id]/edit.tsx already do, unchanged by PLA-78.
+    await act(async () => {
+      await client.invalidateQueries({ queryKey: key });
+    });
 
     await waitFor(() => expect(result.current.groups).toHaveLength(2));
     expect(fetches).toBe(2);
   });
 
-  it('leaves other caches alone', async () => {
+  it('is not disturbed by an unrelated cache going stale', async () => {
+    rows = [group('g1', 'Padel')];
     const client = makeClient();
-    client.setQueryData(['groups'], ['untouched']);
-    client.setQueryData(['home-plans'], ['untouched']);
+    const { result } = await renderMyGroups(client);
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(fetches).toBe(1);
 
-    invalidateMyGroups(client);
+    await act(async () => {
+      await client.invalidateQueries({ queryKey: ['home-plans'] });
+      await client.invalidateQueries({ queryKey: ['friends'] });
+    });
 
-    expect(client.getQueryData(['groups'])).toEqual(['untouched']);
-    expect(client.getQueryData(['home-plans'])).toEqual(['untouched']);
+    expect(fetches).toBe(1);
   });
 
-  it('keys on the prefix every user entry shares', () => {
-    expect(MY_GROUPS_KEY).toEqual(['my-groups']);
+  it("stays a sibling of the Groups tab's own query rather than colliding with it", async () => {
+    rows = [group('g1', 'Padel')];
+    const client = makeClient();
+    const { result } = await renderMyGroups(client);
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // The tab keys on ['groups', userId]; a user id can never be the literal
+    // 'mine', so the two cannot read each other's entry.
+    client.setQueryData(['groups', 'user-1'], ['the tab own data']);
+
+    expect(client.getQueryData(['groups', 'mine', 'user-1'])).toHaveLength(1);
+    expect(client.getQueryData(['groups', 'user-1'])).toEqual(['the tab own data']);
   });
 });

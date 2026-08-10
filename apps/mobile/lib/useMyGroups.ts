@@ -1,4 +1,4 @@
-import { useQuery, type QueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from './supabase';
 import { useAuthStore } from '../stores/authStore';
 
@@ -9,40 +9,36 @@ export interface MyGroup {
 }
 
 /**
- * Every read of this cache, under one name.
+ * Deliberately a child of `['groups']`, not a key of its own.
  *
- * The hook keys on `['my-groups', userId]`; this prefix matches every user's
- * entry, which is what an invalidation wants — the signed-in user is the only
- * one with an observer, and a stale entry for a signed-out account is worth
- * nothing anyway.
+ * Caching this query at all (see below) means something has to say when it is
+ * wrong, and the honest list of writes that make it wrong is longer than it
+ * looks: create, join by code, join by link, accept an invite, leave — and
+ * renaming or recolouring a group, which changes the `name` and `color` cached
+ * right here and reaches no realtime listener at all, because `groups` is not
+ * in SUBSCRIBED_TABLES.
+ *
+ * Every one of those already invalidates `['groups']` for the Groups tab. Being
+ * a child means they invalidate this too, without knowing it exists. The
+ * alternative — a key of its own plus a helper each of those sites has to
+ * remember — was written first and had already missed the rename by the time it
+ * was reviewed, which is the argument against it.
+ *
+ * The cost is a handful of extra refetches on manage-screen actions that do not
+ * touch your own membership (promoting an admin, toggling notifications). The
+ * sibling under this prefix, `['groups', userId]` in the Groups tab, is heavier
+ * and already pays exactly that.
  */
-export const MY_GROUPS_KEY = ['my-groups'] as const;
+const myGroupsKey = (userId: string | undefined) => ['groups', 'mine', userId];
 
 /**
  * How long "which groups am I in" is trusted without asking again.
  *
- * Membership changes are pushed here, not polled for: {@link
- * invalidateMyGroups} covers everything you do yourself, and `lib/realtime.ts`
- * covers what other people do to you. Five minutes is the backstop for a path
- * neither of those reaches, not the mechanism.
+ * Staleness is pushed here, not polled for: the key above rides every
+ * `['groups']` invalidation. Five minutes is the backstop for a path none of
+ * those reach, not the mechanism.
  */
 export const MY_GROUPS_STALE_MS = 5 * 60_000;
-
-/**
- * Say that your membership just changed.
- *
- * Call this next to the `['groups']` invalidation at every write that adds or
- * removes *you* from a group. It lives here because the key does: five call
- * sites spread across create, join-by-code, join-by-link, invite-accept and
- * leave already drifted apart once, which is the whole of PLA-78.
- *
- * Not needed for a write that changes somebody *else's* membership (removing a
- * member, approving a request). Their client hears it over realtime, and yours
- * has nothing to update.
- */
-export function invalidateMyGroups(queryClient: QueryClient): void {
-  void queryClient.invalidateQueries({ queryKey: MY_GROUPS_KEY });
-}
 
 /**
  * The groups you're in, and whether we know yet.
@@ -66,7 +62,7 @@ export function useMyGroups() {
   const { user } = useAuthStore();
 
   const { data, isPending } = useQuery({
-    queryKey: ['my-groups', user?.id],
+    queryKey: myGroupsKey(user?.id),
     staleTime: MY_GROUPS_STALE_MS,
     refetchOnWindowFocus: true,
     queryFn: async (): Promise<MyGroup[]> => {
