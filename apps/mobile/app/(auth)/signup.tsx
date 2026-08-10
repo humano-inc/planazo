@@ -1,15 +1,6 @@
 import { useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link, useLocalSearchParams, useRouter } from 'expo-router';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { decode } from 'base64-arraybuffer';
@@ -21,8 +12,15 @@ import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
 import { useAuthStore } from '../../stores/authStore';
 import { ConfirmEmailStep } from '../../components/auth/ConfirmEmailStep';
-import { Avatar, Button, FooterBar, FormField, ThemedText } from '../../components/ui';
-import { colors, fonts, spacing } from '../../theme/tokens';
+import {
+  Avatar,
+  Button,
+  FooterPrompt,
+  FormField,
+  FormScreen,
+  ThemedText,
+} from '../../components/ui';
+import { colors, spacing } from '../../theme/tokens';
 
 const MIN_PASSWORD = 6;
 
@@ -205,111 +203,28 @@ export default function SignupScreen() {
     );
   }
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <View style={styles.backRow}>
-        <Pressable
-          accessibilityRole="button"
-          hitSlop={LINK_HIT_SLOP}
-          onPress={goBack}
-          testID="back"
-        >
-          <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-            ‹ Back
-          </ThemedText>
-        </Pressable>
-      </View>
-
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+  const backRow = (
+    <View style={styles.backRow}>
+      <Pressable
+        accessibilityRole="button"
+        hitSlop={LINK_HIT_SLOP}
+        onPress={goBack}
+        testID="back"
       >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-        >
-          <ThemedText variant="screenTitle">Make your account</ThemedText>
-          <ThemedText variant="body" color={colors.textSecondary} style={styles.blurb}>
-            One minute, and you can start your first plan.
-          </ThemedText>
+        <ThemedText variant="bodyStrong" color={colors.textSecondary}>
+          ‹ Back
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
 
-          <View style={styles.photoBlock}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={pickImage}
-              style={styles.avatarWrap}
-              testID="avatar-press"
-            >
-              <Avatar name={displayName.trim() || '?'} size={84} imageUrl={avatarUri} />
-              <View style={styles.badge}>
-                <ThemedText variant="caption" color={colors.textOnAccent}>
-                  ✦
-                </ThemedText>
-              </View>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={LINK_HIT_SLOP}
-              onPress={pickImage}
-              testID="add-photo"
-            >
-              <ThemedText variant="caption" color={colors.accentText}>
-                Add a photo (optional)
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          <View style={styles.fields}>
-            <FormField
-              label="Your name"
-              value={displayName}
-              onChangeText={setDisplayName}
-              placeholder="Your name"
-              autoComplete="name"
-              hint="It's what your groups see next to your yes."
-              testID="name-input"
-            />
-
-            <FormField
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="your@email.com"
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              autoComplete="email"
-              testID="email-input"
-            />
-
-            <FormField
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              placeholder={`At least ${MIN_PASSWORD} characters`}
-              autoCapitalize="none"
-              autoComplete="new-password"
-              secure
-              testID="password-input"
-            />
-          </View>
-
-          {error ? (
-            <View
-              style={styles.errorBox}
-              accessibilityRole="alert"
-              accessibilityLiveRegion="assertive"
-              testID="signup-error"
-            >
-              <ThemedText variant="bodyStrong" color={colors.accentText}>
-                {error}
-              </ThemedText>
-            </View>
-          ) : null}
-        </ScrollView>
-
-        <FooterBar>
+  return (
+    <FormScreen
+      header={backRow}
+      contentContainerStyle={styles.scroll}
+      testID="signup"
+      footer={
+        <>
           <Button
             label={loading ? 'Making your account…' : step.label}
             variant={step.ready ? 'primary' : 'secondary'}
@@ -317,37 +232,104 @@ export default function SignupScreen() {
             onPress={handleSignup}
             testID="create-account"
           />
-          <View style={styles.footerRow}>
-            <ThemedText variant="sub">Already have an account?</ThemedText>
-            <Link href="/(auth)/login" asChild>
-              <Pressable accessibilityRole="button" hitSlop={LINK_HIT_SLOP} testID="login-link">
-                <ThemedText variant="sub" color={colors.accentText} style={styles.footerLink}>
-                  Sign in
-                </ThemedText>
-              </Pressable>
-            </Link>
+          <FooterPrompt
+            prompt="Already have an account?"
+            action="Sign in"
+            href="/(auth)/login"
+            testID="login-link"
+          />
+        </>
+      }
+    >
+      <ThemedText variant="screenTitle">Make your account</ThemedText>
+      <ThemedText variant="body" color={colors.textSecondary} style={styles.blurb}>
+        One minute, and you can start your first plan.
+      </ThemedText>
+
+      <View style={styles.photoBlock}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={pickImage}
+          style={styles.avatarWrap}
+          testID="avatar-press"
+        >
+          <Avatar name={displayName.trim() || '?'} size={84} imageUrl={avatarUri} />
+          <View style={styles.badge}>
+            <ThemedText variant="caption" color={colors.textOnAccent}>
+              ✦
+            </ThemedText>
           </View>
-        </FooterBar>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={LINK_HIT_SLOP}
+          onPress={pickImage}
+          testID="add-photo"
+        >
+          <ThemedText variant="caption" color={colors.accentText}>
+            Add a photo (optional)
+          </ThemedText>
+        </Pressable>
+      </View>
+
+      <View style={styles.fields}>
+        <FormField
+          label="Your name"
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholder="Your name"
+          autoComplete="name"
+          hint="It's what your groups see next to your yes."
+          testID="name-input"
+        />
+
+        <FormField
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          placeholder="your@email.com"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          autoComplete="email"
+          testID="email-input"
+        />
+
+        <FormField
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          placeholder={`At least ${MIN_PASSWORD} characters`}
+          autoCapitalize="none"
+          autoComplete="new-password"
+          secure
+          testID="password-input"
+        />
+      </View>
+
+      {error ? (
+        <View
+          style={styles.errorBox}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive"
+          testID="signup-error"
+        >
+          <ThemedText variant="bodyStrong" color={colors.accentText}>
+            {error}
+          </ThemedText>
+        </View>
+      ) : null}
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
   backRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.xl,
     paddingTop: 6,
   },
   scroll: {
-    paddingHorizontal: spacing.xl,
     paddingTop: 18,
     paddingBottom: spacing.xxl,
   },
@@ -386,17 +368,5 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // At accessibility text sizes "First time here?" and its link no longer
-    // fit side by side; wrapping stacks them instead of running off-screen.
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  footerLink: {
-    fontFamily: fonts.bodyBold,
   },
 });

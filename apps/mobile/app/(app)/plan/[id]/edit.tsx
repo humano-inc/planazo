@@ -1,21 +1,11 @@
 import { useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../../lib/supabase';
 import { useDismissTo } from '../../../../lib/navigation';
 import { contentViolation } from '../../../../lib/moderation';
-import { ThemedText } from '../../../../components/ui';
+import { FormScreen, ThemedText } from '../../../../components/ui';
 import { colors, fonts, radii, spacing, type } from '../../../../theme/tokens';
 
 /**
@@ -119,96 +109,80 @@ export default function EditPlanScreen() {
     onError: (error: Error) => Alert.alert('Error', error.message),
   });
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
-        <Pressable onPress={leave} accessibilityRole="button" testID="cancel">
-          <ThemedText variant="bodyStrong" color={colors.textMuted}>
-            Cancel
-          </ThemedText>
-        </Pressable>
-        <ThemedText style={styles.headerTitle}>Edit plan</ThemedText>
-        <Pressable
-          onPress={() => save.mutate()}
-          disabled={!dirty || !valid || save.isPending}
-          accessibilityRole="button"
-          testID="save"
+  const header = (
+    <View style={styles.header}>
+      <Pressable onPress={leave} accessibilityRole="button" testID="cancel">
+        <ThemedText variant="bodyStrong" color={colors.textMuted}>
+          Cancel
+        </ThemedText>
+      </Pressable>
+      <ThemedText style={styles.headerTitle}>Edit plan</ThemedText>
+      <Pressable
+        onPress={() => save.mutate()}
+        disabled={!dirty || !valid || save.isPending}
+        accessibilityRole="button"
+        testID="save"
+      >
+        <ThemedText
+          variant="bodyStrong"
+          color={dirty && valid ? colors.accent : colors.textFaint}
         >
-          <ThemedText
-            variant="bodyStrong"
-            color={dirty && valid ? colors.accent : colors.textFaint}
-          >
-            Save
-          </ThemedText>
-        </Pressable>
+          Save
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
+
+  return (
+    <FormScreen header={header} contentContainerStyle={styles.content} testID="plan-edit">
+      <View style={styles.titleBlock}>
+        <TextInput
+          style={styles.titleInput}
+          placeholder="Padel? Paella? Poker?"
+          placeholderTextColor={colors.textFaint}
+          value={draftTitle}
+          onChangeText={setTitle}
+          testID="title-input"
+        />
+        <View style={styles.rule} />
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.titleBlock}>
-            <TextInput
-              style={styles.titleInput}
-              placeholder="Padel? Paella? Poker?"
-              placeholderTextColor={colors.textFaint}
-              value={draftTitle}
-              onChangeText={setTitle}
-              testID="title-input"
-            />
-            <View style={styles.rule} />
-          </View>
+      <View style={styles.section}>
+        <ThemedText variant="sectionLabel">Where</ThemedText>
+        <TextInput
+          style={styles.input}
+          placeholder="Where's it happening?"
+          placeholderTextColor={colors.textFaint}
+          value={draftPlace}
+          onChangeText={setPlace}
+          testID="location-input"
+        />
+      </View>
 
-          <View style={styles.section}>
-            <ThemedText variant="sectionLabel">Where</ThemedText>
-            <TextInput
-              style={styles.input}
-              placeholder="Where's it happening?"
-              placeholderTextColor={colors.textFaint}
-              value={draftPlace}
-              onChangeText={setPlace}
-              testID="location-input"
-            />
-          </View>
+      <View style={styles.section}>
+        <ThemedText variant="sectionLabel">Anything they should know</ThemedText>
+        <TextInput
+          style={[styles.input, styles.notes]}
+          placeholder="Bring cash, wear trainers…"
+          placeholderTextColor={colors.textFaint}
+          value={draftNotes}
+          onChangeText={setNotes}
+          multiline
+          testID="notes-input"
+        />
+      </View>
 
-          <View style={styles.section}>
-            <ThemedText variant="sectionLabel">Anything they should know</ThemedText>
-            <TextInput
-              style={[styles.input, styles.notes]}
-              placeholder="Bring cash, wear trainers…"
-              placeholderTextColor={colors.textFaint}
-              value={draftNotes}
-              onChangeText={setNotes}
-              multiline
-              testID="notes-input"
-            />
-          </View>
-
-          {/* Said out loud rather than left to be discovered: an edit is
-              silent. Whoever is already in finds out by opening the plan. */}
-          <ThemedText variant="caption" color={colors.textMuted} style={styles.hint}>
-            Nobody gets a notification. They'll see the change next time they open the plan. The
-            date, the group and the numbers stay as they are.
-          </ThemedText>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      {/* Said out loud rather than left to be discovered: an edit is
+          silent. Whoever is already in finds out by opening the plan. */}
+      <ThemedText variant="caption" color={colors.textMuted} style={styles.hint}>
+        Nobody gets a notification. They'll see the change next time they open the plan. The
+        date, the group and the numbers stay as they are.
+      </ThemedText>
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -224,9 +198,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   content: {
-    paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
-    paddingBottom: 40,
     gap: 22,
   },
   titleBlock: {

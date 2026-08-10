@@ -119,27 +119,22 @@ describe('LoginScreen', () => {
    * Layout guards. RNTL cannot lay anything out, so these assert the style and
    * structure decisions behind two bugs rather than the pixels: a `flex: 1`
    * body clamped to the ScrollView height, so overflowing content was clipped
-   * instead of scrollable at Accessibility XXXL; a non-wrapping footer row that
-   * ran off the side of the screen at those sizes; and the footer living inside
+   * instead of scrollable at Accessibility XXXL; and the footer living inside
    * the scrolling content, where a raised keyboard pushed it below the fold and
    * first-timers never found the way to sign up (PLA-69).
+   *
+   * The third guard, that the prompt row wraps rather than running off the
+   * side, now sits on `FooterPrompt` itself, so it holds for all four screens
+   * that carry one instead of only this one.
    */
   it('lets the form grow past the viewport rather than clamping it', async () => {
     await render(<LoginScreen />);
 
-    const scroll = screen.getByTestId('login-scroll');
-    expect(StyleSheet.flatten(scroll.props.contentContainerStyle).flexGrow).toBe(1);
-
-    const body = StyleSheet.flatten(screen.getByTestId('login-body').props.style);
-    expect(body.flexGrow).toBe(1);
-    expect(body.flex).toBeUndefined();
-  });
-
-  it('wraps the footer instead of running it off the screen', async () => {
-    await render(<LoginScreen />);
-    const row = StyleSheet.flatten(screen.getByTestId('login-footer-row').props.style);
-
-    expect(row.flexWrap).toBe('wrap');
+    const content = StyleSheet.flatten(
+      screen.getByTestId('login-scroll').props.contentContainerStyle,
+    );
+    expect(content.flexGrow).toBe(1);
+    expect(content.flex).toBeUndefined();
   });
 
   it('keeps both ways out of the screen clear of the keyboard', async () => {

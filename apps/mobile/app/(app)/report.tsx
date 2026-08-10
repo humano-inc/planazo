@@ -1,16 +1,5 @@
 import { useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  TextInput,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, Pressable, StyleSheet, Switch, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
@@ -24,7 +13,7 @@ import {
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
 import { useAuthStore } from '../../stores/authStore';
-import { Card, ThemedText, showToast } from '../../components/ui';
+import { Card, FormScreen, ThemedText, showToast } from '../../components/ui';
 import { colors, fonts, spacing } from '../../theme/tokens';
 
 const SUBJECT_NOUN: Record<ReportSubject, string> = {
@@ -109,132 +98,116 @@ export default function ReportScreen() {
     onError: (error: Error) => Alert.alert("Couldn't send that", error.message),
   });
 
+  const header = (
+    <View style={styles.header}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={leave}
+        testID="cancel"
+        style={styles.headerAction}
+      >
+        <ThemedText variant="bodyStrong" color={colors.textSecondary}>
+          Cancel
+        </ThemedText>
+      </Pressable>
+      <ThemedText style={styles.headerTitle}>Report {SUBJECT_NOUN[subjectType]}</ThemedText>
+      <Pressable
+        accessibilityRole="button"
+        disabled={!valid || send.isPending}
+        onPress={() => send.mutate()}
+        testID="send-report"
+        style={[styles.headerAction, styles.headerActionEnd]}
+      >
+        <ThemedText variant="bodyStrong" color={valid ? colors.accentText : colors.textFaint}>
+          {send.isPending ? 'Sending…' : 'Send'}
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          onPress={leave}
-          testID="cancel"
-          style={styles.headerAction}
-        >
-          <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-            Cancel
-          </ThemedText>
-        </Pressable>
-        <ThemedText style={styles.headerTitle}>Report {SUBJECT_NOUN[subjectType]}</ThemedText>
-        <Pressable
-          accessibilityRole="button"
-          disabled={!valid || send.isPending}
-          onPress={() => send.mutate()}
-          testID="send-report"
-          style={[styles.headerAction, styles.headerActionEnd]}
-        >
-          <ThemedText variant="bodyStrong" color={valid ? colors.accentText : colors.textFaint}>
-            {send.isPending ? 'Sending…' : 'Send'}
-          </ThemedText>
-        </Pressable>
+    <FormScreen header={header} contentContainerStyle={styles.content} testID="report">
+      {params.subject ? (
+        <ThemedText variant="body" color={colors.textSecondary}>
+          You’re reporting{' '}
+          <ThemedText variant="bodyStrong">{params.subject}</ThemedText>.
+        </ThemedText>
+      ) : null}
+
+      <View style={styles.section}>
+        <ThemedText variant="sectionLabel">What’s wrong with it?</ThemedText>
+        <Card padded={false}>
+          {REPORT_REASONS.map((r, index) => {
+            const active = reason === r.key;
+            return (
+              <Pressable
+                key={r.key}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: active }}
+                onPress={() => setReason(r.key)}
+                style={({ pressed }) => [
+                  styles.reasonRow,
+                  index > 0 && styles.reasonDivider,
+                  pressed && styles.pressed,
+                ]}
+                testID={`reason-${r.key}`}
+              >
+                <View style={styles.reasonBody}>
+                  <ThemedText variant="bodyStrong">{r.label}</ThemedText>
+                  <ThemedText variant="caption">{r.blurb}</ThemedText>
+                </View>
+                <View style={[styles.radio, active && styles.radioOn]}>
+                  {active ? <View style={styles.radioDot} /> : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </Card>
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-        >
-          {params.subject ? (
-            <ThemedText variant="body" color={colors.textSecondary}>
-              You’re reporting{' '}
-              <ThemedText variant="bodyStrong">{params.subject}</ThemedText>.
-            </ThemedText>
-          ) : null}
+      <View style={styles.noteWrap}>
+        <TextInput
+          value={note}
+          onChangeText={setNote}
+          placeholder="Anything else we should know? (optional)"
+          placeholderTextColor={colors.textFaint}
+          style={styles.note}
+          accessibilityLabel="More about this report"
+          multiline
+          testID="report-note"
+        />
+      </View>
 
-          <View style={styles.section}>
-            <ThemedText variant="sectionLabel">What’s wrong with it?</ThemedText>
-            <Card padded={false}>
-              {REPORT_REASONS.map((r, index) => {
-                const active = reason === r.key;
-                return (
-                  <Pressable
-                    key={r.key}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: active }}
-                    onPress={() => setReason(r.key)}
-                    style={({ pressed }) => [
-                      styles.reasonRow,
-                      index > 0 && styles.reasonDivider,
-                      pressed && styles.pressed,
-                    ]}
-                    testID={`reason-${r.key}`}
-                  >
-                    <View style={styles.reasonBody}>
-                      <ThemedText variant="bodyStrong">{r.label}</ThemedText>
-                      <ThemedText variant="caption">{r.blurb}</ThemedText>
-                    </View>
-                    <View style={[styles.radio, active && styles.radioOn]}>
-                      {active ? <View style={styles.radioDot} /> : null}
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </Card>
-          </View>
-
-          <View style={styles.noteWrap}>
-            <TextInput
-              value={note}
-              onChangeText={setNote}
-              placeholder="Anything else we should know? (optional)"
-              placeholderTextColor={colors.textFaint}
-              style={styles.note}
-              accessibilityLabel="More about this report"
-              multiline
-              testID="report-note"
+      {personId ? (
+        <Card padded={false}>
+          <View style={styles.blockRow}>
+            <View style={styles.reasonBody}>
+              <ThemedText variant="bodyStrong">Block {personName}</ThemedText>
+              <ThemedText variant="caption">
+                You stop seeing their plans. They aren’t told, and they stay in the group
+                until an admin says otherwise.
+              </ThemedText>
+            </View>
+            <Switch
+              value={alsoBlock}
+              onValueChange={setAlsoBlock}
+              trackColor={{ false: colors.borderStrong, true: colors.accent }}
+              ios_backgroundColor={colors.borderStrong}
+              testID="also-block"
             />
           </View>
+        </Card>
+      ) : null}
 
-          {personId ? (
-            <Card padded={false}>
-              <View style={styles.blockRow}>
-                <View style={styles.reasonBody}>
-                  <ThemedText variant="bodyStrong">Block {personName}</ThemedText>
-                  <ThemedText variant="caption">
-                    You stop seeing their plans. They aren’t told, and they stay in the group
-                    until an admin says otherwise.
-                  </ThemedText>
-                </View>
-                <Switch
-                  value={alsoBlock}
-                  onValueChange={setAlsoBlock}
-                  trackColor={{ false: colors.borderStrong, true: colors.accent }}
-                  ios_backgroundColor={colors.borderStrong}
-                  testID="also-block"
-                />
-              </View>
-            </Card>
-          ) : null}
-
-          <ThemedText variant="caption" color={colors.textFaint} style={styles.privacy}>
-            Reports go to us, not to the group. Whoever you’re reporting is never told who
-            reported them.
-          </ThemedText>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <ThemedText variant="caption" color={colors.textFaint} style={styles.privacy}>
+        Reports go to us, not to the group. Whoever you’re reporting is never told who
+        reported them.
+      </ThemedText>
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -259,10 +232,10 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   content: {
+    // flexGrow, so `privacy` keeps its auto margin on a screen too short to
+    // scroll. FormScreen owns the horizontal padding and the bottom inset.
     flexGrow: 1,
-    paddingHorizontal: spacing.xl,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.xl,
     gap: spacing.xl,
   },
   section: {

@@ -2,14 +2,12 @@ import { useState } from 'react';
 import {
   ActionSheetIOS,
   Alert,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
 import { useDismissTo } from '../../../lib/navigation';
@@ -17,7 +15,7 @@ import { contentViolation } from '../../../lib/moderation';
 import { useAuthStore } from '../../../stores/authStore';
 import { pickFromLibrary, takePhoto, uploadAvatar } from '../../../lib/images';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
-import { Avatar, ThemedText } from '../../../components/ui';
+import { Avatar, FormScreen, ThemedText } from '../../../components/ui';
 import { colors, fonts, spacing } from '../../../theme/tokens';
 
 type PhotoDraft = { kind: 'keep' } | { kind: 'remove' } | { kind: 'new'; uri: string };
@@ -108,96 +106,84 @@ export default function ProfileEdit() {
     photo.kind === 'new' ? photo.uri : photo.kind === 'keep' ? profile?.avatar_url : null;
   const draftName = trimmed || profile?.display_name || '?';
 
+  const header = (
+    <View style={styles.header}>
+      <Pressable
+        accessibilityRole="button"
+        onPress={leave}
+        testID="cancel"
+        style={styles.headerAction}
+      >
+        <ThemedText variant="bodyStrong" color={colors.textSecondary}>
+          Cancel
+        </ThemedText>
+      </Pressable>
+      <ThemedText style={styles.headerTitle}>Your profile</ThemedText>
+      <Pressable
+        accessibilityRole="button"
+        disabled={!dirty || save.isPending}
+        onPress={() => save.mutate()}
+        testID="save"
+        style={[styles.headerAction, styles.headerActionEnd]}
+      >
+        <ThemedText variant="bodyStrong" color={dirty ? colors.accent : colors.textFaint}>
+          Save
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
+    <FormScreen header={header} contentContainerStyle={styles.body} testID="profile-edit">
+      <View style={styles.photoBlock}>
         <Pressable
           accessibilityRole="button"
-          onPress={leave}
-          testID="cancel"
-          style={styles.headerAction}
+          onPress={openPhotoOptions}
+          style={styles.avatarWrap}
+          testID="avatar-press"
         >
-          <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-            Cancel
-          </ThemedText>
+          <Avatar name={draftName} dark size={96} imageUrl={shownUri} />
+          <View style={styles.badge}>
+            <ThemedText variant="caption" color={colors.textOnAccent}>
+              ✦
+            </ThemedText>
+          </View>
         </Pressable>
-        <ThemedText style={styles.headerTitle}>Your profile</ThemedText>
         <Pressable
           accessibilityRole="button"
-          disabled={!dirty || save.isPending}
-          onPress={() => save.mutate()}
-          testID="save"
-          style={[styles.headerAction, styles.headerActionEnd]}
+          onPress={openPhotoOptions}
+          testID="change-photo"
+          style={styles.changePhotoAction}
         >
-          <ThemedText variant="bodyStrong" color={dirty ? colors.accent : colors.textFaint}>
-            Save
+          <ThemedText variant="bodyStrong" color={colors.accent} style={styles.changePhoto}>
+            Change photo
           </ThemedText>
         </Pressable>
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View style={styles.body}>
-          <View style={styles.photoBlock}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={openPhotoOptions}
-              style={styles.avatarWrap}
-              testID="avatar-press"
-            >
-              <Avatar name={draftName} dark size={96} imageUrl={shownUri} />
-              <View style={styles.badge}>
-                <ThemedText variant="caption" color={colors.textOnAccent}>
-                  ✦
-                </ThemedText>
-              </View>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              onPress={openPhotoOptions}
-              testID="change-photo"
-              style={styles.changePhotoAction}
-            >
-              <ThemedText variant="bodyStrong" color={colors.accent} style={styles.changePhoto}>
-                Change photo
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          <View style={styles.field}>
-            <ThemedText variant="sectionLabel">Your name</ThemedText>
-            <View style={styles.inputWrap}>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                placeholder="Your name"
-                placeholderTextColor={colors.textFaint}
-                style={styles.input}
-                autoFocus
-                testID="name-input"
-              />
-            </View>
-            <ThemedText variant="caption" style={styles.hint}>
-              This is what your groups see next to your yes.
-              {profile?.handle ? ` Your handle @${profile.handle} can't change. Invite links point at it.` : ''}
-            </ThemedText>
-          </View>
+      <View style={styles.field}>
+        <ThemedText variant="sectionLabel">Your name</ThemedText>
+        <View style={styles.inputWrap}>
+          <TextInput
+            value={name}
+            onChangeText={setName}
+            placeholder="Your name"
+            placeholderTextColor={colors.textFaint}
+            style={styles.input}
+            autoFocus
+            testID="name-input"
+          />
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        <ThemedText variant="caption" style={styles.hint}>
+          This is what your groups see next to your yes.
+          {profile?.handle ? ` Your handle @${profile.handle} can't change. Invite links point at it.` : ''}
+        </ThemedText>
+      </View>
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -221,8 +207,10 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   body: {
-    flex: 1,
-    paddingHorizontal: spacing.xl,
+    // This screen had no ScrollView at all, so at large text sizes the hint
+    // under the name field simply ran off the bottom. flexGrow keeps the
+    // spacing it had while letting it scroll when it no longer fits.
+    flexGrow: 1,
     paddingTop: 14,
     gap: 26,
   },

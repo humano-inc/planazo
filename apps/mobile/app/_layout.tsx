@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet, AppState, AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -346,10 +347,25 @@ function RootLayout() {
 
   return (
     <Sentry.ErrorBoundary fallback={({ resetError }) => <CrashFallback resetError={resetError} />}>
-      <QueryClientProvider client={queryClient}>
-        <StatusBar style="dark" />
-        <InitialLayout />
-      </QueryClientProvider>
+      {/*
+        Above every screen, because FormScreen's keyboard-aware scrolling and
+        sticky footers read the keyboard from this context (PLA-74). It has to
+        sit outside the router: (auth) and (app) have their own layouts, and a
+        provider in either would leave the other guessing at the keyboard the
+        way all twelve form screens used to.
+
+        `preload` is left at its default (on), which builds UIKit's keyboard
+        once during launch. The app opens onto the feed, which has no input, so
+        that work is spent on a screen that will not raise one. It buys the
+        first tap into a field an animation that is not janky, and this is the
+        issue about forms feeling right.
+      */}
+      <KeyboardProvider>
+        <QueryClientProvider client={queryClient}>
+          <StatusBar style="dark" />
+          <InitialLayout />
+        </QueryClientProvider>
+      </KeyboardProvider>
     </Sentry.ErrorBoundary>
   );
 }

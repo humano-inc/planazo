@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react';
-import { View, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { useFriends } from '../../lib/useFriends';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
-import { ThemedText, Card, Avatar, SearchField } from '../../components/ui';
+import { ThemedText, Card, Avatar, FormScreen, SearchField } from '../../components/ui';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 
 interface PersonRow {
@@ -201,8 +200,11 @@ export default function FindPeopleScreen() {
   // Keep just-requested people visible — Add becomes Requested in place (17b)
   const suggestions = (sharedPeople ?? []).filter((p) => relationOf(p.id) !== 'friend');
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
+  // The search box is fixed above the scroll rather than in it: it is the one
+  // control this screen is for, and it autofocuses, so it must not be the first
+  // thing a raised keyboard pushes away.
+  const header = (
+    <>
       <View style={styles.navRow}>
         <Pressable
           onPress={goBack}
@@ -224,64 +226,55 @@ export default function FindPeopleScreen() {
           testID="search-input"
         />
       </View>
+    </>
+  );
 
-      <ScrollView
-        style={styles.flex}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-      >
-        {searching ? (
-          <View style={styles.section}>
-            <ThemedText variant="sectionLabel">Results</ThemedText>
-            {(results ?? []).length === 0 ? (
-              <ThemedText variant="sub">No one by that name or handle yet.</ThemedText>
-            ) : (
-              renderRows(results ?? [])
-            )}
-          </View>
-        ) : (
-          <>
-            {suggestions.length > 0 ? (
-              <View style={styles.section}>
-                <ThemedText variant="sectionLabel">You've planned together</ThemedText>
-                {renderRows(suggestions)}
-              </View>
-            ) : null}
+  return (
+    <FormScreen header={header} contentContainerStyle={styles.content} testID="find-people">
+      {searching ? (
+        <View style={styles.section}>
+          <ThemedText variant="sectionLabel">Results</ThemedText>
+          {(results ?? []).length === 0 ? (
+            <ThemedText variant="sub">No one by that name or handle yet.</ThemedText>
+          ) : (
+            renderRows(results ?? [])
+          )}
+        </View>
+      ) : (
+        <>
+          {suggestions.length > 0 ? (
+            <View style={styles.section}>
+              <ThemedText variant="sectionLabel">You've planned together</ThemedText>
+              {renderRows(suggestions)}
+            </View>
+          ) : null}
 
-            {friends.length > 0 ? (
-              <View style={styles.section}>
-                <ThemedText variant="sectionLabel">Your people</ThemedText>
-                {renderRows(
-                  friends.map((f) => ({
-                    id: f.id,
-                    name: f.name,
-                    handle: f.handle,
-                    avatarUrl: f.avatarUrl,
-                    note: null,
-                  }))
-                )}
-              </View>
-            ) : null}
-          </>
-        )}
+          {friends.length > 0 ? (
+            <View style={styles.section}>
+              <ThemedText variant="sectionLabel">Your people</ThemedText>
+              {renderRows(
+                friends.map((f) => ({
+                  id: f.id,
+                  name: f.name,
+                  handle: f.handle,
+                  avatarUrl: f.avatarUrl,
+                  note: null,
+                }))
+              )}
+            </View>
+          ) : null}
+        </>
+      )}
 
-        <ThemedText variant="caption" color={colors.textFaint} style={styles.footnote}>
-          People can only find you by your name or @handle. Your plans and groups stay hidden
-          until you accept.
-        </ThemedText>
-      </ScrollView>
-    </SafeAreaView>
+      <ThemedText variant="caption" color={colors.textFaint} style={styles.footnote}>
+        People can only find you by your name or @handle. Your plans and groups stay hidden
+        until you accept.
+      </ThemedText>
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
   navRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -318,8 +311,6 @@ const styles = StyleSheet.create({
     paddingBottom: 14,
   },
   content: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: 40,
     gap: spacing.xl,
   },
   section: {
