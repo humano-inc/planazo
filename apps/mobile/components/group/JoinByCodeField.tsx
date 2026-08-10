@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { View, StyleSheet, Pressable, TextInput } from 'react-native';
-import type { StyleProp, ViewStyle } from 'react-native';
 import { useRouter } from 'expo-router';
 import { inviteCodeFrom } from '../../lib/inviteCode';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
-import { ThemedText } from '../ui';
+// Straight at the file, not through `components/ui`: the barrel reaches
+// `lib/supabase` via the photo field, which reads `EXPO_PUBLIC_*` at import
+// time and doubles this component's test suite.
+import { ThemedText } from '../ui/ThemedText';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 
 /**
@@ -22,7 +24,7 @@ import { colors, fonts, radii, spacing } from '../../theme/tokens';
  * (PLA-49). Joining from here instead was the older shape, and it meant the two
  * ways in disagreed about whether you get to see what you are walking into.
  */
-export function JoinByCodeField({ style }: { style?: StyleProp<ViewStyle> }) {
+export function JoinByCodeField() {
   const router = useRouter();
   const [text, setText] = useState('');
 
@@ -37,7 +39,7 @@ export function JoinByCodeField({ style }: { style?: StyleProp<ViewStyle> }) {
   };
 
   return (
-    <View style={[styles.row, style]}>
+    <View style={styles.row}>
       <TextInput
         style={styles.input}
         placeholder="Paste an invite link"
@@ -83,6 +85,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
     paddingLeft: spacing.lg,
     paddingRight: spacing.sm,
+    marginTop: spacing.lg,
   },
   input: {
     flex: 1,
@@ -96,7 +99,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     paddingVertical: spacing.sm,
     paddingHorizontal: 14,
-    // Was 34 (8 + 18 + 8) — the only way to act on a code you just typed.
+    // Was 34 (8 + 18 + 8). A code you just typed has to be actionable by thumb,
+    // not only by the keyboard's go key.
     justifyContent: 'center',
     minHeight: MIN_TOUCH_TARGET,
   },

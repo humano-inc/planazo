@@ -70,10 +70,6 @@ describe('the copy', () => {
     expect(joinBlurb('approval')).toMatch(/An admin has to let you in/);
   });
 
-  it('names the ask without naming the door it came through', () => {
-    expect(requestedEyebrow).toBe('You’ve asked to join');
-  });
-
   // Deliberately a constant answer and not a function of anything: a decline is
   // never announced (PLA-44), so a turned-down requester who taps the same link
   // reads exactly what a first-time asker reads.

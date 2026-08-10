@@ -1,7 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import GroupsScreen from '../groups';
-import { inviteCodeFrom } from '../../../../lib/inviteCode';
 import { useAuthStore } from '../../../../stores/authStore';
 import { supabase } from '../../../../lib/supabase';
 
@@ -25,16 +24,14 @@ let plans: any[] = [];
 let groupInvites: any[] = [];
 let pendingRequests: any[] = [];
 let acceptedFriendships: any[] = [];
-let gmInserts: jest.Mock[] = [];
 
 /**
- * group_members serves three queries on this screen; which result a chain
+ * group_members serves two queries on this screen; which result a chain
  * resolves to depends on how it was built (eq user_id = memberships,
- * in group_id = counts, insert = join). friendships resolves by the
- * status filter (pending = requests, accepted = friends).
+ * in group_id = counts). friendships resolves by the status filter
+ * (pending = requests, accepted = friends).
  */
 function primeSupabase() {
-  gmInserts = [];
   mockFrom.mockImplementation((table: string) => {
     const c: any = {};
     let kind = table;
@@ -50,24 +47,17 @@ function primeSupabase() {
       if (table === 'group_members') kind = 'counts';
       return c;
     });
-    c.insert = jest.fn(() => {
-      kind = 'insert';
-      return c;
-    });
-    if (table === 'group_members') gmInserts.push(c.insert);
     c.then = (resolve: (v: unknown) => void) => {
       const result =
-        kind === 'insert'
-          ? { error: null }
-          : kind === 'counts'
-            ? { data: counts, error: null }
-            : table === 'group_invites'
-              ? { data: groupInvites, error: null }
-              : table === 'friendships'
-                ? { data: status === 'pending' ? pendingRequests : acceptedFriendships, error: null }
-                : kind === 'group_members'
-                  ? { data: memberships, error: null }
-                  : { data: plans, error: null };
+        kind === 'counts'
+          ? { data: counts, error: null }
+          : table === 'group_invites'
+            ? { data: groupInvites, error: null }
+            : table === 'friendships'
+              ? { data: status === 'pending' ? pendingRequests : acceptedFriendships, error: null }
+              : kind === 'group_members'
+                ? { data: memberships, error: null }
+                : { data: plans, error: null };
       return Promise.resolve(result).then(resolve);
     };
     return c;
@@ -92,20 +82,9 @@ beforeEach(() => {
   pendingRequests = [];
   acceptedFriendships = [];
   primeSupabase();
-  mockRpc.mockResolvedValue({ data: null, error: null });
   useAuthStore.setState({
     user: { id: 'me' } as any,
     profile: { id: 'me', display_name: 'Rocío', avatar_url: null } as any,
-  });
-});
-
-describe('inviteCodeFrom', () => {
-  it('finds a code in a link, a raw code, and rejects garbage', () => {
-    expect(inviteCodeFrom('planazo://join/ABCD2345')).toBe('ABCD2345');
-    expect(inviteCodeFrom('abcd2345')).toBe('ABCD2345');
-    expect(inviteCodeFrom('join my group!')).toBeNull();
-    // 0, 1, I and O are not in the code alphabet
-    expect(inviteCodeFrom('ABC10OI2')).toBeNull();
   });
 });
 
@@ -269,7 +248,6 @@ describe('GroupsScreen', () => {
 
     expect(mockPush).toHaveBeenCalledWith('/(app)/join/ABCD2345');
     expect(mockRpc).not.toHaveBeenCalled();
-    expect(gmInserts.every((ins) => ins.mock.calls.length === 0)).toBe(true);
   });
 
 });

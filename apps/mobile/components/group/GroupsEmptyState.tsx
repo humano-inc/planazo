@@ -9,10 +9,9 @@ import { colors, spacing } from '../../theme/tokens';
  * 16a: two ways in, and they're not equal — the link field is real,
  * creating is second, and the header pill stays gone.
  *
- * This is also where somebody lands when the store broke the chain: they tapped
- * an invite, installed from it, and arrived with no memory of the code. The
- * field is the way back in for them, which is why it sits above the fold on the
- * one screen they are guaranteed to see (PLA-80).
+ * `JoinByCodeField` owns the case it exists for; this screen only claims the
+ * placement, above the fold on the one screen everybody is guaranteed to see
+ * (PLA-80).
  */
 export function GroupsEmptyState() {
   const router = useRouter();
@@ -28,7 +27,7 @@ export function GroupsEmptyState() {
         group, not to everybody.
       </ThemedText>
 
-      <JoinByCodeField style={styles.joinField} />
+      <JoinByCodeField />
       <View style={styles.orRow}>
         <View style={styles.orLine} />
         <ThemedText variant="caption" color={colors.textFaint}>
@@ -56,9 +55,6 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     paddingTop: spacing.xs,
-  },
-  joinField: {
-    marginTop: spacing.lg,
   },
   orRow: {
     flexDirection: 'row',

@@ -7,11 +7,6 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
-// The field touches no network at all. It reaches `lib/supabase` only through
-// the `components/ui` barrel, which pulls in the photo field, which needs real
-// `EXPO_PUBLIC_*` values at import time.
-jest.mock('../../../lib/supabase', () => ({ supabase: {} }));
-
 beforeEach(() => {
   jest.clearAllMocks();
 });
@@ -25,21 +20,15 @@ async function paste(text: string) {
 /**
  * The field's whole job is turning what somebody pasted into a route. It joins
  * nothing itself (PLA-80), so every test here ends at a push.
+ *
+ * What counts as a code is `inviteCodeFrom`'s business and is tested against
+ * the function in `lib/__tests__/inviteCode.test.ts`. These cover the wiring:
+ * a code becomes a route, no code becomes nothing.
  */
 describe('JoinByCodeField', () => {
   it('opens the join screen with the code pulled out of a whole link', async () => {
     await paste('https://planazo.me/join/ABCD2345');
     expect(mockPush).toHaveBeenCalledWith('/(app)/join/ABCD2345');
-  });
-
-  it('takes a bare code too, in whatever case it arrives', async () => {
-    await paste('abcd2345');
-    expect(mockPush).toHaveBeenCalledWith('/(app)/join/ABCD2345');
-  });
-
-  it('finds the code in a sentence somebody typed around it', async () => {
-    await paste('join us! planazo://join/K4M7P2QR');
-    expect(mockPush).toHaveBeenCalledWith('/(app)/join/K4M7P2QR');
   });
 
   it('goes nowhere on an empty field', async () => {
@@ -50,13 +39,6 @@ describe('JoinByCodeField', () => {
 
   it('goes nowhere on text with no code in it', async () => {
     await paste('join my group!');
-    expect(mockPush).not.toHaveBeenCalled();
-  });
-
-  // 0, 1, I and O are not in the code alphabet, so eight characters is not
-  // enough on its own to be a code.
-  it('goes nowhere on eight characters that cannot be a code', async () => {
-    await paste('ABC10OI2');
     expect(mockPush).not.toHaveBeenCalled();
   });
 
