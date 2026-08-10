@@ -220,21 +220,49 @@ describe('GroupAdminsScreen', () => {
     expect(screen.queryByTestId('admins-note')).toBeNull();
   });
 
-  it('a failed write surfaces as an alert', async () => {
-    await renderAdmins();
-
-    const button = await screen.findByTestId('promote-u2');
+  /** Makes the next role write fail with `error`, whatever the screen sends. */
+  function failNextWrite(error: unknown) {
     mockFrom.mockImplementation(() => {
       const c: any = {};
       ['update', 'eq'].forEach((m) => {
         c[m] = jest.fn(() => c);
       });
-      c.then = (resolve: (v: unknown) => void) =>
-        Promise.resolve({ error: new Error('nope') }).then(resolve);
+      c.then = (resolve: (v: unknown) => void) => Promise.resolve({ error }).then(resolve);
       return c;
     });
+  }
+
+  it('a failed write surfaces as an alert, never as the raw message', async () => {
+    await renderAdmins();
+
+    const button = await screen.findByTestId('promote-u2');
+    failNextWrite(new Error('nope'));
     await fireEvent.press(button);
 
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Error', 'nope'));
+    await waitFor(() =>
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "That didn't go through",
+        'Something went wrong saving your answer. Try again.'
+      )
+    );
+  });
+
+  // PLA-86: the floor is in the database now, and this is the one way it can
+  // reach a person. Two admins step down at once, the other one lands first,
+  // and this screen is still showing the control it drew for two.
+  it('explains the last-admin floor when the database refuses a step-down', async () => {
+    group.group_members[1].role = 'admin';
+    await renderAdmins();
+
+    await fireEvent.press(await screen.findByTestId('demote-me'));
+    failNextWrite({ code: 'PT422', message: 'A group needs at least one admin' });
+    await fireEvent.press(screen.getByTestId('confirm-demote-confirm'));
+
+    await waitFor(() =>
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'A group needs an admin',
+        "You're the only admin left. Make someone else one first."
+      )
+    );
   });
 });

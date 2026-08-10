@@ -1,12 +1,17 @@
 import { useState } from 'react';
-import { View, ScrollView, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { GroupRole } from '@planazo/shared';
 import { supabase } from '../../../../lib/supabase';
 import { useAuthStore } from '../../../../stores/authStore';
-import { errorCopy, groupGoneCopy, isNotFoundError } from '../../../../lib/queryErrors';
+import {
+  alertActionError,
+  errorCopy,
+  groupGoneCopy,
+  isNotFoundError,
+} from '../../../../lib/queryErrors';
 import { groupManageQuery, invalidateGroup } from '../../../../lib/groupManageQuery';
 import { splitByRole, demoteConfirmCopy, memberName } from '../../../../lib/groupAdmins';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
@@ -46,7 +51,13 @@ export default function GroupAdminsScreen() {
       if (error) throw error;
     },
     onSuccess: () => invalidateGroup(queryClient, id),
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    // Refetching on the way out matters as much as the alert: a refused
+    // step-down means someone else stepped down first, so the list this screen
+    // is showing is already wrong and still offers the control (PLA-86).
+    onError: (error: unknown) => {
+      invalidateGroup(queryClient, id);
+      alertActionError(error);
+    },
   });
 
   if (!isLoading && (isError || !group)) {
