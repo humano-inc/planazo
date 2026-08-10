@@ -9,6 +9,9 @@ import { chooseFromSheet, mockActionSheet } from '../../../../lib/testing/action
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
+const mockReplace = jest.fn();
+/** False on a cold deep link: the screen mounts with nothing behind it. */
+let mockCanGoBack = true;
 
 jest.mock('../../../../lib/supabase', () => ({
   supabase: {
@@ -24,7 +27,12 @@ jest.mock('../../../../lib/images', () => ({
 }));
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, back: mockBack }),
+  useRouter: () => ({
+    push: mockPush,
+    back: mockBack,
+    replace: mockReplace,
+    canGoBack: () => mockCanGoBack,
+  }),
 }));
 
 
@@ -82,6 +90,7 @@ async function renderEdit() {
 beforeEach(() => {
   jest.clearAllMocks();
   mockActionSheet();
+  mockCanGoBack = true;
   primeSupabase();
   useAuthStore.setState({ user: { id: 'me' } as any, profile: { ...ME } as any });
 });
@@ -110,6 +119,18 @@ describe('ProfileEdit', () => {
       expect(useAuthStore.getState().profile?.display_name).toBe('Ro Vidal');
       expect(mockBack).toHaveBeenCalled();
     });
+  });
+
+  // PLA-79: `planazo://profile/edit` mounts this with an empty stack, where
+  // `back()` is a no-op. Cancel is the only way out, so it stops being one.
+  it('opened by a deep link, Cancel lands on the profile', async () => {
+    mockCanGoBack = false;
+    await renderEdit();
+
+    await fireEvent.press(screen.getByTestId('cancel'));
+
+    expect(mockReplace).toHaveBeenCalledWith('/(app)/profile');
+    expect(mockBack).not.toHaveBeenCalled();
   });
 
   it('the handle is shown but fixed', async () => {

@@ -11,7 +11,13 @@ jest.mock('../../../lib/supabase', () => ({
 }));
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: jest.fn(), back: mockBack, navigate: jest.fn() }),
+  useRouter: () => ({
+    push: jest.fn(),
+    back: mockBack,
+    navigate: jest.fn(),
+    replace: jest.fn(),
+    canGoBack: () => true,
+  }),
 }));
 
 

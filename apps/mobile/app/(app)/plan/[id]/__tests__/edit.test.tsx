@@ -9,9 +9,17 @@ jest.mock('../../../../../lib/supabase', () => ({
 }));
 
 const mockBack = jest.fn();
+const mockReplace = jest.fn();
+/** False on a cold deep link: the screen mounts with nothing behind it. */
+let mockCanGoBack = true;
 jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({ id: 'plan-1' }),
-  useRouter: () => ({ back: mockBack, push: jest.fn(), replace: jest.fn() }),
+  useRouter: () => ({
+    back: mockBack,
+    push: jest.fn(),
+    replace: mockReplace,
+    canGoBack: () => mockCanGoBack,
+  }),
 }));
 
 
@@ -71,6 +79,7 @@ async function renderEdit() {
 beforeEach(() => {
   jest.clearAllMocks();
   jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+  mockCanGoBack = true;
   primeSupabase();
 });
 
@@ -152,6 +161,35 @@ describe('EditPlanScreen', () => {
       )
     );
     expect(mockBack).not.toHaveBeenCalled();
+  });
+
+  /**
+   * PLA-79. `planazo://plan/plan-1/edit` from a message or a push mounts this
+   * screen with an empty stack, and `back()` there is a no-op that logs and
+   * does nothing: Cancel is the only way off this screen, so it stops being
+   * leavable at all. Pinned on the two screens that leave it, because saving
+   * closes the screen the same way Cancel does.
+   */
+  describe('opened by a deep link, with nothing behind it', () => {
+    it('Cancel lands on the plan rather than doing nothing', async () => {
+      mockCanGoBack = false;
+      await renderEdit();
+
+      await fireEvent.press(screen.getByTestId('cancel'));
+
+      expect(mockReplace).toHaveBeenCalledWith('/(app)/plan/plan-1');
+      expect(mockBack).not.toHaveBeenCalled();
+    });
+
+    it('a successful save leaves the same way', async () => {
+      mockCanGoBack = false;
+      await renderEdit();
+
+      await fireEvent.changeText(screen.getByTestId('title-input'), 'Padel at nine');
+      await fireEvent.press(screen.getByTestId('save'));
+
+      await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(app)/plan/plan-1'));
+    });
   });
 
   it('reports a failed write instead of closing', async () => {

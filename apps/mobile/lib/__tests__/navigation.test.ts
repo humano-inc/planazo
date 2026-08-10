@@ -5,6 +5,7 @@ const mockPush = jest.fn();
 const mockNavigate = jest.fn();
 const mockReplace = jest.fn();
 const mockBack = jest.fn();
+const mockDismiss = jest.fn();
 /** False on a cold deep link: the screen mounts with nothing behind it. */
 let mockCanGoBack = true;
 
@@ -14,6 +15,7 @@ jest.mock('expo-router', () => ({
     navigate: mockNavigate,
     replace: mockReplace,
     back: mockBack,
+    dismiss: mockDismiss,
     canGoBack: () => mockCanGoBack,
   }),
 }));
@@ -100,5 +102,29 @@ describe('useDismissTo', () => {
     expect(popped).toBe(false);
     expect(mockReplace).toHaveBeenCalledWith('/(app)/(tabs)');
     expect(mockBack).not.toHaveBeenCalled();
+  });
+
+  /**
+   * The feedback sheet's case: opened from the profile sheet, it has to take
+   * both with it, because a toast renders under native sheets and would be
+   * invisible with one still up.
+   */
+  it('drops several layers at once when asked to', async () => {
+    const { result } = await renderHook(() => useDismissTo('/(app)/(tabs)', 2));
+
+    await act(async () => result.current());
+    expect(mockDismiss).toHaveBeenCalledWith(2);
+    expect(mockBack).not.toHaveBeenCalled();
+  });
+
+  // With nothing behind the sheet there are no layers to count, and the
+  // fallback lands in the same place whether one was skipped or two.
+  it('still replaces with the fallback when several layers were asked for', async () => {
+    mockCanGoBack = false;
+    const { result } = await renderHook(() => useDismissTo('/(app)/(tabs)', 2));
+
+    await act(async () => result.current());
+    expect(mockReplace).toHaveBeenCalledWith('/(app)/(tabs)');
+    expect(mockDismiss).not.toHaveBeenCalled();
   });
 });

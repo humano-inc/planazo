@@ -18,6 +18,7 @@ import { supabase } from '../../lib/supabase';
 import { captureError } from '../../lib/sentry';
 import { contentViolation } from '../../lib/moderation';
 import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
+import { useDismissTo } from '../../lib/navigation';
 import { useAuthStore } from '../../stores/authStore';
 import { ConfirmEmailStep } from '../../components/auth/ConfirmEmailStep';
 import { Avatar, Button, FooterBar, FormField, ThemedText } from '../../components/ui';
@@ -41,6 +42,9 @@ function nextStep(name: string, email: string, password: string) {
 
 export default function SignupScreen() {
   const router = useRouter();
+  // Login is behind this on the normal path, and an invite link that finds no
+  // account (join/[code]) replaces straight into it with nothing behind.
+  const goBack = useDismissTo('/(auth)/login');
   // Sign-in sends anyone with an unconfirmed account here rather than printing
   // "Email not confirmed" at them (PLA-70). Their address is all we need: the
   // code they enter is what produces the session.
@@ -207,7 +211,7 @@ export default function SignupScreen() {
         <Pressable
           accessibilityRole="button"
           hitSlop={LINK_HIT_SLOP}
-          onPress={() => router.back()}
+          onPress={goBack}
           testID="back"
         >
           <ThemedText variant="bodyStrong" color={colors.textSecondary}>

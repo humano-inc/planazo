@@ -15,6 +15,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ThemedText } from '../../../../components/ui/ThemedText';
 import { PhotoTile } from '../../../../components/ui/PhotoTile';
 import { ErrorState } from '../../../../components/ui/ErrorState';
+import { useDismissTo } from '../../../../lib/navigation';
 import { usePlanPhotos, planPhotosKey } from '../../../../lib/usePlanPhotos';
 import {
   albumSummaryFromRows,
@@ -47,6 +48,7 @@ export default function PlanAlbumScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const planId = String(id);
   const router = useRouter();
+  const leave = useDismissTo(`/(app)/plan/${planId}`);
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   // Which photo the viewer is on, as an index rather than the photo itself,
@@ -87,7 +89,7 @@ export default function PlanAlbumScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} accessibilityRole="button" testID="album-back">
+        <Pressable onPress={leave} accessibilityRole="button" testID="album-back">
           <ThemedText variant="bodyStrong" color={colors.accent}>
             ‹ Back
           </ThemedText>

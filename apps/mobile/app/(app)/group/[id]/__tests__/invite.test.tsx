@@ -7,13 +7,22 @@ import { useAuthStore } from '../../../../../stores/authStore';
 import { supabase } from '../../../../../lib/supabase';
 
 const mockBack = jest.fn();
+const mockReplace = jest.fn();
+/** False on a cold deep link: the sheet mounts with nothing behind it. */
+let mockCanGoBack = true;
 
 jest.mock('../../../../../lib/supabase', () => ({
   supabase: { from: jest.fn(), rpc: jest.fn() },
 }));
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: jest.fn(), back: mockBack, navigate: jest.fn() }),
+  useRouter: () => ({
+    push: jest.fn(),
+    back: mockBack,
+    navigate: jest.fn(),
+    replace: mockReplace,
+    canGoBack: () => mockCanGoBack,
+  }),
   useLocalSearchParams: () => ({ id: 'g1' }),
 }));
 
@@ -69,6 +78,7 @@ async function renderInvite() {
 beforeEach(() => {
   jest.clearAllMocks();
   jest.spyOn(Alert, 'alert');
+  mockCanGoBack = true;
   primeSupabase();
   inviteCode = { data: 'ABCD2345', error: null };
   // The code is no longer a column the client may read (PLA-49), so the sheet
@@ -215,5 +225,19 @@ describe('InviteToGroupSheet', () => {
       })
     );
     await waitFor(() => expect(mockBack).toHaveBeenCalled());
+  });
+
+  // PLA-79: `planazo://group/g1/invite` mounts this sheet with an empty stack,
+  // where `back()` is a no-op. Sending is its only other exit, so without the
+  // fallback the sheet stays on screen over a plan nobody can get back to.
+  it('opened by a deep link, sending lands on the group', async () => {
+    mockCanGoBack = false;
+    await renderInvite();
+
+    await fireEvent.press(await screen.findByTestId('invitee-f3'));
+    await fireEvent.press(screen.getByText('Send 1 invite'));
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(app)/group/g1'));
+    expect(mockBack).not.toHaveBeenCalled();
   });
 });

@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
@@ -21,6 +21,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { pickFromLibrary, uploadJpeg } from '../../lib/images';
 import { feedbackSheetOpen } from '../../lib/feedbackState';
 import { MIN_TOUCH_TARGET, hitSlopTo } from '../../lib/a11y';
+import { useDismissTo } from '../../lib/navigation';
 import { ThemedText, showToast } from '../../components/ui';
 import { colors, fonts, groupColors, spacing } from '../../theme/tokens';
 
@@ -38,10 +39,16 @@ const KINDS: { key: Kind; label: string; shape: 'square' | 'circle' | 'diamond';
  * arrives bare, with the library picker as the only way to attach.
  */
 export default function FeedbackScreen() {
-  const router = useRouter();
   const { user } = useAuthStore();
   const params = useLocalSearchParams<{ shot?: string }>();
   const fromScreenshot = !!params.shot;
+
+  const cancel = useDismissTo('/(app)/(tabs)');
+  // The profile-row path sits on the profile formSheet, so sending drops both:
+  // the toast renders under native sheets and would otherwise be invisible.
+  // A screenshot arrives on its own, and a cold deep link on nothing at all,
+  // which is the fallback's job.
+  const leaveAfterSending = useDismissTo('/(app)/(tabs)', fromScreenshot ? 1 : 2);
 
   const [kind, setKind] = useState<Kind | null>(null);
   const [message, setMessage] = useState('');
@@ -76,13 +83,7 @@ export default function FeedbackScreen() {
     },
     onSuccess: () => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      // Profile-row path sits on the profile formSheet; drop both so the
-      // toast (rendered under native sheets) is actually visible.
-      if (fromScreenshot) {
-        router.back();
-      } else {
-        router.dismiss(2);
-      }
+      leaveAfterSending();
       showToast('Got it, thanks. We read every one.');
     },
     onError: (error: Error) => Alert.alert('Error', error.message),
@@ -98,7 +99,7 @@ export default function FeedbackScreen() {
       <View style={styles.header}>
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.back()}
+          onPress={cancel}
           testID="cancel"
           style={styles.headerAction}
         >

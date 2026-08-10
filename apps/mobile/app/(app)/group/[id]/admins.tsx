@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { GroupRole } from '@planazo/shared';
@@ -10,6 +10,7 @@ import { errorCopy, groupGoneCopy, isNotFoundError } from '../../../../lib/query
 import { groupManageQuery, invalidateGroup } from '../../../../lib/groupManageQuery';
 import { splitByRole, demoteConfirmCopy, memberName } from '../../../../lib/groupAdmins';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
+import { useDismissTo } from '../../../../lib/navigation';
 import type { GroupMemberRow } from '../../../../components/group/MemberList';
 import { AdminsCard } from '../../../../components/group/AdminsCard';
 import { PromoteCard } from '../../../../components/group/PromoteCard';
@@ -29,8 +30,11 @@ import { colors, fonts, spacing } from '../../../../theme/tokens';
  */
 export default function GroupAdminsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const queryClient = useQueryClient();
+  const goBack = useDismissTo(`/(app)/group/${id}`);
+  // The error state is reached when the group is gone or unreadable, so the
+  // group route is exactly where not to send someone.
+  const leaveGone = useDismissTo('/(app)/(tabs)/groups');
   const { user } = useAuthStore();
   const [demoting, setDemoting] = useState<GroupMemberRow | null>(null);
 
@@ -59,9 +63,7 @@ export default function GroupAdminsScreen() {
           title={copy.title}
           body={copy.body}
           onRetry={notFound ? undefined : () => refetch()}
-          onBack={() =>
-            router.canGoBack() ? router.back() : router.replace('/(app)/(tabs)/groups')
-          }
+          onBack={leaveGone}
           testID="group-admins-error"
         />
       </SafeAreaView>
@@ -97,7 +99,7 @@ export default function GroupAdminsScreen() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.navRow}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={goBack}
           accessibilityRole="button"
           testID="back"
           style={styles.navAction}

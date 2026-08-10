@@ -20,7 +20,7 @@ jest.mock('../../../../../lib/images', () => ({
 }));
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ back: mockBack }),
+  useRouter: () => ({ back: mockBack, replace: jest.fn(), canGoBack: () => true }),
   useLocalSearchParams: () => ({ id: 'g1' }),
 }));
 

@@ -12,6 +12,7 @@ import { Link, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { supabase } from '../../lib/supabase';
 import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
+import { useDismissTo } from '../../lib/navigation';
 import { Button, ConfirmCard, FormField, ThemedText } from '../../components/ui';
 import { colors, fonts, spacing } from '../../theme/tokens';
 
@@ -30,6 +31,9 @@ export const RESET_REDIRECT_PATH = 'reset-password';
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  // Login is behind this on the normal path, and is where the recovery email's
+  // own link sends people, so it is the right place to land either way.
+  const goBack = useDismissTo('/(auth)/login');
   const [email, setEmail] = useState('');
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -123,7 +127,7 @@ export default function ForgotPasswordScreen() {
         <Pressable
           accessibilityRole="button"
           hitSlop={LINK_HIT_SLOP}
-          onPress={() => router.back()}
+          onPress={goBack}
           testID="back"
         >
           <ThemedText variant="bodyStrong" color={colors.textSecondary}>

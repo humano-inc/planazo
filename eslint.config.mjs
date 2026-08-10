@@ -46,6 +46,35 @@ const emDashWithText = [
     'parentheses for a parenthetical. Splitting in two is usually best.',
 }));
 
+/**
+ * PLA-79: `router.back()` is a no-op on a screen a deep link or a push
+ * notification opened directly, because there is nothing behind it to pop. It
+ * logs "GO_BACK was not handled by any navigator" and the user sits there. When
+ * it is wired to the only Cancel button, the screen has no exit at all.
+ *
+ * Twelve screens shipped that way before anyone noticed, which is the argument
+ * for a rule rather than a convention: `lib/navigation.ts` already held the
+ * three-line fix and a comment explaining it, and that was not enough.
+ *
+ * `dismiss` and `dismissAll` are the same trap by another name, but they are
+ * matched only on a receiver named `router`: `Keyboard.dismiss()` is a real and
+ * unrelated React Native API, and a rule that cost someone that would get
+ * turned off. `back()` takes any receiver, because nothing else in this
+ * codebase has a `.back()` worth calling and renaming the variable is not a
+ * reason to be allowed to strand a user.
+ */
+const noBareBack = [
+  { method: 'back', receiver: '' },
+  { method: 'dismiss', receiver: "[callee.object.name='router']" },
+  { method: 'dismissAll', receiver: "[callee.object.name='router']" },
+].map(({ method, receiver }) => ({
+  selector: `CallExpression[callee.type='MemberExpression'][callee.property.name='${method}']${receiver}`,
+  message:
+    `router.${method}() strands anyone who arrived by deep link or push: with nothing ` +
+    'behind the screen it does nothing at all (PLA-79). Use useDismissTo(fallback) ' +
+    'from lib/navigation, which pops when it can and replaces when it cannot.',
+}));
+
 export default tseslint.config(
   {
     // A disable comment whose rule no longer fires is debt that paid itself
@@ -144,6 +173,22 @@ export default tseslint.config(
         'error',
         { max: 400, skipBlankLines: true, skipComments: true },
       ],
+    },
+  },
+
+  {
+    /**
+     * Screens and the components they render. `lib/navigation.ts` is outside
+     * this glob on purpose: it is the one file allowed to call `back()`, being
+     * the thing everything else calls instead.
+     *
+     * The em dash rules are repeated here because flat config replaces a rule's
+     * options rather than merging them, so naming `no-restricted-syntax` again
+     * would otherwise switch the em dash ban off for every screen in the app.
+     */
+    files: ['apps/mobile/app/**/*.{ts,tsx}', 'apps/mobile/components/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': ['error', ...emDashWithText, ...noBareBack],
     },
   },
 

@@ -9,9 +9,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDismissTo } from '../../../../lib/navigation';
 import { submitPollDraft, planPollKey } from '../../../../lib/usePlanPoll';
 import { emptyPollDraft, pollDraftValid } from '../../../../lib/pollDraft';
 import { PollOptionsEditor } from '../../../../components/PollComposer';
@@ -37,8 +38,8 @@ export default function NewPollScreen() {
     peopleIn?: string;
   }>();
   const peopleIn = Number(peopleInParam) || 0;
-  const router = useRouter();
   const queryClient = useQueryClient();
+  const leave = useDismissTo(`/(app)/plan/${id}`);
   const [draft, setDraft] = useState(emptyPollDraft());
 
   const add = useMutation({
@@ -46,7 +47,7 @@ export default function NewPollScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planPollKey(String(id)) });
       queryClient.invalidateQueries({ queryKey: ['home-plans'] });
-      router.back();
+      leave();
     },
     onError: (error: Error) => Alert.alert('Error', error.message),
   });
@@ -57,7 +58,7 @@ export default function NewPollScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} accessibilityRole="button" testID="cancel">
+        <Pressable onPress={leave} accessibilityRole="button" testID="cancel">
           <ThemedText variant="bodyStrong" color={colors.textMuted}>
             Cancel
           </ThemedText>

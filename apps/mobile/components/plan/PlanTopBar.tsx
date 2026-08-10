@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import type { PlanDerived } from '../../lib/planDerived';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
+import { useDismissTo } from '../../lib/navigation';
 import { planLinkFor } from '../../lib/shareLinks';
 import { ThemedText, showToast } from '../ui';
 import { colors, spacing } from '../../theme/tokens';
@@ -18,6 +19,9 @@ type Props = {
 /** The back label, the ··· menu, and the menu itself (20a). */
 export function PlanTopBar({ planId, groupId, d, groupName, onNudge }: Props) {
   const router = useRouter();
+  // Deep links (push, QA) mount this as the first screen, so the back label
+  // falls back to where it points rather than to nothing.
+  const goBack = useDismissTo(groupId ? `/(app)/group/${groupId}` : '/(app)/(tabs)');
 
   const copyLink = async () => {
     await Clipboard.setStringAsync(planLinkFor(planId));
@@ -78,14 +82,8 @@ export function PlanTopBar({ planId, groupId, d, groupName, onNudge }: Props) {
 
   return (
     <View style={styles.topBar}>
-      {/* Deep links (push, QA) mount this as the first screen — fall back
-          to where the label points */}
       <Pressable
-        onPress={() =>
-          router.canGoBack()
-            ? router.back()
-            : router.replace(groupId ? `/(app)/group/${groupId}` : '/(app)/(tabs)')
-        }
+        onPress={goBack}
         accessibilityRole="button"
         testID="back"
         style={styles.navAction}
