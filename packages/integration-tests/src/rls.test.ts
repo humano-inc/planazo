@@ -191,6 +191,14 @@ describe('create_group and join_group_by_invite_code', () => {
   });
 });
 
+/** Every member's role in a group, by the service role's unfiltered view. */
+async function rolesOf(groupId: string): Promise<Record<string, string | null>> {
+  const rows = ok(
+    await bed.service.from('group_members').select('user_id, role').eq('group_id', groupId),
+  );
+  return Object.fromEntries(rows.map((r) => [r.user_id, r.role]));
+}
+
 // PLA-50: the Admins screen promotes and demotes with a plain UPDATE on
 // group_members, so the only thing between a member and someone else's role
 // is "Admins can update memberships" (USING is_group_admin, no WITH CHECK).
@@ -211,13 +219,7 @@ describe('group_members role UPDATE', () => {
     await bed.join(g.id, plain);
   });
 
-  /** Every member's role, by the service role's unfiltered view. */
-  async function roles(): Promise<Record<string, string | null>> {
-    const rows = ok(
-      await bed.service.from('group_members').select('user_id, role').eq('group_id', g.id),
-    );
-    return Object.fromEntries(rows.map((r) => [r.user_id, r.role]));
-  }
+  const roles = () => rolesOf(g.id);
 
   it("a plain member cannot change anyone's role, their own included", async () => {
     const [demoteAdmin, promoteSelf] = await Promise.all([
@@ -291,14 +293,6 @@ describe('the last-admin floor', () => {
     [one, two] = await Promise.all([bed.createUser('Floor One'), bed.createUser('Floor Two')]);
   });
 
-  /** Every member's role in one group, by the service role's unfiltered view. */
-  async function rolesOf(groupId: string): Promise<Record<string, string | null>> {
-    const rows = ok(
-      await bed.service.from('group_members').select('user_id, role').eq('group_id', groupId),
-    );
-    return Object.fromEntries(rows.map((r) => [r.user_id, r.role]));
-  }
-
   /** Two admins: the only shape that can race its way to zero. */
   async function twoAdminGroup() {
     const g = await bed.createGroup(one, { name: 'Floor Two Admins' });
@@ -366,6 +360,29 @@ describe('the last-admin floor', () => {
     // admin-less, for the instant before leave_group deletes the group too.
     ok(await one.client.rpc('leave_group', { p_group_id: g.id }));
     expect(ok(await bed.service.from('groups').select('id').eq('id', g.id))).toEqual([]);
+  });
+
+  it("still lets an operator delete the account of a group's only admin", async () => {
+    const doomed = await bed.createUser('Floor Doomed');
+    // `two` creates it and hands admin over, because groups.created_by is
+    // RESTRICT: the account being deleted can never be the one that created it.
+    const g = await bed.createGroup(two, { name: 'Floor Orphan' });
+    await bed.join(g.id, doomed, 'admin');
+    ok(
+      await two.client
+        .from('group_members')
+        .update({ role: 'member' })
+        .eq('group_id', g.id)
+        .eq('user_id', two.id),
+    );
+
+    // Deleting an account cascades auth.users -> profiles -> group_members and
+    // promotes nobody. Without the "the person is going" exemption this is a
+    // PT422 raised three levels down, and the sole admin of a group can never
+    // be deleted — a reported user being exactly who you need to delete.
+    const { error } = await bed.service.auth.admin.deleteUser(doomed.id);
+    expect(error).toBeNull();
+    expect(await rolesOf(g.id)).toEqual({ [two.id]: 'member' });
   });
 
   it('still lets an admin remove the other admin', async () => {

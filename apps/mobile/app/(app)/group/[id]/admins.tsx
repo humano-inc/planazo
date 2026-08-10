@@ -10,6 +10,7 @@ import {
   alertActionError,
   errorCopy,
   groupGoneCopy,
+  isLastAdminError,
   isNotFoundError,
 } from '../../../../lib/queryErrors';
 import { groupManageQuery, invalidateGroup } from '../../../../lib/groupManageQuery';
@@ -51,11 +52,14 @@ export default function GroupAdminsScreen() {
       if (error) throw error;
     },
     onSuccess: () => invalidateGroup(queryClient, id),
-    // Refetching on the way out matters as much as the alert: a refused
-    // step-down means someone else stepped down first, so the list this screen
-    // is showing is already wrong and still offers the control (PLA-86).
+    // Refetching matters as much as the alert for this one failure: a refused
+    // step-down means someone else stepped down first, so the list on screen is
+    // already wrong and still offering the control (PLA-86). Only for this one,
+    // though — a write that failed because the network did leaves the list
+    // perfectly good, and a refetch that cannot succeed would replace it with a
+    // full-screen error.
     onError: (error: unknown) => {
-      invalidateGroup(queryClient, id);
+      if (isLastAdminError(error)) invalidateGroup(queryClient, id);
       alertActionError(error);
     },
   });

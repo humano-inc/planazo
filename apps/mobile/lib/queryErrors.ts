@@ -275,8 +275,11 @@ export function actionErrorCopy(error: unknown): { title: string; body: string }
   if (isLastAdminError(error)) {
     return {
       title: 'A group needs an admin',
-      // The second line is the note under the admins card, word for word: the
-      // rule reads the same whether you meet it before the tap or after it.
+      // Ends on the same instruction as adminsNote's "Make someone else one
+      // first" (lib/groupAdmins.ts), so the way out reads identically whether
+      // you meet the rule before the tap or after it. The opening differs on
+      // purpose: the note explains a control that is missing, while this
+      // explains a tap that just failed.
       body: "You're the only admin left. Make someone else one first.",
     };
   }
