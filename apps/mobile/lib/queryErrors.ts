@@ -35,6 +35,12 @@ const SIGN_IN_REQUIRED_CODE = 'PGRST302';
  * status, so this arrives as a 409 rather than an opaque 500.
  */
 const PLAN_FULL_CODE = 'PT409';
+/**
+ * Raised by the enforce_last_admin_floor trigger when a write would leave a
+ * group with no admin (PLA-86). Same PTxyz convention as the cap above, with
+ * its own status so one code never carries two meanings.
+ */
+const LAST_ADMIN_CODE = 'PT422';
 
 /**
  * GoTrue's two verdicts that matter to us. It marks a failure it wants retried
@@ -182,6 +188,15 @@ export function isPlanFullError(error: unknown): boolean {
 }
 
 /**
+ * The group would have been left with no admin. The Admins screen hides the
+ * step-down control from a lone admin, so this arrives only when the count
+ * changed underneath the person: two admins, both stepping down at once.
+ */
+export function isLastAdminError(error: unknown): boolean {
+  return codeOf(error) === LAST_ADMIN_CODE;
+}
+
+/**
  * A not-found never becomes found by asking again, and a permission denial
  * never becomes permitted, so retrying only delays the message the user needs.
  * Everything else — including an expired token, which a refresh can fix — gets
@@ -255,6 +270,17 @@ export function actionErrorCopy(error: unknown): { title: string; body: string }
       // Used to end at "One opens up if somebody drops out", which was true and
       // useless. Since PLA-37 there is somewhere to put yourself, so say so.
       body: "Every place is taken. Take the next spot and we'll tell you if one opens up.",
+    };
+  }
+  if (isLastAdminError(error)) {
+    return {
+      title: 'A group needs an admin',
+      // Ends on the same instruction as adminsNote's "Make someone else one
+      // first" (lib/groupAdmins.ts), so the way out reads identically whether
+      // you meet the rule before the tap or after it. The opening differs on
+      // purpose: the note explains a control that is missing, while this
+      // explains a tap that just failed.
+      body: "You're the only admin left. Make someone else one first.",
     };
   }
   const copy = errorCopy(error);

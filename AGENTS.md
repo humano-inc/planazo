@@ -402,6 +402,32 @@ Rules of thumb:
   with no UI writes `## See it working` → "Nothing user-visible; the proof is
   the N tests in `<file>`." Silence reads like an oversight.
 
+### A PR body describes this PR, never the next one
+
+**Work you did not do does not go in the PR body.** No "deliberately left
+alone", no "follow-up", no "worth its own issue later". A PR body is read by
+someone deciding whether to merge *this diff*, and a paragraph about a change
+that is not in it costs them attention on a decision they were not asked to
+make. Worse, it is where good findings go to die: nobody re-reads a merged PR,
+so a note left there is a note lost.
+
+When a pass turns something up, there is an order to try:
+
+1. **Fix it here.** This is the default and it is not a close call. If it is
+   the same kind of work the PR is already doing — a sixth call site of the
+   component you just extracted, the same duplication one file further out —
+   finish it. The diff growing is fine. One issue quietly becoming four is not.
+2. **Raise it in the conversation, as a candidate Linear issue.** When it needs
+   a decision the user has not made (a visual change to a screen this PR was
+   not about, a schema change, a new dependency), or verifying it would cost
+   more than the PR it is riding on, say so *to the user* and propose the issue:
+   a title, a sentence of why, and what it would take. Filing it is their call.
+3. **Nothing else.** In particular, not a line in the PR body instead of one of
+   the two above.
+
+The same rule governs the commit message: it explains the change it carries, not
+the one after it.
+
 ## iOS Simulator
 
 **Inside a worktree, `pnpm wt:start` does all of this for you** — it boots the

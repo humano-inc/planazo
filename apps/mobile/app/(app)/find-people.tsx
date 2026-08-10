@@ -1,12 +1,5 @@
 import { useMemo, useState } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  Pressable,
-  TextInput,
-  Alert,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
@@ -14,7 +7,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { useFriends } from '../../lib/useFriends';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
-import { ThemedText, Card, Avatar } from '../../components/ui';
+import { ThemedText, Card, Avatar, SearchField } from '../../components/ui';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 
 interface PersonRow {
@@ -223,23 +216,13 @@ export default function FindPeopleScreen() {
       </View>
 
       <View style={styles.searchWrap}>
-        <View style={styles.searchBox}>
-          <View style={styles.searchIcon}>
-            <View style={styles.searchCircle} />
-            <View style={styles.searchHandle} />
-          </View>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Name or @handle"
-            placeholderTextColor={colors.textFaint}
-            value={query}
-            onChangeText={setQuery}
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoFocus
-            testID="search-input"
-          />
-        </View>
+        <SearchField
+          placeholder="Name or @handle"
+          value={query}
+          onChangeText={setQuery}
+          autoFocus
+          testID="search-input"
+        />
       </View>
 
       <ScrollView
@@ -333,46 +316,6 @@ const styles = StyleSheet.create({
   searchWrap: {
     paddingHorizontal: spacing.xl,
     paddingBottom: 14,
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.ink,
-    borderRadius: radii.input,
-    paddingHorizontal: 15,
-  },
-  searchIcon: {
-    width: 15,
-    height: 14,
-  },
-  searchCircle: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    width: 11,
-    height: 11,
-    borderRadius: radii.pill,
-    borderWidth: 1.5,
-    borderColor: colors.textMuted,
-  },
-  searchHandle: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    width: 8,
-    height: 2,
-    backgroundColor: colors.textMuted,
-    transform: [{ rotate: '45deg' }],
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: fonts.body,
-    fontSize: 16,
-    color: colors.textPrimary,
-    paddingVertical: 13,
   },
   content: {
     paddingHorizontal: spacing.xl,

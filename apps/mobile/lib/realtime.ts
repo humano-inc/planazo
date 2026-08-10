@@ -93,8 +93,9 @@ export function keysForChange(
     case 'group_members':
       return [
         groupId ? ['group', groupId] : ['group'],
+        // Covers useMyGroups too: it keys on ['groups', 'mine', userId], a
+        // child of this one on purpose (PLA-78).
         ['groups'],
-        ['my-groups'],
         ['home-plans'],
         ['plan-membership'],
         groupId ? ['plan-group-member-ids', groupId] : ['plan-group-member-ids'],

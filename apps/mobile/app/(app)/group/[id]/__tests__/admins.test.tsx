@@ -18,9 +18,12 @@ const mockFrom = supabase.from as jest.Mock;
 
 let group: any;
 let gmUpdates: { update: jest.Mock; eq: jest.Mock }[] = [];
+/** What the next write should come back with, set by failWrites(). */
+let writeError: unknown = null;
 
 function primeSupabase() {
   gmUpdates = [];
+  writeError = null;
   mockFrom.mockImplementation((table: string) => {
     const c: any = {};
     let mutation = false;
@@ -33,7 +36,7 @@ function primeSupabase() {
     });
     if (table === 'group_members') gmUpdates.push({ update: c.update, eq: c.eq });
     c.then = (resolve: (v: unknown) => void) => {
-      const result = mutation ? { error: null } : { data: group, error: null };
+      const result = mutation ? { error: writeError } : { data: group, error: null };
       return Promise.resolve(result).then(resolve);
     };
     return c;
@@ -47,6 +50,11 @@ async function renderAdmins() {
       <GroupAdminsScreen />
     </QueryClientProvider>
   );
+}
+
+/** How many times the group query has been read, refetches included. */
+function groupReads() {
+  return mockFrom.mock.calls.filter(([table]) => table === 'groups').length;
 }
 
 /** The one group_members update that ran, or null. */
@@ -220,21 +228,55 @@ describe('GroupAdminsScreen', () => {
     expect(screen.queryByTestId('admins-note')).toBeNull();
   });
 
-  it('a failed write surfaces as an alert', async () => {
+  /**
+   * Makes every role write fail with `error`, leaving reads alone. Hand-rolling
+   * a second chain here instead would drop `select`, and the refetch that
+   * follows a refusal would die on it rather than reloading the screen.
+   */
+  function failWrites(error: unknown) {
+    writeError = error;
+  }
+
+  it('a failed write surfaces as an alert, never as the raw message', async () => {
     await renderAdmins();
 
     const button = await screen.findByTestId('promote-u2');
-    mockFrom.mockImplementation(() => {
-      const c: any = {};
-      ['update', 'eq'].forEach((m) => {
-        c[m] = jest.fn(() => c);
-      });
-      c.then = (resolve: (v: unknown) => void) =>
-        Promise.resolve({ error: new Error('nope') }).then(resolve);
-      return c;
-    });
+    failWrites(new Error('nope'));
+    const readsBefore = groupReads();
     await fireEvent.press(button);
 
-    await waitFor(() => expect(Alert.alert).toHaveBeenCalledWith('Error', 'nope'));
+    await waitFor(() =>
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "That didn't go through",
+        'Something went wrong saving your answer. Try again.'
+      )
+    );
+    // And the list it is showing survives: a write that failed for any other
+    // reason says nothing about whether the data is stale, and a refetch that
+    // fails the same way would swap the screen for a full-page error.
+    expect(groupReads()).toBe(readsBefore);
+  });
+
+  // PLA-86: the floor is in the database now, and this is the one way it can
+  // reach a person. Two admins step down at once, the other one lands first,
+  // and this screen is still showing the control it drew for two.
+  it('explains the last-admin floor when the database refuses a step-down', async () => {
+    group.group_members[1].role = 'admin';
+    await renderAdmins();
+
+    await fireEvent.press(await screen.findByTestId('demote-me'));
+    failWrites({ code: 'PT422', message: 'A group needs at least one admin' });
+    const readsBefore = groupReads();
+    await fireEvent.press(screen.getByTestId('confirm-demote-confirm'));
+
+    await waitFor(() =>
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'A group needs an admin',
+        "You're the only admin left. Make someone else one first."
+      )
+    );
+    // This refusal is the one failure that proves the screen is out of date, so
+    // it is the one that refetches: the control it is still drawing is gone.
+    await waitFor(() => expect(groupReads()).toBeGreaterThan(readsBefore));
   });
 });

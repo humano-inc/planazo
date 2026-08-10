@@ -1,12 +1,18 @@
 import { useState } from 'react';
-import { View, ScrollView, StyleSheet, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { GroupRole } from '@planazo/shared';
 import { supabase } from '../../../../lib/supabase';
 import { useAuthStore } from '../../../../stores/authStore';
-import { errorCopy, groupGoneCopy, isNotFoundError } from '../../../../lib/queryErrors';
+import {
+  alertActionError,
+  errorCopy,
+  groupGoneCopy,
+  isLastAdminError,
+  isNotFoundError,
+} from '../../../../lib/queryErrors';
 import { groupManageQuery, invalidateGroup } from '../../../../lib/groupManageQuery';
 import { splitByRole, demoteConfirmCopy, memberName } from '../../../../lib/groupAdmins';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
@@ -50,7 +56,16 @@ export default function GroupAdminsScreen() {
       if (error) throw error;
     },
     onSuccess: () => invalidateGroup(queryClient, id),
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    // Refetching matters as much as the alert for this one failure: a refused
+    // step-down means someone else stepped down first, so the list on screen is
+    // already wrong and still offering the control (PLA-86). Only for this one,
+    // though — a write that failed because the network did leaves the list
+    // perfectly good, and a refetch that cannot succeed would replace it with a
+    // full-screen error.
+    onError: (error: unknown) => {
+      if (isLastAdminError(error)) invalidateGroup(queryClient, id);
+      alertActionError(error);
+    },
   });
 
   if (!isLoading && (isError || !group)) {
