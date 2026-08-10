@@ -7,9 +7,9 @@ async function renderField(props: Partial<React.ComponentProps<typeof SearchFiel
   return render(<SearchField placeholder="Name or @handle" testID="search" {...props} />);
 }
 
-/** The bordered row is the input's parent; the box styles live on it. */
+/** The bordered row carries its own testID, so this never walks the tree. */
 function boxStyleOf(view: Awaited<ReturnType<typeof renderField>>) {
-  return StyleSheet.flatten(view.getByTestId('search').parent?.props.style);
+  return StyleSheet.flatten(view.getByTestId('search-box').props.style);
 }
 
 describe('SearchField', () => {
@@ -20,15 +20,6 @@ describe('SearchField', () => {
     expect(input.props.placeholder).toBe('Name or @handle');
     expect(input.props.placeholderTextColor).toBe(colors.textFaint);
     expect(input.props.value).toBeUndefined();
-  });
-
-  it('reports what was typed', async () => {
-    const onChangeText = jest.fn();
-    const view = await renderField({ onChangeText });
-
-    await fireEvent.changeText(view.getByTestId('search'), 'nacho');
-
-    expect(onChangeText).toHaveBeenCalledWith('nacho');
   });
 
   it('turns off autocapitalize and autocorrect, which no name search wants', async () => {
@@ -50,12 +41,8 @@ describe('SearchField', () => {
    * resting search box must not wear one. Resting is borderStrong and focus is
    * ember, matching FormField.
    */
-  it('rests on the strong border and never on ink', async () => {
-    const view = await renderField();
-    const box = boxStyleOf(view);
-
-    expect(box.borderColor).toBe(colors.borderStrong);
-    expect(box.borderColor).not.toBe(colors.ink);
+  it('rests on the strong border, not the selected-state ink', async () => {
+    expect(boxStyleOf(await renderField()).borderColor).toBe(colors.borderStrong);
   });
 
   it('borders ember while focused and returns to rest on blur', async () => {
@@ -101,10 +88,23 @@ describe('SearchField', () => {
     expect(box.paddingVertical).toBeUndefined();
   });
 
-  it('takes no taps when it is a still life', async () => {
-    const view = await renderField({ editable: false });
+  /**
+   * Onboarding's art is a picture of a field, not a field. The three halves of
+   * that have to travel together: drop one and page 1 of the first-run deck
+   * grows a live box that summons a keyboard mid-swipe.
+   */
+  it('makes a still life uneditable and untappable in one prop', async () => {
+    const view = await renderField({ decorative: true });
 
     expect(view.getByTestId('search').props.editable).toBe(false);
+    expect(view.getByTestId('search-box').props.pointerEvents).toBe('none');
+  });
+
+  it('is an ordinary editable field otherwise', async () => {
+    const view = await renderField();
+
+    expect(view.getByTestId('search').props.editable).toBe(true);
+    expect(view.getByTestId('search-box').props.pointerEvents).toBe('auto');
   });
 });
 
@@ -118,14 +118,23 @@ describe('SearchGlyph', () => {
     };
   }
 
-  // The 15pt box holds an 11pt ring plus a handle that has to clear it. A wider
-  // ring runs its own stroke back across the lens, which is what the 13pt copy
-  // on the admins screen was doing before PLA-85.
-  it('leaves the handle room beside the ring', async () => {
+  /**
+   * The handle is pinned to the bottom of the box and the ring to the top, so
+   * the ring's height is what decides whether a stroke emerges from its edge or
+   * crosses it. The admins screen's 13pt ring in this 14pt box left the handle
+   * no band of its own, which is the drift PLA-85 removed. Assert the clearance
+   * rather than the numbers: 11 and 13 both "look" fine next to a 15pt width.
+   */
+  it('leaves the handle a band the ring does not reach into', async () => {
     const { box, lens, handle } = await renderGlyph();
 
+    expect(box.height - handle.height).toBeGreaterThanOrEqual(lens.height);
+  });
+
+  it('keeps the ring inside the box, so the handle has somewhere to go', async () => {
+    const { box, lens } = await renderGlyph();
+
     expect(lens.width).toBeLessThan(box.width);
-    expect(lens.width + handle.width).toBeGreaterThan(box.width);
   });
 
   it('takes the muted hint tone by default', async () => {

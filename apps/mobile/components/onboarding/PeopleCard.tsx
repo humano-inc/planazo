@@ -49,10 +49,10 @@ export function PeopleCard({ width }: { width: number }) {
       testID="onboarding-people"
     >
       <CardArt style={styles.art}>
-        {/* A picture of Find people's field, so it is the same component with
-            nothing behind it: editable={false} leaves the placeholder showing
-            and takes no taps, and CardArt already hides it from VoiceOver. */}
-        <SearchField placeholder="Name or @handle" editable={false} onCard />
+        {/* A picture of Find people's field, so it cannot drift from the screen
+            it depicts: the same component, drawn on the card's paper, with
+            nothing behind it. CardArt already hides it from VoiceOver. */}
+        <SearchField placeholder="Name or @handle" decorative onCard />
 
         <Person name="Nacho Pardo" handle="@nacho" bg={groupColors[1]} action="Add" />
         <Person

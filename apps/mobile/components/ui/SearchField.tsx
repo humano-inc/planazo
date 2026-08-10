@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet, TextInput, TextInputProps, View } from 'react-native';
+import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { colors, fonts, radii } from '../../theme/tokens';
 
 /**
@@ -20,34 +21,51 @@ export function SearchGlyph({ color = colors.textMuted }: { color?: string }) {
   );
 }
 
-interface SearchFieldProps extends Omit<TextInputProps, 'style' | 'placeholderTextColor'> {
+interface SearchFieldProps
+  extends Omit<TextInputProps, 'style' | 'placeholderTextColor' | 'editable'> {
+  /**
+   * A picture of a search box rather than one: no taps, no focus, no keyboard.
+   * The three travel together as a single prop so a later edit cannot leave one
+   * of them behind and quietly grow a live field inside onboarding's art.
+   */
+  decorative?: boolean;
   /**
    * Fill with paper instead of white, for a box that sits on a white card
    * rather than on the screen. Onboarding's still life is the only one.
    */
   onCard?: boolean;
-  testID?: string;
 }
 
 /**
  * The app's search box: magnifier, then the field, in a bordered row.
  *
- * The border follows {@link FormField} rather than the black outline
- * find-people used to wear (PLA-85). An ink border means *selected* everywhere
- * else in Planazo — the active chip, the chosen swatch — so a resting input in
- * that colour was saying the wrong word. Resting is `borderStrong` and focus is
- * ember, which is what every other input in the app does.
+ * The border follows FormField rather than the black outline find-people used
+ * to wear (PLA-85). An ink border means *selected* everywhere else in Planazo:
+ * the active chip, the chosen swatch. A resting input in that colour was saying
+ * the wrong word. Resting is `borderStrong` and focus is ember, which is what
+ * every other input in the app does.
  */
-export function SearchField({ onCard = false, ...rest }: SearchFieldProps) {
+export function SearchField({
+  decorative = false,
+  onCard = false,
+  testID,
+  ...rest
+}: SearchFieldProps) {
   const [focused, setFocused] = useState(false);
 
   return (
-    <View style={[styles.box, onCard && styles.boxOnCard, focused && styles.boxFocused]}>
+    <View
+      style={[styles.box, onCard && styles.boxOnCard, focused && styles.boxFocused]}
+      pointerEvents={decorative ? 'none' : 'auto'}
+      testID={testID ? `${testID}-box` : undefined}
+    >
       <SearchGlyph />
       <TextInput
         autoCapitalize="none"
         autoCorrect={false}
         {...rest}
+        testID={testID}
+        editable={!decorative}
         style={styles.input}
         placeholderTextColor={colors.textFaint}
         onFocus={(e) => {
@@ -84,8 +102,10 @@ const styles = StyleSheet.create({
     width: 15,
     height: 14,
   },
-  // 11pt, not 13: the handle needs the remaining 4pt of the 15pt box to clear
-  // the ring. A wider ring runs its own stroke back across the lens.
+  // 11pt, not 13. The ring is pinned to the top of a 14pt box and the handle to
+  // the bottom, so the ring's *height* is what leaves the handle a band of its
+  // own. At 13 there is none, and the stroke crosses the ring instead of
+  // emerging from it, which is what the admins screen's copy was doing.
   lens: {
     position: 'absolute',
     left: 0,
@@ -112,6 +132,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textPrimary,
     paddingVertical: 13,
-    minHeight: 44,
+    minHeight: MIN_TOUCH_TARGET,
   },
 });
