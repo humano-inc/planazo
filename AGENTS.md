@@ -96,6 +96,53 @@ database, run anywhere), which is exactly why extracting it out of components
 and RPC call sites pays off. Glue with no logic of its own does not earn a
 test; the moment it grows a branch, it does.
 
+## Forms take the keyboard from `FormScreen`
+
+**Every screen with a text input renders `components/ui/FormScreen`.** Not a
+hand-rolled `SafeAreaView > KeyboardAvoidingView > ScrollView`, and not a
+neighbour copied because it was nearest.
+
+```tsx
+<FormScreen
+  header={<HeaderRow title="New plan" onCancel={cancel} />}
+  footer={<Button label={ctaLabel} onPress={post} />}
+  testID="create"
+>
+  {/* fields */}
+</FormScreen>
+```
+
+It owns four things so no screen has to: the safe area, a scroll that insets
+itself by the real keyboard height and scrolls the focused field into view, a
+footer that rides up and sits on top of the keyboard, and the home-indicator
+padding — once, by whichever of the footer or the content is last on screen.
+
+Three rules follow from that, and they are the ones worth remembering:
+
+- **The primary action goes in `footer`, never at the end of the scroll.** A
+  first-time user on TestFlight never found "Make your account" because it sat
+  at the bottom of a `ScrollView` that the keyboard pushed below the fold, and
+  signed in instead of signing up (PLA-69). An action inside the scroll is an
+  action you are betting the user will scroll for.
+- **Never pass `bottom` in `edges`.** The type already refuses it. Two things
+  padding for the same home indicator is how you get a strip of background
+  floating above a raised keyboard.
+- **No constant exists to make room for the keyboard.** If you are reaching for
+  `paddingBottom: 140`, `marginTop: 'auto'` or a `flexGrow` to keep something
+  visible, the layout is guessing at a number `FormScreen` measures. Twelve
+  screens used to carry those, tuned by eye on whichever phone the author had
+  (PLA-74).
+
+`react-native-keyboard-controller` is the engine underneath, and
+`KeyboardProvider` sits in `app/_layout.tsx` above the router because `(auth)`
+and `(app)` have separate layouts. Adding it required a native rebuild, so a
+fresh checkout needs one too: `npx expo run:ios --device "$IOS_SIMULATOR"
+--no-bundler`.
+
+Check form work on an **SE-class simulator with the keyboard up**, not just the
+reviewer's phone. A 16 Pro has ~180pt of slack that hides exactly the class of
+bug this section exists to prevent.
+
 ## Lint
 
 `eslint.config.mjs` at the root covers every package. It does two jobs, and a new

@@ -1,18 +1,10 @@
 import { useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '../../../../lib/supabase';
-import { ThemedText, Button } from '../../../../components/ui';
+import { ThemedText, Button, FormScreen } from '../../../../components/ui';
 import { colors, fonts, radii, spacing } from '../../../../theme/tokens';
 
 /**
@@ -105,46 +97,16 @@ export default function CancelPlanScreen() {
         : `${affected} people ${openFlexible ? 'sent dates' : "said they're coming"}. They'll all get a notification straight away, and the plan moves to Past.`;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={styles.sheet}>
-        <View style={styles.grabber} />
-
-        <View style={styles.headerBlock}>
-          <ThemedText variant="headerTitle">
-            Call off {plan ? `“${plan.title}”` : 'this plan'}?
-          </ThemedText>
-          <ThemedText variant="body" color={colors.textSecondary}>
-            {costLine}
-          </ThemedText>
-        </View>
-
-        <View style={styles.reasonBlock}>
-          <ThemedText variant="sectionLabel">
-            Say why{' '}
-            <ThemedText variant="caption" color={colors.textFaint} style={styles.optional}>
-              (optional)
-            </ThemedText>
-          </ThemedText>
-          <TextInput
-            style={[styles.input, focused && styles.inputFocused]}
-            value={reason}
-            onChangeText={setReason}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            multiline
-            autoFocus
-            selectionColor={colors.accent}
-            testID="cancel-reason"
-          />
-          <ThemedText variant="caption" color={colors.textMuted} style={styles.hint}>
-            This goes in the notification and stays on the plan.
-          </ThemedText>
-        </View>
-
-        <View style={styles.actions}>
+    // Keeps the `top` edge even though this is a formSheet: on a compact-height
+    // phone iOS presents a formSheet full-screen, and without the inset the
+    // title sits under the status bar. Inside a real sheet the top inset is 0,
+    // so this costs nothing there.
+    <FormScreen
+      header={<View style={styles.grabber} />}
+      contentContainerStyle={styles.sheet}
+      testID="cancel"
+      footer={
+        <>
           <Button
             label="Call it off"
             variant="danger"
@@ -162,20 +124,46 @@ export default function CancelPlanScreen() {
               Keep it
             </ThemedText>
           </Pressable>
-        </View>
+        </>
+      }
+    >
+      <View style={styles.headerBlock}>
+        <ThemedText variant="headerTitle">
+          Call off {plan ? `“${plan.title}”` : 'this plan'}?
+        </ThemedText>
+        <ThemedText variant="body" color={colors.textSecondary}>
+          {costLine}
+        </ThemedText>
       </View>
-    </KeyboardAvoidingView>
+
+      <View style={styles.reasonBlock}>
+        <ThemedText variant="sectionLabel">
+          Say why{' '}
+          <ThemedText variant="caption" color={colors.textFaint} style={styles.optional}>
+            (optional)
+          </ThemedText>
+        </ThemedText>
+        <TextInput
+          style={[styles.input, focused && styles.inputFocused]}
+          value={reason}
+          onChangeText={setReason}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          multiline
+          autoFocus
+          selectionColor={colors.accent}
+          testID="cancel-reason"
+        />
+        <ThemedText variant="caption" color={colors.textMuted} style={styles.hint}>
+          This goes in the notification and stays on the plan.
+        </ThemedText>
+      </View>
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
   sheet: {
-    flex: 1,
-    paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     gap: spacing.lg,
   },
@@ -185,7 +173,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     backgroundColor: colors.endedBorder,
     alignSelf: 'center',
-    marginBottom: spacing.xxs,
+    marginTop: spacing.md,
   },
   headerBlock: {
     gap: 7,
@@ -216,10 +204,6 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontFamily: fonts.body,
-  },
-  actions: {
-    gap: spacing.sm + 1,
-    paddingBottom: spacing.lg,
   },
   keepIt: {
     paddingVertical: spacing.lg,

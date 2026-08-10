@@ -25,3 +25,17 @@ jest.mock('react-native-safe-area-context', () => {
     initialWindowMetrics: { frame: { x: 0, y: 0, width: 390, height: 844 }, insets: zero },
   };
 });
+
+/**
+ * Same reasoning one library over (PLA-74). Every form screen renders
+ * `FormScreen`, which reaches for `KeyboardProvider`'s context, and jsdom has no
+ * keyboard to report — so without this the whole suite would need the provider
+ * mounted around every render just to get a height of zero.
+ *
+ * The mock is the library's own: `KeyboardAwareScrollView` falls back to a plain
+ * `ScrollView` and `KeyboardStickyView` to a `View`, which is exactly the
+ * keyboard-down layout the tests assert on.
+ */
+jest.mock('react-native-keyboard-controller', () =>
+  jest.requireActual('react-native-keyboard-controller/jest')
+);

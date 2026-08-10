@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, ScrollView, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +19,7 @@ import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 import type { GroupMemberRow } from '../../../../components/group/MemberList';
 import { AdminsCard } from '../../../../components/group/AdminsCard';
 import { PromoteCard } from '../../../../components/group/PromoteCard';
-import { ThemedText, ErrorState, ConfirmSheet } from '../../../../components/ui';
+import { ThemedText, ErrorState, ConfirmSheet, FormScreen } from '../../../../components/ui';
 import { colors, fonts, spacing } from '../../../../theme/tokens';
 
 /**
@@ -108,49 +108,49 @@ export default function GroupAdminsScreen() {
     demoting?.user_id === user?.id
   );
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.navRow}>
-        <Pressable
-          onPress={() => router.back()}
-          accessibilityRole="button"
-          testID="back"
-          style={styles.navAction}
-        >
-          <ThemedText variant="bodyStrong" color={colors.accent} numberOfLines={1}>
-            ‹ Manage
-          </ThemedText>
-        </Pressable>
-        <ThemedText style={styles.navTitle}>Admins</ThemedText>
-        <View style={styles.navSpacer} />
-      </View>
-
-      <ScrollView
-        style={styles.flex}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
+  const navRow = (
+    <View style={styles.navRow}>
+      <Pressable
+        onPress={() => router.back()}
+        accessibilityRole="button"
+        testID="back"
+        style={styles.navAction}
       >
-        <ThemedText variant="sub">
-          Admins edit the group, remove people, and make other admins.
+        <ThemedText variant="bodyStrong" color={colors.accent} numberOfLines={1}>
+          ‹ Manage
         </ThemedText>
+      </Pressable>
+      <ThemedText style={styles.navTitle}>Admins</ThemedText>
+      <View style={styles.navSpacer} />
+    </View>
+  );
 
-        <AdminsCard
-          admins={admins}
-          myId={user?.id}
-          createdBy={group.created_by ?? null}
-          viewerIsAdmin={viewerIsAdmin}
-          disabled={setRole.isPending}
-          onDemote={setDemoting}
-        />
+  return (
+    // The ConfirmSheet is a sibling of the form, not content inside it: it
+    // covers the screen when it opens and must not scroll with the list.
+    <>
+      <FormScreen header={navRow} contentContainerStyle={styles.content} testID="admins">
+          <ThemedText variant="sub">
+            Admins edit the group, remove people, and make other admins.
+          </ThemedText>
 
-        {viewerIsAdmin ? (
-          <PromoteCard
-            candidates={candidates}
+          <AdminsCard
+            admins={admins}
+            myId={user?.id}
+            createdBy={group.created_by ?? null}
+            viewerIsAdmin={viewerIsAdmin}
             disabled={setRole.isPending}
-            onPromote={(m) => setRole.mutate({ userId: m.user_id, role: 'admin' })}
+            onDemote={setDemoting}
           />
-        ) : null}
-      </ScrollView>
+
+          {viewerIsAdmin ? (
+            <PromoteCard
+              candidates={candidates}
+              disabled={setRole.isPending}
+              onPromote={(m) => setRole.mutate({ userId: m.user_id, role: 'admin' })}
+            />
+          ) : null}
+      </FormScreen>
 
       <ConfirmSheet
         visible={!!demoting}
@@ -161,7 +161,7 @@ export default function GroupAdminsScreen() {
         onCancel={() => setDemoting(null)}
         testID="confirm-demote"
       />
-    </SafeAreaView>
+    </>
   );
 }
 
@@ -198,9 +198,7 @@ const styles = StyleSheet.create({
     width: 20,
   },
   content: {
-    paddingHorizontal: spacing.xl,
     paddingTop: 6,
-    paddingBottom: 40,
     gap: spacing.xxl,
   },
 });

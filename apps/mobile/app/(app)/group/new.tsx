@@ -1,17 +1,7 @@
 import { useState } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  Pressable,
-  TextInput,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import { useDismissTo, useLeaveFor } from '../../../lib/navigation';
 import { contentViolation } from '../../../lib/moderation';
@@ -22,7 +12,7 @@ import { FriendPicker } from '../../../components/group/FriendPicker';
 import {
   ThemedText,
   Button,
-  FooterBar,
+  FormScreen,
   GroupTile,
   GroupPhotoField,
   showToast,
@@ -115,107 +105,30 @@ export default function NewGroupScreen() {
         ? `Create and invite ${picks.length}`
         : 'Create group';
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={cancel}
-          accessibilityRole="button"
-          testID="cancel"
-          style={styles.headerAction}
-        >
-          <ThemedText variant="bodyStrong" color={colors.textMuted}>
-            Cancel
-          </ThemedText>
-        </Pressable>
-        <ThemedText style={styles.headerTitle}>New group</ThemedText>
-        <View style={styles.headerSpacer} />
-      </View>
-
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+  const header = (
+    <View style={styles.header}>
+      <Pressable
+        onPress={cancel}
+        accessibilityRole="button"
+        testID="cancel"
+        style={styles.headerAction}
       >
-        <ScrollView
-          style={styles.flex}
-          contentContainerStyle={styles.content}
-          contentOffset={params.y ? { x: 0, y: Number(params.y) } : undefined}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.nameRow}>
-            <GroupTile
-              name={named ? name : '?'}
-              color={groupColors[colorIdx]}
-              imageUrl={photoUri}
-              size={52}
-            />
-            <View style={styles.nameBlock}>
-              <TextInput
-                style={styles.nameInput}
-                placeholder="Name the group"
-                placeholderTextColor={colors.textFaint}
-                value={name}
-                onChangeText={setName}
-                testID="name-input"
-              />
-              <View style={styles.rule} />
-            </View>
-          </View>
+        <ThemedText variant="bodyStrong" color={colors.textMuted}>
+          Cancel
+        </ThemedText>
+      </Pressable>
+      <ThemedText style={styles.headerTitle}>New group</ThemedText>
+      <View style={styles.headerSpacer} />
+    </View>
+  );
 
-          <GroupPhotoField
-            uri={photoUri}
-            uploading={createGroup.isPending && !!photoUri}
-            caption="The photo is the group's tile everywhere."
-            onPick={setPhotoUri}
-            onRemove={() => setPhotoUri(null)}
-          />
-
-          {photoUri ? (
-            // Group profile says the same thing when a photo hides the
-            // swatches. Saying nothing here made them look like a glitch.
-            <ThemedText variant="sub">
-              Colour is hidden while a photo is set. It comes back the moment the photo goes.
-            </ThemedText>
-          ) : (
-            <View style={styles.section}>
-              <ThemedText variant="sectionLabel">Colour</ThemedText>
-              <View style={styles.swatches}>
-                {groupColors.map((swatch, i) => (
-                  <Pressable
-                    key={swatch}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: i === colorIdx }}
-                    onPress={() => setColorIdx(i)}
-                    style={[
-                      styles.swatch,
-                      { backgroundColor: swatch },
-                      i === colorIdx && styles.swatchSelected,
-                    ]}
-                    testID={`swatch-${i}`}
-                  />
-                ))}
-              </View>
-            </View>
-          )}
-
-          <View style={styles.section}>
-            <ThemedText variant="sectionLabel">What's it for</ThemedText>
-            <TextInput
-              style={styles.descInput}
-              placeholder="One line so people know what they're joining. Skippable."
-              placeholderTextColor={colors.textFaint}
-              value={desc}
-              onChangeText={setDesc}
-              multiline
-              testID="desc-input"
-            />
-          </View>
-
-          <FriendPicker picks={picks} onToggle={togglePick} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-
-      <FooterBar pinned>
+  return (
+    <FormScreen
+      header={header}
+      contentContainerStyle={styles.content}
+      contentOffset={params.y ? { x: 0, y: Number(params.y) } : undefined}
+      testID="group-new"
+      footer={
         <Button
           label={ctaLabel}
           variant={named ? 'primary' : 'secondary'}
@@ -224,19 +137,83 @@ export default function NewGroupScreen() {
           onPress={() => createGroup.mutate()}
           testID="create-cta"
         />
-      </FooterBar>
-    </SafeAreaView>
+      }
+    >
+      <View style={styles.nameRow}>
+        <GroupTile
+          name={named ? name : '?'}
+          color={groupColors[colorIdx]}
+          imageUrl={photoUri}
+          size={52}
+        />
+        <View style={styles.nameBlock}>
+          <TextInput
+            style={styles.nameInput}
+            placeholder="Name the group"
+            placeholderTextColor={colors.textFaint}
+            value={name}
+            onChangeText={setName}
+            testID="name-input"
+          />
+          <View style={styles.rule} />
+        </View>
+      </View>
+
+      <GroupPhotoField
+        uri={photoUri}
+        uploading={createGroup.isPending && !!photoUri}
+        caption="The photo is the group's tile everywhere."
+        onPick={setPhotoUri}
+        onRemove={() => setPhotoUri(null)}
+      />
+
+      {photoUri ? (
+        // Group profile says the same thing when a photo hides the
+        // swatches. Saying nothing here made them look like a glitch.
+        <ThemedText variant="sub">
+          Colour is hidden while a photo is set. It comes back the moment the photo goes.
+        </ThemedText>
+      ) : (
+        <View style={styles.section}>
+          <ThemedText variant="sectionLabel">Colour</ThemedText>
+          <View style={styles.swatches}>
+            {groupColors.map((swatch, i) => (
+              <Pressable
+                key={swatch}
+                accessibilityRole="button"
+                accessibilityState={{ selected: i === colorIdx }}
+                onPress={() => setColorIdx(i)}
+                style={[
+                  styles.swatch,
+                  { backgroundColor: swatch },
+                  i === colorIdx && styles.swatchSelected,
+                ]}
+                testID={`swatch-${i}`}
+              />
+            ))}
+          </View>
+        </View>
+      )}
+
+      <View style={styles.section}>
+        <ThemedText variant="sectionLabel">What's it for</ThemedText>
+        <TextInput
+          style={styles.descInput}
+          placeholder="One line so people know what they're joining. Skippable."
+          placeholderTextColor={colors.textFaint}
+          value={desc}
+          onChangeText={setDesc}
+          multiline
+          testID="desc-input"
+        />
+      </View>
+
+      <FriendPicker picks={picks} onToggle={togglePick} />
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -259,9 +236,7 @@ const styles = StyleSheet.create({
     width: 48,
   },
   content: {
-    paddingHorizontal: spacing.xl,
     paddingTop: spacing.sm,
-    paddingBottom: 140,
     gap: spacing.xxl,
   },
   nameRow: {

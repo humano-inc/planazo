@@ -1,18 +1,10 @@
 import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { supabase } from '../../lib/supabase';
 import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
 import { useAuthStore } from '../../stores/authStore';
-import { BrandMark, Button, FooterBar, FormField, ThemedText } from '../../components/ui';
+import { BrandMark, Button, FormField, FormScreen, ThemedText } from '../../components/ui';
 import { colors, fonts, spacing } from '../../theme/tokens';
 
 export default function LoginScreen() {
@@ -81,84 +73,11 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-          testID="login-scroll"
-        >
-          <View style={styles.body} testID="login-body">
-            <BrandMark size={52} />
-
-            <ThemedText variant="screenTitle" style={styles.title}>
-              Welcome back
-            </ThemedText>
-
-            <View style={styles.fields}>
-              <FormField
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="your@email.com"
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                autoComplete="email"
-                testID="email-input"
-              />
-
-              <FormField
-                label="Password"
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Your password"
-                autoCapitalize="none"
-                autoComplete="password"
-                secure
-                testID="password-input"
-              />
-
-              <View style={styles.forgotRow}>
-                <Link href="/(auth)/forgot" asChild>
-                  <Pressable accessibilityRole="button" hitSlop={LINK_HIT_SLOP} testID="forgot-link">
-                    <ThemedText variant="caption" color={colors.accentText}>
-                      Forgot your password?
-                    </ThemedText>
-                  </Pressable>
-                </Link>
-              </View>
-            </View>
-
-            {error ? (
-              <View
-                style={styles.errorBox}
-                accessibilityRole="alert"
-                accessibilityLiveRegion="assertive"
-                testID="login-error"
-              >
-                <ThemedText variant="bodyStrong" color={colors.accentText}>
-                  {error}
-                </ThemedText>
-              </View>
-            ) : null}
-
-          </View>
-        </ScrollView>
-
-        {/*
-          Outside the ScrollView, inside the KeyboardAvoidingView, so both ways
-          out of this screen survive the keyboard opening. They used to sit at
-          the end of the scrolling content, where a raised keyboard pushed them
-          below the fold — and a first-timer who never found the way to sign up
-          typed their details into this form instead (PLA-69). Same structure as
-          signup.tsx.
-        */}
-        <FooterBar testID="login-footer">
+    <FormScreen
+      contentContainerStyle={styles.scroll}
+      testID="login"
+      footer={
+        <>
           <Button
             label={loading ? 'Signing in…' : 'Sign in'}
             onPress={handleLogin}
@@ -176,20 +95,69 @@ export default function LoginScreen() {
               </Pressable>
             </Link>
           </View>
-        </FooterBar>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </>
+      }
+    >
+      <View style={styles.body} testID="login-body">
+        <BrandMark size={52} />
+
+        <ThemedText variant="screenTitle" style={styles.title}>
+          Welcome back
+        </ThemedText>
+
+        <View style={styles.fields}>
+          <FormField
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            placeholder="your@email.com"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            autoComplete="email"
+            testID="email-input"
+          />
+
+          <FormField
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Your password"
+            autoCapitalize="none"
+            autoComplete="password"
+            secure
+            testID="password-input"
+          />
+
+          <View style={styles.forgotRow}>
+            <Link href="/(auth)/forgot" asChild>
+              <Pressable accessibilityRole="button" hitSlop={LINK_HIT_SLOP} testID="forgot-link">
+                <ThemedText variant="caption" color={colors.accentText}>
+                  Forgot your password?
+                </ThemedText>
+              </Pressable>
+            </Link>
+          </View>
+        </View>
+
+        {error ? (
+          <View
+            style={styles.errorBox}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="assertive"
+            testID="login-error"
+          >
+            <ThemedText variant="bodyStrong" color={colors.accentText}>
+              {error}
+            </ThemedText>
+          </View>
+        ) : null}
+      </View>
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
   scroll: {
     flexGrow: 1,
   },
@@ -198,23 +166,20 @@ const styles = StyleSheet.create({
     // at large text sizes the content overflowed instead of making the view
     // scrollable, and the bottom of the form became unreachable.
     flexGrow: 1,
-    paddingHorizontal: spacing.xl,
-    // This, `title.marginTop` and `fields.marginTop` were all tightened
-    // together, and are deliberately smaller than they look like they should
-    // be. The pinned footer takes ~110pt off the scrolling area; with a
-    // keyboard up as well, this spacing is what keeps "Forgot your password?"
-    // from falling under the footer on a normal phone. Round any of the three
-    // up to the nearest token and it slides back under. On smaller phones it
-    // scrolls instead, which is fine: the two actions that matter are pinned.
-    paddingTop: 22,
+    // These three were 22 / 18 / xxl, deliberately undersized to keep "Forgot
+    // your password?" clear of the footer with a keyboard up. FormScreen
+    // measures the footer and scrolls the focused field above it, so the
+    // spacing no longer has to double as arithmetic and goes back to tokens
+    // (PLA-74).
+    paddingTop: spacing.xxl,
     paddingBottom: spacing.lg,
   },
   title: {
-    marginTop: 18,
+    marginTop: spacing.xl,
   },
   fields: {
     gap: 18,
-    marginTop: spacing.xxl,
+    marginTop: spacing.xxxl,
   },
   forgotRow: {
     flexDirection: 'row',

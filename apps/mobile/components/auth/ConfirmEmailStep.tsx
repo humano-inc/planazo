@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Pressable, StyleSheet, View } from 'react-native';
 import type { AuthError, Session } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
-import { Button, FooterBar, FormField, ThemedText } from '../ui';
+import { Button, FormField, FormScreen, ThemedText } from '../ui';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 
 const CODE_LENGTH = 6;
@@ -158,79 +157,11 @@ export function ConfirmEmailStep({ email, autoSend = false, onVerified, onBack }
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-        >
-          <View style={styles.tick}>
-            <ThemedText variant="bodyStrong" color={colors.confirmed} style={styles.tickGlyph}>
-              ✓
-            </ThemedText>
-          </View>
-
-          <ThemedText variant="screenTitle" style={styles.title}>
-            Check your email
-          </ThemedText>
-          <ThemedText variant="body" color={colors.textSecondary} style={styles.blurb}>
-            We sent a {CODE_LENGTH}-digit code to{' '}
-            <ThemedText variant="bodyStrong">{email}</ThemedText>. Enter it here and you&apos;re in.
-          </ThemedText>
-
-          <View style={styles.field}>
-            <FormField
-              label="Your code"
-              value={code}
-              // Digits only: the code is numeric, and stripping as they type is
-              // kinder than refusing a paste that carried a stray space.
-              onChangeText={(next) => setCode(next.replace(/\D/g, '').slice(0, CODE_LENGTH))}
-              placeholder="000000"
-              keyboardType="number-pad"
-              // iOS offers the code straight from the Mail notification banner,
-              // which is the whole reason a code beats a link on a phone.
-              textContentType="oneTimeCode"
-              autoComplete="one-time-code"
-              maxLength={CODE_LENGTH}
-              testID="code-input"
-            />
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ disabled: cooldown > 0 || sending }}
-              disabled={cooldown > 0 || sending}
-              hitSlop={LINK_HIT_SLOP}
-              onPress={() => resend()}
-              testID="resend-code"
-            >
-              <ThemedText
-                variant="caption"
-                color={cooldown > 0 || sending ? colors.textFaint : colors.accentText}
-              >
-                {resendLabel()}
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          {notice ? (
-            <View
-              style={[styles.noticeBox, notice.tone === 'info' && styles.noticeBoxInfo]}
-              accessibilityRole="alert"
-              accessibilityLiveRegion="assertive"
-              testID={notice.tone === 'info' ? 'confirm-notice' : 'confirm-error'}
-            >
-              <ThemedText
-                variant="bodyStrong"
-                color={notice.tone === 'info' ? colors.confirmed : colors.accentText}
-              >
-                {notice.text}
-              </ThemedText>
-            </View>
-          ) : null}
-        </ScrollView>
-
-        <FooterBar>
+    <FormScreen
+      contentContainerStyle={styles.scroll}
+      testID="confirm-email"
+      footer={
+        <>
           <Button
             label={footerLabel()}
             variant={ready ? 'primary' : 'secondary'}
@@ -240,28 +171,89 @@ export function ConfirmEmailStep({ email, autoSend = false, onVerified, onBack }
           />
           <View style={styles.footerRow}>
             <ThemedText variant="sub">Wrong email?</ThemedText>
-            <Pressable accessibilityRole="button" hitSlop={LINK_HIT_SLOP} onPress={onBack} testID="confirm-back">
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={LINK_HIT_SLOP}
+              onPress={onBack}
+              testID="confirm-back"
+            >
               <ThemedText variant="sub" color={colors.accentText} style={styles.footerLink}>
                 Go back
               </ThemedText>
             </Pressable>
           </View>
-        </FooterBar>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </>
+      }
+    >
+      <View style={styles.tick}>
+        <ThemedText variant="bodyStrong" color={colors.confirmed} style={styles.tickGlyph}>
+          ✓
+        </ThemedText>
+      </View>
+
+      <ThemedText variant="screenTitle" style={styles.title}>
+        Check your email
+      </ThemedText>
+      <ThemedText variant="body" color={colors.textSecondary} style={styles.blurb}>
+        We sent a {CODE_LENGTH}-digit code to{' '}
+        <ThemedText variant="bodyStrong">{email}</ThemedText>. Enter it here and you&apos;re in.
+      </ThemedText>
+
+      <View style={styles.field}>
+        <FormField
+          label="Your code"
+          value={code}
+          // Digits only: the code is numeric, and stripping as they type is
+          // kinder than refusing a paste that carried a stray space.
+          onChangeText={(next) => setCode(next.replace(/\D/g, '').slice(0, CODE_LENGTH))}
+          placeholder="000000"
+          keyboardType="number-pad"
+          // iOS offers the code straight from the Mail notification banner,
+          // which is the whole reason a code beats a link on a phone.
+          textContentType="oneTimeCode"
+          autoComplete="one-time-code"
+          maxLength={CODE_LENGTH}
+          testID="code-input"
+        />
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={{ disabled: cooldown > 0 || sending }}
+          disabled={cooldown > 0 || sending}
+          hitSlop={LINK_HIT_SLOP}
+          onPress={() => resend()}
+          testID="resend-code"
+        >
+          <ThemedText
+            variant="caption"
+            color={cooldown > 0 || sending ? colors.textFaint : colors.accentText}
+          >
+            {resendLabel()}
+          </ThemedText>
+        </Pressable>
+      </View>
+
+      {notice ? (
+        <View
+          style={[styles.noticeBox, notice.tone === 'info' && styles.noticeBoxInfo]}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive"
+          testID={notice.tone === 'info' ? 'confirm-notice' : 'confirm-error'}
+        >
+          <ThemedText
+            variant="bodyStrong"
+            color={notice.tone === 'info' ? colors.confirmed : colors.accentText}
+          >
+            {notice.text}
+          </ThemedText>
+        </View>
+      ) : null}
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
   scroll: {
-    paddingHorizontal: spacing.xl,
     paddingTop: 40,
     paddingBottom: spacing.xxl,
   },

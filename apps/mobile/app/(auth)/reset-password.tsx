@@ -1,18 +1,11 @@
 import { useEffect, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { supabase } from '../../lib/supabase';
 import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
-import { Button, FormField, ThemedText } from '../../components/ui';
+import { Button, FormField, FormScreen, ThemedText } from '../../components/ui';
 import { colors, spacing } from '../../theme/tokens';
 
 const MIN_PASSWORD = 6;
@@ -167,60 +160,50 @@ export default function ResetPasswordScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
+    <FormScreen
+      contentContainerStyle={styles.body}
+      testID="reset"
+      footer={
+        <Button
+          label={saving ? 'Saving…' : 'Save and go in'}
+          disabled={saving}
+          onPress={savePassword}
+          testID="save-password"
+        />
+      }
+    >
+      <ThemedText variant="screenTitle">Pick a new password</ThemedText>
+      <ThemedText variant="body" color={colors.textSecondary} style={styles.blurb}>
+        Choose something you&apos;ll remember. We&apos;ll take you straight in afterwards.
+      </ThemedText>
+
+      <View style={styles.field}>
+        <FormField
+          label="New password"
+          value={password}
+          onChangeText={setPassword}
+          placeholder={`At least ${MIN_PASSWORD} characters`}
+          autoCapitalize="none"
+          autoComplete="new-password"
+          secure
+          autoFocus
+          testID="password-input"
+        />
+      </View>
+
+      {error ? (
+        <View
+          style={styles.errorBox}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive"
+          testID="reset-error"
         >
-          <View style={styles.body}>
-            <ThemedText variant="screenTitle">Pick a new password</ThemedText>
-            <ThemedText variant="body" color={colors.textSecondary} style={styles.blurb}>
-              Choose something you&apos;ll remember. We&apos;ll take you straight in afterwards.
-            </ThemedText>
-
-            <View style={styles.field}>
-              <FormField
-                label="New password"
-                value={password}
-                onChangeText={setPassword}
-                placeholder={`At least ${MIN_PASSWORD} characters`}
-                autoCapitalize="none"
-                autoComplete="new-password"
-                secure
-                autoFocus
-                testID="password-input"
-              />
-            </View>
-
-            {error ? (
-              <View
-                style={styles.errorBox}
-                accessibilityRole="alert"
-                accessibilityLiveRegion="assertive"
-                testID="reset-error"
-              >
-                <ThemedText variant="bodyStrong" color={colors.accentText}>
-                  {error}
-                </ThemedText>
-              </View>
-            ) : null}
-
-            <Button
-              label={saving ? 'Saving…' : 'Save and go in'}
-              disabled={saving}
-              onPress={savePassword}
-              style={styles.submit}
-              testID="save-password"
-            />
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          <ThemedText variant="bodyStrong" color={colors.accentText}>
+            {error}
+          </ThemedText>
+        </View>
+      ) : null}
+    </FormScreen>
   );
 }
 
@@ -229,18 +212,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  flex: {
-    flex: 1,
-  },
-  scroll: {
-    flexGrow: 1,
-  },
   body: {
     // flexGrow, not flex. `flex: 1` clamps this to the ScrollView's height, so
     // at large text sizes the content overflowed instead of making the view
     // scrollable — the sign-in button ended up below the fold, unreachable.
     flexGrow: 1,
-    paddingHorizontal: spacing.xl,
     paddingTop: 60,
   },
   centred: {

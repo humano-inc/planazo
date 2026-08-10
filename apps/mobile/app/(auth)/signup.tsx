@@ -1,14 +1,5 @@
 import { useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -20,7 +11,7 @@ import { contentViolation } from '../../lib/moderation';
 import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
 import { useAuthStore } from '../../stores/authStore';
 import { ConfirmEmailStep } from '../../components/auth/ConfirmEmailStep';
-import { Avatar, Button, FooterBar, FormField, ThemedText } from '../../components/ui';
+import { Avatar, Button, FormField, FormScreen, ThemedText } from '../../components/ui';
 import { colors, fonts, spacing } from '../../theme/tokens';
 
 const MIN_PASSWORD = 6;
@@ -201,111 +192,28 @@ export default function SignupScreen() {
     );
   }
 
-  return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <View style={styles.backRow}>
-        <Pressable
-          accessibilityRole="button"
-          hitSlop={LINK_HIT_SLOP}
-          onPress={() => router.back()}
-          testID="back"
-        >
-          <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-            ‹ Back
-          </ThemedText>
-        </Pressable>
-      </View>
-
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+  const backRow = (
+    <View style={styles.backRow}>
+      <Pressable
+        accessibilityRole="button"
+        hitSlop={LINK_HIT_SLOP}
+        onPress={() => router.back()}
+        testID="back"
       >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
-        >
-          <ThemedText variant="screenTitle">Make your account</ThemedText>
-          <ThemedText variant="body" color={colors.textSecondary} style={styles.blurb}>
-            One minute, and you can start your first plan.
-          </ThemedText>
+        <ThemedText variant="bodyStrong" color={colors.textSecondary}>
+          ‹ Back
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
 
-          <View style={styles.photoBlock}>
-            <Pressable
-              accessibilityRole="button"
-              onPress={pickImage}
-              style={styles.avatarWrap}
-              testID="avatar-press"
-            >
-              <Avatar name={displayName.trim() || '?'} size={84} imageUrl={avatarUri} />
-              <View style={styles.badge}>
-                <ThemedText variant="caption" color={colors.textOnAccent}>
-                  ✦
-                </ThemedText>
-              </View>
-            </Pressable>
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={LINK_HIT_SLOP}
-              onPress={pickImage}
-              testID="add-photo"
-            >
-              <ThemedText variant="caption" color={colors.accentText}>
-                Add a photo (optional)
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          <View style={styles.fields}>
-            <FormField
-              label="Your name"
-              value={displayName}
-              onChangeText={setDisplayName}
-              placeholder="Your name"
-              autoComplete="name"
-              hint="It's what your groups see next to your yes."
-              testID="name-input"
-            />
-
-            <FormField
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              placeholder="your@email.com"
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              autoComplete="email"
-              testID="email-input"
-            />
-
-            <FormField
-              label="Password"
-              value={password}
-              onChangeText={setPassword}
-              placeholder={`At least ${MIN_PASSWORD} characters`}
-              autoCapitalize="none"
-              autoComplete="new-password"
-              secure
-              testID="password-input"
-            />
-          </View>
-
-          {error ? (
-            <View
-              style={styles.errorBox}
-              accessibilityRole="alert"
-              accessibilityLiveRegion="assertive"
-              testID="signup-error"
-            >
-              <ThemedText variant="bodyStrong" color={colors.accentText}>
-                {error}
-              </ThemedText>
-            </View>
-          ) : null}
-        </ScrollView>
-
-        <FooterBar>
+  return (
+    <FormScreen
+      header={backRow}
+      contentContainerStyle={styles.scroll}
+      testID="signup"
+      footer={
+        <>
           <Button
             label={loading ? 'Making your account…' : step.label}
             variant={step.ready ? 'primary' : 'secondary'}
@@ -323,27 +231,98 @@ export default function SignupScreen() {
               </Pressable>
             </Link>
           </View>
-        </FooterBar>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+        </>
+      }
+    >
+      <ThemedText variant="screenTitle">Make your account</ThemedText>
+      <ThemedText variant="body" color={colors.textSecondary} style={styles.blurb}>
+        One minute, and you can start your first plan.
+      </ThemedText>
+
+      <View style={styles.photoBlock}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={pickImage}
+          style={styles.avatarWrap}
+          testID="avatar-press"
+        >
+          <Avatar name={displayName.trim() || '?'} size={84} imageUrl={avatarUri} />
+          <View style={styles.badge}>
+            <ThemedText variant="caption" color={colors.textOnAccent}>
+              ✦
+            </ThemedText>
+          </View>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={LINK_HIT_SLOP}
+          onPress={pickImage}
+          testID="add-photo"
+        >
+          <ThemedText variant="caption" color={colors.accentText}>
+            Add a photo (optional)
+          </ThemedText>
+        </Pressable>
+      </View>
+
+      <View style={styles.fields}>
+        <FormField
+          label="Your name"
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholder="Your name"
+          autoComplete="name"
+          hint="It's what your groups see next to your yes."
+          testID="name-input"
+        />
+
+        <FormField
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          placeholder="your@email.com"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          autoComplete="email"
+          testID="email-input"
+        />
+
+        <FormField
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          placeholder={`At least ${MIN_PASSWORD} characters`}
+          autoCapitalize="none"
+          autoComplete="new-password"
+          secure
+          testID="password-input"
+        />
+      </View>
+
+      {error ? (
+        <View
+          style={styles.errorBox}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive"
+          testID="signup-error"
+        >
+          <ThemedText variant="bodyStrong" color={colors.accentText}>
+            {error}
+          </ThemedText>
+        </View>
+      ) : null}
+    </FormScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  flex: {
-    flex: 1,
-  },
   backRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.xl,
     paddingTop: 6,
   },
   scroll: {
-    paddingHorizontal: spacing.xl,
     paddingTop: 18,
     paddingBottom: spacing.xxl,
   },

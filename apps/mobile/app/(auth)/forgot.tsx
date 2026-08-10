@@ -1,18 +1,11 @@
 import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { supabase } from '../../lib/supabase';
 import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
-import { Button, ConfirmCard, FormField, ThemedText } from '../../components/ui';
+import { Button, ConfirmCard, FormField, FormScreen, ThemedText } from '../../components/ui';
 import { colors, fonts, spacing } from '../../theme/tokens';
 
 /**
@@ -117,88 +110,83 @@ export default function ForgotPasswordScreen() {
     );
   }
 
+  const backRow = (
+    <View style={styles.backRow}>
+      <Pressable
+        accessibilityRole="button"
+        hitSlop={LINK_HIT_SLOP}
+        onPress={() => router.back()}
+        testID="back"
+      >
+        <ThemedText variant="bodyStrong" color={colors.textSecondary}>
+          ‹ Back
+        </ThemedText>
+      </Pressable>
+    </View>
+  );
+
   return (
-    <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <View style={styles.backRow}>
-        <Pressable
-          accessibilityRole="button"
-          hitSlop={LINK_HIT_SLOP}
-          onPress={() => router.back()}
-          testID="back"
-        >
-          <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-            ‹ Back
-          </ThemedText>
-        </Pressable>
+    <FormScreen
+      header={backRow}
+      contentContainerStyle={styles.body}
+      testID="forgot"
+      footer={
+        <>
+          <Button
+            label={loading ? 'Sending…' : 'Send me the link'}
+            disabled={loading}
+            onPress={() => sendLink(email)}
+            testID="send-link"
+          />
+
+          <View style={styles.footer}>
+            <ThemedText variant="sub">Remembered it?</ThemedText>
+            <Link href="/(auth)/login" asChild>
+              <Pressable accessibilityRole="button" hitSlop={LINK_HIT_SLOP} testID="login-link">
+                <ThemedText variant="sub" color={colors.accentText} style={styles.footerLink}>
+                  Sign in
+                </ThemedText>
+              </Pressable>
+            </Link>
+          </View>
+        </>
+      }
+    >
+      <ThemedText variant="screenTitle" style={styles.title}>
+        We&apos;ll send you a link
+      </ThemedText>
+      <ThemedText variant="body" color={colors.textSecondary} style={styles.blurb}>
+        Put in the email you sign in with and we&apos;ll send a link to pick a new password.
+      </ThemedText>
+
+      <View style={styles.field}>
+        <FormField
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          placeholder="your@email.com"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          autoComplete="email"
+          autoFocus
+          testID="email-input"
+        />
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="on-drag"
+      {error ? (
+        <View
+          style={styles.errorBox}
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive"
+          testID="forgot-error"
         >
-          <View style={styles.body}>
-            <ThemedText variant="screenTitle" style={styles.title}>
-              We&apos;ll send you a link
-            </ThemedText>
-            <ThemedText variant="body" color={colors.textSecondary} style={styles.blurb}>
-              Put in the email you sign in with and we&apos;ll send a link to pick a new password.
-            </ThemedText>
-
-            <View style={styles.field}>
-              <FormField
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="your@email.com"
-                autoCapitalize="none"
-                autoCorrect={false}
-                keyboardType="email-address"
-                autoComplete="email"
-                autoFocus
-                testID="email-input"
-              />
-            </View>
-
-            {error ? (
-              <View
-                style={styles.errorBox}
-                accessibilityRole="alert"
-                accessibilityLiveRegion="assertive"
-                testID="forgot-error"
-              >
-                <ThemedText variant="bodyStrong" color={colors.accentText}>
-                  {error}
-                </ThemedText>
-              </View>
-            ) : null}
-
-            <Button
-              label={loading ? 'Sending…' : 'Send me the link'}
-              disabled={loading}
-              onPress={() => sendLink(email)}
-              style={styles.submit}
-              testID="send-link"
-            />
-
-            <View style={styles.footer}>
-              <ThemedText variant="sub">Remembered it?</ThemedText>
-              <Link href="/(auth)/login" asChild>
-                <Pressable accessibilityRole="button" hitSlop={LINK_HIT_SLOP} testID="login-link">
-                  <ThemedText variant="sub" color={colors.accentText} style={styles.footerLink}>
-                    Sign in
-                  </ThemedText>
-                </Pressable>
-              </Link>
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          <ThemedText variant="bodyStrong" color={colors.accentText}>
+            {error}
+          </ThemedText>
+        </View>
+      ) : null}
+    </FormScreen>
   );
 }
 
@@ -207,23 +195,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  flex: {
-    flex: 1,
-  },
   backRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.xl,
     paddingTop: 6,
-  },
-  scroll: {
-    flexGrow: 1,
   },
   body: {
     // flexGrow, not flex. `flex: 1` clamps this to the ScrollView's height, so
     // at large text sizes the content overflowed instead of making the view
     // scrollable — the sign-in button ended up below the fold, unreachable.
     flexGrow: 1,
-    paddingHorizontal: spacing.xl,
     paddingTop: 28,
   },
   title: {
@@ -235,9 +216,6 @@ const styles = StyleSheet.create({
   },
   field: {
     marginTop: 30,
-  },
-  submit: {
-    marginTop: spacing.xxl,
   },
   errorBox: {
     marginTop: spacing.xl,
@@ -254,12 +232,6 @@ const styles = StyleSheet.create({
     // fit side by side; wrapping stacks them instead of running off-screen.
     flexWrap: 'wrap',
     gap: 6,
-    // Replaces a flex:1 spacer View. Same effect when there is room to spare,
-    // but this one yields once the content is taller than the screen instead
-    // of fighting it.
-    marginTop: 'auto',
-    paddingTop: spacing.xxl,
-    paddingBottom: 34,
   },
   footerLink: {
     fontFamily: fonts.bodyBold,
