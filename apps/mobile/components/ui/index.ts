@@ -8,6 +8,7 @@ export { ConfirmSheet } from './ConfirmSheet';
 export { SwipeRow, ACTION_WIDTH } from './SwipeRow';
 export type { SwipeAction } from './SwipeRow';
 export { FormField } from './FormField';
+export { SearchField, SearchGlyph } from './SearchField';
 export { Card } from './Card';
 export { Chip } from './Chip';
 export { Badge } from './Badge';

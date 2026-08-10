@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { OnboardingCard, CardArt } from './OnboardingCard';
-import { ThemedText, Avatar } from '../ui';
+import { ThemedText, Avatar, SearchField } from '../ui';
 import { colors, fonts, groupColors, radii, spacing } from '../../theme/tokens';
 
 interface PersonProps {
@@ -49,15 +49,10 @@ export function PeopleCard({ width }: { width: number }) {
       testID="onboarding-people"
     >
       <CardArt style={styles.art}>
-        <View style={styles.search}>
-          <View style={styles.magnifier}>
-            <View style={styles.lens} />
-            <View style={styles.handle} />
-          </View>
-          <ThemedText color={colors.textFaint} style={styles.searchText}>
-            Name or @handle
-          </ThemedText>
-        </View>
+        {/* A picture of Find people's field, so it is the same component with
+            nothing behind it: editable={false} leaves the placeholder showing
+            and takes no taps, and CardArt already hides it from VoiceOver. */}
+        <SearchField placeholder="Name or @handle" editable={false} onCard />
 
         <Person name="Nacho Pardo" handle="@nacho" bg={groupColors[1]} action="Add" />
         <Person
@@ -84,46 +79,6 @@ const styles = StyleSheet.create({
   // block, not three separate beats.
   art: {
     gap: 10,
-  },
-  search: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 11,
-    backgroundColor: colors.background,
-    borderWidth: 1.5,
-    borderColor: colors.ink,
-    borderRadius: radii.input,
-    paddingHorizontal: 15,
-  },
-  searchText: {
-    flex: 1,
-    fontSize: 16,
-    lineHeight: 16,
-    paddingVertical: 13,
-  },
-  // Two rectangles standing in for a magnifier: a ring and a stroke at 45°.
-  magnifier: {
-    width: 15,
-    height: 14,
-  },
-  lens: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    width: 11,
-    height: 11,
-    borderRadius: radii.pill,
-    borderWidth: 1.5,
-    borderColor: colors.textMuted,
-  },
-  handle: {
-    position: 'absolute',
-    right: 0,
-    bottom: 0,
-    width: 8,
-    height: 2,
-    backgroundColor: colors.textMuted,
-    transform: [{ rotate: '45deg' }],
   },
   person: {
     flexDirection: 'row',
