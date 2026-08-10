@@ -42,6 +42,29 @@ export function canInvite(
   return whoCanInviteOf(whoCanInvite) === 'members' || role === 'admin';
 }
 
+/**
+ * What this group's settings take away from a plain member, in plain words.
+ *
+ * A member can move none of them, so the switches are hidden rather than shown
+ * dead (PLA-61), and only the settings actually in force are said out loud. A
+ * group on its open defaults says nothing at all, which is most groups.
+ */
+export function memberLimits(
+  whoCanInvite: string | null | undefined,
+  anyoneCanPost: boolean | null | undefined,
+): string[] {
+  const limits: string[] = [];
+  if (whoCanInviteOf(whoCanInvite) === 'admins') {
+    limits.push('Only admins can invite people here.');
+  }
+  // `anyone_can_post` is NOT NULL DEFAULT true, so only an explicit false is a
+  // closed door. Anything unreadable lands on open, like the dials above.
+  if (anyoneCanPost === false) {
+    limits.push('Only admins can post plans here.');
+  }
+  return limits;
+}
+
 /** What the invite sheet promises about the link it is showing. */
 export function linkBlurb(joinMode: string | null | undefined): string {
   return joinModeOf(joinMode) === 'approval'

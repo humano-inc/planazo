@@ -406,8 +406,8 @@ describe('ManageGroupScreen', () => {
   });
 
   // PLA-49. The door dials sit under the same card pattern as "How it runs",
-  // and both are admin-only in the same way: shown to everybody, movable by
-  // admins, so a member who cannot find Invite gets to see why.
+  // and both are admin-only in the same way: an admin moves them, and nobody
+  // else is shown them at all (PLA-61).
   it('the door dials write through update_group_door', async () => {
     await renderManage();
 
@@ -430,13 +430,58 @@ describe('ManageGroupScreen', () => {
     );
   });
 
-  it('a member sees the dials but cannot move them', async () => {
+  // PLA-61. A member could move none of these, so they are gone rather than
+  // greyed out, and what the group's settings actually cost them is said in
+  // words underneath "How it runs".
+  it('a member gets no dials and no posting switch, only their own notifications', async () => {
     group.group_members[0].role = 'member';
     await renderManage();
 
-    expect(await screen.findByTestId('pref-admins-invite')).toBeTruthy();
-    expect(screen.getByTestId('pref-admins-invite').props.disabled).toBe(true);
-    expect(screen.getByTestId('pref-join-approval').props.disabled).toBe(true);
+    expect(await screen.findByTestId('pref-notify')).toBeTruthy();
+    expect(screen.queryByTestId('pref-anyone-can-post')).toBeNull();
+    expect(screen.queryByTestId('pref-admins-invite')).toBeNull();
+    expect(screen.queryByTestId('pref-join-approval')).toBeNull();
+    // Fully open group: nothing is being kept from them, so nothing is said.
+    expect(screen.queryByTestId('member-limits')).toBeNull();
+  });
+
+  it('a member is told which doors are shut, and only those', async () => {
+    group.group_members[0].role = 'member';
+    group.who_can_invite = 'admins';
+    await renderManage();
+
+    expect(await screen.findByText('Only admins can invite people here.')).toBeTruthy();
+    expect(screen.queryByText('Only admins can post plans here.')).toBeNull();
+  });
+
+  it('a closed posting door is named too', async () => {
+    group.group_members[0].role = 'member';
+    group.anyone_can_post = false;
+    await renderManage();
+
+    expect(await screen.findByText('Only admins can post plans here.')).toBeTruthy();
+  });
+
+  it('an admin is told nothing: the switches say it', async () => {
+    group.who_can_invite = 'admins';
+    group.anyone_can_post = false;
+    await renderManage();
+
+    expect(await screen.findByTestId('pref-anyone-can-post')).toBeTruthy();
+    expect(screen.queryByTestId('member-limits')).toBeNull();
+  });
+
+  it('the title says what the screen is for the person reading it', async () => {
+    await renderManage();
+    expect(await screen.findByText('Manage')).toBeTruthy();
+  });
+
+  it('a member gets Members, not Manage', async () => {
+    group.group_members[0].role = 'member';
+    await renderManage();
+
+    expect(await screen.findByText('Members')).toBeTruthy();
+    expect(screen.queryByText('Manage')).toBeNull();
   });
 
   it('the admins dial takes the Invite entry point away from a member', async () => {

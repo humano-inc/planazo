@@ -228,8 +228,10 @@ export default function GroupDetailScreen() {
           testID="manage"
           style={[styles.navAction, styles.navActionEnd]}
         >
+          {/* Same route either way. A member is not managing anything behind
+              this word, so it does not say they are (PLA-61). */}
           <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-            Manage
+            {myRole === 'admin' ? 'Manage' : 'Members'}
           </ThemedText>
         </Pressable>
       </View>

@@ -1,5 +1,6 @@
 import {
   canInvite,
+  memberLimits,
   joinBlurb,
   joinLabel,
   joinModeOf,
@@ -47,6 +48,41 @@ describe('canInvite', () => {
     expect(canInvite('admins', 'member')).toBe(false);
     expect(canInvite('admins', null)).toBe(false);
     expect(canInvite('admins', 'admin')).toBe(true);
+  });
+});
+
+/**
+ * PLA-61. A member sees no switch they cannot move, so these lines are the only
+ * place the group's settings get explained to them. Saying one that is not in
+ * force would invent a restriction; staying silent about one that is leaves
+ * them guessing why Invite is missing.
+ */
+describe('memberLimits', () => {
+  it('says nothing about a group on its open defaults', () => {
+    expect(memberLimits('members', true)).toEqual([]);
+    expect(memberLimits(null, null)).toEqual([]);
+    expect(memberLimits(undefined, undefined)).toEqual([]);
+  });
+
+  it('names the shut invite door on its own', () => {
+    expect(memberLimits('admins', true)).toEqual(['Only admins can invite people here.']);
+  });
+
+  it('names the shut posting door on its own', () => {
+    expect(memberLimits('members', false)).toEqual(['Only admins can post plans here.']);
+  });
+
+  it('names both, invite first, when both are shut', () => {
+    expect(memberLimits('admins', false)).toEqual([
+      'Only admins can invite people here.',
+      'Only admins can post plans here.',
+    ]);
+  });
+
+  it('reads an unreadable dial as open, never as a restriction', () => {
+    for (const value of ['', 'ADMINS', 'nonsense']) {
+      expect(memberLimits(value, true)).toEqual([]);
+    }
   });
 });
 
