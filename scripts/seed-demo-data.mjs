@@ -53,31 +53,38 @@ const demoUsers = [
   { handle: 'sam', email: 'sam.green@example.com', displayName: 'Sam Green' },
 ];
 
+/**
+ * Every `inviteCode` here is eight characters from `generate_invite_code`'s
+ * alphabet (`ABCDEFGHJKLMNPQRSTUVWXYZ23456789`, with no 0, 1, I or O), because
+ * demo data that a real code would never look like is demo data you cannot
+ * finish a walkthrough with. The old seven-letter words opened fine as links
+ * and were silently refused by the paste field, which reads the same rule.
+ */
 const demoGroups = [
   {
     key: 'weekend',
-    inviteCode: 'WEEKEND',
+    inviteCode: 'WEEKENDS',
     name: 'Weekend Crew',
     description: 'Low-pressure plans for Saturdays, Sundays, and last-minute ideas.',
     members: ['primary', 'demo', 'alex', 'bianca', 'diego', 'maya', 'sam'],
   },
   {
     key: 'food',
-    inviteCode: 'FOODIE',
+    inviteCode: 'FEASTDAY',
     name: 'Food & Drinks',
     description: 'Restaurants, bars, pop-ups, and dinner experiments.',
     members: ['primary', 'demo', 'alex', 'bianca', 'lucia', 'theo', 'nina'],
   },
   {
     key: 'outdoors',
-    inviteCode: 'OUTSIDE',
+    inviteCode: 'TREKDAYS',
     name: 'Outdoors Club',
     description: 'Hikes, parks, paddle days, and anything outside.',
     members: ['primary', 'demo', 'diego', 'lucia', 'maya', 'nina', 'sam'],
   },
   {
     key: 'culture',
-    inviteCode: 'CULTURE',
+    inviteCode: 'CULTURES',
     name: 'Culture Club',
     description: 'Museums, concerts, galleries, and coffee after.',
     members: ['primary', 'demo', 'bianca', 'lucia', 'maya', 'theo'],

@@ -428,6 +428,38 @@ When a pass turns something up, there is an order to try:
 The same rule governs the commit message: it explains the change it carries, not
 the one after it.
 
+#### Step 2 is narrower than it reads
+
+Escalating is the comfortable option and it is the one that gets over-used, so
+it needs a test rather than a judgment call:
+
+> **Can you state the correct behaviour in one sentence nobody would argue
+> with?** If yes, it is not a decision waiting on the user, it is work waiting
+> on you.
+
+"A link's own code beats words typed in front of it." "Backing out of a screen
+you pushed returns where you were." "Demo data should look like real data."
+Nobody argues with any of those. Write the sentence in the PR body, make the
+change, and let the reviewer disagree with a diff instead of a question. Step 2
+is for the sentence you *cannot* write: which of three placements is right,
+whether a screen should look different, what a schema should hold.
+
+Two things that are **not** grounds to escalate:
+
+- **"It would need a copy change."** Copy that stops being true when behaviour
+  changes is part of that behaviour change, not a separate decision. A button
+  reading "Go to my plans" that now pops back is a bug you introduced, and
+  fixing the label is finishing the job.
+- **"It is a bug and this was a quality pass."** `/simplify` looks for quality
+  and `/code-review` looks for bugs, and that boundary governs what to go
+  looking for, never what to do with what you trip over. A bug found in code
+  this PR already touches gets fixed in this PR.
+
+The honest reason to escalate is that being wrong would waste work: it needs
+verification you cannot do (a device pass, a database you do not own), or a
+call that is the user's taste to make. "I found it late" and "it was not in
+scope when I started" are not on that list.
+
 ## iOS Simulator
 
 **Inside a worktree, `pnpm wt:start` does all of this for you** — it boots the

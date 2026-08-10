@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import { stashPendingJoin } from '../../../lib/pendingJoin';
+import { useDismissTo } from '../../../lib/navigation';
 import {
   joinBlurb,
   joinLabel,
@@ -94,7 +95,14 @@ export default function JoinByInviteScreen() {
     },
   });
 
-  const goToFeed = () => router.replace('/(app)/(tabs)');
+  // Two ways in, so two ways out. A tapped link opens this screen with nothing
+  // beneath it and the only exit is the feed. The paste field pushes it onto a
+  // live stack (PLA-80), where replacing would swallow whatever the person was
+  // looking at. `useDismissTo` is the one place that knows the difference
+  // (PLA-79), and the lint rule points every `back()` at it.
+  const leave = useDismissTo('/(app)/(tabs)');
+  // The label reads the same condition, or the button lies about where it goes.
+  const leaveLabel = router.canGoBack() ? 'Go back' : 'Go to my plans';
 
   // Sent, and now waiting on an admin. Read off the mutation rather than kept
   // alongside it, and deliberately the same screen whether this is the first
@@ -112,8 +120,8 @@ export default function JoinByInviteScreen() {
         <ErrorState
           title="That invite doesn’t work"
           body="The link may have been mistyped, or the group may be gone. Ask whoever sent it for a fresh one."
-          onBack={goToFeed}
-          backLabel="Go to my plans"
+          onBack={leave}
+          backLabel={leaveLabel}
           testID="join-not-found"
         />
       </Screen>
@@ -127,8 +135,8 @@ export default function JoinByInviteScreen() {
           title="Couldn’t open that invite"
           body="Check your connection and try again."
           onRetry={() => void preview.refetch()}
-          onBack={goToFeed}
-          backLabel="Go to my plans"
+          onBack={leave}
+          backLabel={leaveLabel}
           testID="join-error"
         />
       </Screen>
@@ -160,7 +168,7 @@ export default function JoinByInviteScreen() {
       </View>
 
       {asked ? (
-        <Button label="Go to my plans" onPress={goToFeed} testID="join-requested-done" />
+        <Button label={leaveLabel} onPress={leave} testID="join-requested-done" />
       ) : null}
 
       {join.isError ? (
@@ -187,7 +195,7 @@ export default function JoinByInviteScreen() {
             onPress={() => join.mutate()}
             testID="join-group"
           />
-          <Button label="Not now" variant="secondary" onPress={goToFeed} testID="join-decline" />
+          <Button label="Not now" variant="secondary" onPress={leave} testID="join-decline" />
         </View>
       )}
     </Screen>

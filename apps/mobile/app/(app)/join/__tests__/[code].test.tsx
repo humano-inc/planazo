@@ -6,15 +6,24 @@ import { supabase } from '../../../../lib/supabase';
 import { takePendingJoin } from '../../../../lib/pendingJoin';
 
 const mockReplace = jest.fn();
-// `mock`-prefixed so jest.mock's factory is allowed to close over it.
+const mockBack = jest.fn();
+// `mock`-prefixed so jest.mock's factory is allowed to close over them.
 let mockParams: { code?: string } = { code: 'ABCD2345' };
+// Whether anything is underneath this screen: false for a tapped link, true
+// when the paste field pushed it onto a live stack.
+let mockCanGoBack = false;
 
 jest.mock('../../../../lib/supabase', () => ({
   supabase: { rpc: jest.fn() },
 }));
 
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ replace: mockReplace, push: jest.fn(), back: jest.fn() }),
+  useRouter: () => ({
+    replace: mockReplace,
+    push: jest.fn(),
+    back: mockBack,
+    canGoBack: () => mockCanGoBack,
+  }),
   useLocalSearchParams: () => mockParams,
 }));
 
@@ -55,6 +64,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   takePendingJoin();
   mockParams = { code: 'ABCD2345' };
+  mockCanGoBack = false;
   primeRpc({});
   useAuthStore.setState({ user: { id: 'me' } as any, session: { user: { id: 'me' } } as any });
 });
@@ -118,6 +128,46 @@ describe('JoinByInviteScreen', () => {
   });
 
   /**
+   * Two ways in, so two ways out (PLA-80). A tapped link opens this screen with
+   * nothing beneath it; the paste field pushes it onto a live stack, and
+   * replacing there would swallow whatever the person was looking at.
+   */
+  describe('leaving', () => {
+    it('sends a tapped link to the feed, because there is nothing behind it', async () => {
+      await renderJoin();
+
+      await fireEvent.press(await screen.findByTestId('join-decline'));
+
+      expect(mockReplace).toHaveBeenCalledWith('/(app)/(tabs)');
+      expect(mockBack).not.toHaveBeenCalled();
+    });
+
+    it('returns a pasted code to wherever it came from', async () => {
+      mockCanGoBack = true;
+
+      await renderJoin();
+
+      await fireEvent.press(await screen.findByTestId('join-decline'));
+
+      expect(mockBack).toHaveBeenCalled();
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    // The label is not decoration: a button reading "Go to my plans" that pops
+    // back to the Groups tab is the same lie in the other direction.
+    it('says where it is going, either way', async () => {
+      primeRpc({ preview: { data: [], error: null } });
+
+      await renderJoin();
+      expect(await screen.findByText('Go to my plans')).toBeTruthy();
+
+      mockCanGoBack = true;
+      await renderJoin();
+      expect(await screen.findByText('Go back')).toBeTruthy();
+    });
+  });
+
+  /**
    * A decline is never announced, so asking again after one looks exactly like
    * asking for the first time. The server returns the same `requested` either
    * way, and this screen must not go looking for a difference.
@@ -147,8 +197,9 @@ describe('JoinByInviteScreen', () => {
   /**
    * The database owns what a real code is, so a segment that does not look
    * like one still goes to the server rather than being judged here. A second
-   * copy of the rule in the client could only ever disagree with it, and the
-   * seeded demo codes are exactly where it would.
+   * copy of the rule in the client could only ever disagree with it, and this
+   * screen is reached from outside the app, where nothing has filtered the
+   * link first.
    */
   it('lets the server rule on a segment that does not look like a code', async () => {
     mockParams = { code: 'weekend' };
