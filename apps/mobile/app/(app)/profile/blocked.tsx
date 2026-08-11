@@ -1,7 +1,8 @@
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
+import { alertActionError } from '../../../lib/queryErrors';
 import { useDismissTo } from '../../../lib/navigation';
 import { BLOCKED_QUERY_KEY, fetchBlockedIds, unblockUser } from '../../../lib/moderation';
 import { useAuthStore } from '../../../stores/authStore';
@@ -60,7 +61,7 @@ export default function BlockedPeopleScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BLOCKED_QUERY_KEY });
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const people = blocked ?? [];

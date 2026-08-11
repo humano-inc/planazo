@@ -75,6 +75,38 @@ const noBareBack = [
     'from lib/navigation, which pops when it can and replaces when it cannot.',
 }));
 
+/**
+ * PLA-105: `Alert.alert('Error', error.message)` shows the user raw postgres.
+ * A plan-full trigger reads "new row violates row-level security policy" and a
+ * last-admin one is worse, both titled "Error". `alertActionError` exists to
+ * classify exactly those (`lib/queryErrors.ts`), and its docstring said so
+ * while 23 mutations went around it.
+ *
+ * The selector matches the shape that existed: `Alert.alert` whose second
+ * argument is a bare `.message` member expression. That is deliberately
+ * narrow, and worth being clear about:
+ *
+ * - It catches the pass-through regardless of the title, so a bespoke title
+ *   with a raw body is still an error. Two screens keep their title and take
+ *   `actionErrorCopy(error).body` instead.
+ * - It does not catch a raw message reaching the user by another route: bound
+ *   to a variable first, interpolated into a template, or passed to something
+ *   other than `Alert.alert`. Nothing in the codebase does that today, and a
+ *   selector wide enough to catch it would flag every legitimate `.message`
+ *   read, including the ones inside `queryErrors.ts` doing the classifying.
+ */
+const noRawErrorAlert = [
+  {
+    selector:
+      "CallExpression[callee.object.name='Alert'][callee.property.name='alert']" +
+      " > MemberExpression.arguments[property.name='message']",
+    message:
+      'A failed write must not show the raw error (PLA-105): a postgres trigger message ' +
+      'titled "Error" is not something a user can act on. Use alertActionError from ' +
+      'lib/queryErrors, or actionErrorCopy(error).body to keep a title of your own.',
+  },
+];
+
 export default tseslint.config(
   {
     // A disable comment whose rule no longer fires is debt that paid itself
@@ -163,7 +195,7 @@ export default tseslint.config(
     // Conventions from AGENTS.md, enforced instead of remembered.
     files: ['**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-syntax': ['error', ...emDashWithText],
+      'no-restricted-syntax': ['error', ...emDashWithText, ...noRawErrorAlert],
 
       // Length is a proxy for "this file is doing too much". 400 counts real
       // code only: this codebase comments heavily and that should never push a
@@ -188,7 +220,7 @@ export default tseslint.config(
      */
     files: ['apps/mobile/app/**/*.{ts,tsx}', 'apps/mobile/components/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-syntax': ['error', ...emDashWithText, ...noBareBack],
+      'no-restricted-syntax': ['error', ...emDashWithText, ...noBareBack, ...noRawErrorAlert],
     },
   },
 

@@ -1,6 +1,6 @@
 import { Alert } from 'react-native';
 import { supabase } from './supabase';
-import { actionErrorCopy, isPlanFullError } from './queryErrors';
+import { actionErrorCopy, isPlanFullError, UserFacingError } from './queryErrors';
 
 /**
  * Clears your answer on a plan and proves the row actually went.
@@ -20,7 +20,9 @@ export async function deleteOwnRsvp(planId: string, userId: string): Promise<voi
 
   if (error) throw error;
   if (data.length === 0) {
-    throw new Error("Your answer couldn't be changed. The plan may have been called off.");
+    throw new UserFacingError(
+      "Your answer couldn't be changed. The plan may have been called off."
+    );
   }
 }
 

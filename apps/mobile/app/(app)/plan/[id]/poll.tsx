@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDismissTo } from '../../../../lib/navigation';
 import { submitPollDraft, planPollKey } from '../../../../lib/usePlanPoll';
 import { emptyPollDraft, pollDraftValid } from '../../../../lib/pollDraft';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
+import { alertActionError } from '../../../../lib/queryErrors';
 import { PollOptionsEditor } from '../../../../components/PollComposer';
 import {
   ThemedText,
@@ -46,7 +47,7 @@ export default function NewPollScreen() {
       queryClient.invalidateQueries({ queryKey: ['home-plans'] });
       leave();
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const valid = pollDraftValid(draft);

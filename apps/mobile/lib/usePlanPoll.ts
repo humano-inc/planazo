@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 import { contentViolation } from './moderation';
 import { cleanPollDraft, type PollDraft } from './pollDraft';
 import { applyVoteToHomePlans, applyVoteToPolls, type VoteIntent } from './pollVoteCache';
-import { actionErrorCopy, isForbiddenError } from './queryErrors';
+import { actionErrorCopy, isForbiddenError, UserFacingError } from './queryErrors';
 
 /**
  * The invalidation contract for everything poll-shaped: realtime.ts, the
@@ -73,7 +73,7 @@ export async function submitPollDraft(planId: string, draft: PollDraft): Promise
 
   // Guideline 1.2: objectionable language stops here, not in review.
   const violation = contentViolation({ question, option: options.join(' ') });
-  if (violation) throw new Error(violation);
+  if (violation) throw new UserFacingError(violation);
 
   const { data: poll, error } = await supabase
     .from('plan_polls')

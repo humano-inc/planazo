@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
+import { alertActionError } from '../../lib/queryErrors';
 import { useAuthStore } from '../../stores/authStore';
 import { useFriends } from '../../lib/useFriends';
 import {
@@ -122,7 +123,7 @@ export default function FindPeopleScreen() {
         queryClient.invalidateQueries({ queryKey: ['friendships-pending'] });
       }
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const relationFor = (id: string) => relationOf({ friendIds, sentTo, pending }, id);

@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '../../../../lib/supabase';
+import { alertActionError } from '../../../../lib/queryErrors';
 import { useDismissTo } from '../../../../lib/navigation';
 import { ThemedText, Button, FormScreen } from '../../../../components/ui';
 import { colors, fonts, radii, spacing } from '../../../../theme/tokens';
@@ -83,7 +84,7 @@ export default function CancelPlanScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
       leave();
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   // The cost, named out loud: who this lands on.

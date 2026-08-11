@@ -2,13 +2,13 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Alert,
   useWindowDimensions,
 } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeOutUp, LinearTransition } from 'react-native-reanimated';
 import { supabase } from '../../lib/supabase';
+import { alertActionError } from '../../lib/queryErrors';
 import {
   usePendingInvites,
   type PendingFriendRequest,
@@ -68,7 +68,7 @@ export default function InvitesSheet() {
       if (error) throw error;
     },
     onSuccess: invalidate,
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const respondRequest = useMutation({
@@ -80,7 +80,7 @@ export default function InvitesSheet() {
       if (error) throw error;
     },
     onSuccess: invalidate,
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const renderGroupInvite = (invite: PendingGroupInvite) => (

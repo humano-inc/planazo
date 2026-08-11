@@ -1,6 +1,6 @@
-import { Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { alertActionError, UserFacingError } from './queryErrors';
 import { useLeaveFor } from './navigation';
 import { contentViolation } from './moderation';
 import { submitPollDraft } from './usePlanPoll';
@@ -54,7 +54,7 @@ export function useCreatePlan() {
         'plan description': notes,
         location,
       });
-      if (violation) throw new Error(violation);
+      if (violation) throw new UserFacingError(violation);
       const fixed = dates.length === 1;
       const [h, m] = time.split(':').map(Number);
 
@@ -112,6 +112,6 @@ export function useCreatePlan() {
       queryClient.invalidateQueries({ queryKey: ['group-plans', input.groupId] });
       leaveFor(`/(app)/plan/${plan.id}`);
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 }

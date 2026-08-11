@@ -1,6 +1,6 @@
-import { Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { alertActionError } from './queryErrors';
 import type { JoinMode, WhoCanInvite } from './groupDoor';
 
 /** One person waiting at an approval-mode door. */
@@ -70,7 +70,7 @@ export function useJoinRequests(groupId: string, enabled: boolean) {
       queryClient.invalidateQueries({ queryKey: ['group-manage', groupId] });
       queryClient.invalidateQueries({ queryKey: ['group', groupId] });
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   return {
@@ -106,6 +106,6 @@ export function useDoorSettings(groupId: string) {
       queryClient.invalidateQueries({ queryKey: ['group-manage', groupId] });
       queryClient.invalidateQueries({ queryKey: ['group', groupId] });
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 }

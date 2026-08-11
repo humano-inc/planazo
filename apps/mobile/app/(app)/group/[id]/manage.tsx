@@ -12,7 +12,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../../lib/supabase';
 import { useAuthStore } from '../../../../stores/authStore';
-import { errorCopy, groupGoneCopy, isNotFoundError } from '../../../../lib/queryErrors';
+import {
+  alertActionError,
+  errorCopy,
+  groupGoneCopy,
+  isNotFoundError,
+} from '../../../../lib/queryErrors';
 import { usePendingRemoval } from '../../../../lib/usePendingRemoval';
 import { groupManageQuery, invalidateGroup } from '../../../../lib/groupManageQuery';
 import { adminCount, adminSummary, byArrival, memberName } from '../../../../lib/groupAdmins';
@@ -93,7 +98,7 @@ export default function ManageGroupScreen() {
       queryClient.invalidateQueries({ queryKey: ['friends'] });
       invalidate();
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   // The RPC, not a delete: removing somebody also withdraws the invites they
@@ -110,7 +115,7 @@ export default function ManageGroupScreen() {
       queryClient.invalidateQueries({ queryKey: ['group-invite-sheet', id] });
       invalidate();
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const setAnyoneCanPost = useMutation({
@@ -119,7 +124,7 @@ export default function ManageGroupScreen() {
       if (error) throw error;
     },
     onSuccess: invalidate,
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const setNotify = useMutation({
@@ -131,7 +136,7 @@ export default function ManageGroupScreen() {
       if (error) throw error;
     },
     onSuccess: invalidate,
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const leaveGroup = useMutation({
@@ -144,7 +149,7 @@ export default function ManageGroupScreen() {
       queryClient.invalidateQueries({ queryKey: ['home-plans'] });
       router.navigate('/(app)/(tabs)/groups');
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   // Only one row is ever open.

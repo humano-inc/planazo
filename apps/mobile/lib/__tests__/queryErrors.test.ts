@@ -9,6 +9,7 @@ import {
   isPlanFullError,
   isTimeoutError,
   retryQuery,
+  UserFacingError,
 } from '../queryErrors';
 import { RequestTimeoutError } from '../timeoutFetch';
 
@@ -314,6 +315,34 @@ describe('isPlanFullError / actionErrorCopy', () => {
   it('keeps the diagnosis errorCopy already makes for shared cases', () => {
     expect(actionErrorCopy(expiredJwt).title).toBe('Your sign-in expired');
     expect(actionErrorCopy(new RequestTimeoutError(15000)).title).toBe('That took too long');
+  });
+});
+
+describe('UserFacingError / actionErrorCopy', () => {
+  it('passes our own copy through instead of classifying it', () => {
+    const copy = actionErrorCopy(
+      new UserFacingError('That plan title contains language that isn’t allowed on Planazo.')
+    );
+    expect(copy.body).toBe('That plan title contains language that isn’t allowed on Planazo.');
+    expect(copy.title).toBe("That didn't go through");
+  });
+
+  it('still classifies a plain Error, so a raw message never reaches a user', () => {
+    expect(actionErrorCopy(new Error('permission denied for table plans')).body).not.toMatch(
+      /permission denied/
+    );
+  });
+
+  it('outranks the postgres classifiers when both could match', () => {
+    // A UserFacingError carrying cap-shaped words is still ours, so it is not
+    // rewritten into the waiting-list copy.
+    const copy = actionErrorCopy(new UserFacingError('This plan is full of typos'));
+    expect(copy.body).toBe('This plan is full of typos');
+  });
+
+  it('is an Error, so an untouched catch block still behaves', () => {
+    expect(new UserFacingError('x')).toBeInstanceOf(Error);
+    expect(new UserFacingError('x').message).toBe('x');
   });
 });
 
