@@ -1,7 +1,8 @@
 # web — planazo.me landing page
 
-Next.js (App Router) marketing site for the Planazo mobile app. Statically
-prerendered: the whole page is one route with no server work at request time.
+Next.js (App Router) marketing site for the Planazo mobile app, plus the private
+owner workspace. Marketing routes are statically prerendered; `/admin` is
+server-rendered against the authenticated Planazo session.
 
 ```bash
 pnpm --filter web dev      # http://localhost:3100
@@ -16,10 +17,11 @@ uses, so both can run at once.
 | Path                          | What                                                            |
 | ----------------------------- | --------------------------------------------------------------- |
 | `app/page.tsx`                | The whole page. Static sections, server-rendered.                |
-| `components/PlanDemo.tsx`     | The three interactive plan cards — the only client component.    |
+| `components/PlanDemo.tsx`     | The three interactive plan cards on the landing page.            |
 | `lib/copy.ts`                 | All user-facing strings (`es` + `en`) and the demo fixtures.     |
 | `lib/links.ts`                | Store URLs and contact address.                                  |
 | `app/globals.css`             | Design tokens (colour, elevation, shell width) and base styles.  |
+| `app/admin/feedback`          | Private owner feedback inbox and its server actions.             |
 
 ## Language
 
@@ -56,3 +58,21 @@ On Vercel, set the project root to the repo root and:
 - Install command: `pnpm install`
 
 Turbo skips the build entirely when a commit only touches `apps/mobile`.
+
+## Private feedback inbox
+
+The owner inbox lives at `/admin/feedback`. It uses the existing Planazo
+Supabase session and checks the authenticated user against `public.app_admins`
+on every request.
+
+The deployed web app requires:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `LINEAR_API_KEY`, scoped to a Linear account that can read the `PLA` team and
+  its labels, upload files, and create issues
+
+The PLA-97 migration grants the existing `devinci.maker@gmail.com` auth user by
+immutable UUID. If the production auth user does not exist when the migration
+runs, insert that UUID into `public.app_admins` after the account has been
+created.
