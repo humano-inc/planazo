@@ -409,57 +409,71 @@ simulator at all, and again from the finished diff, which is the first time the
 real answer is knowable. `pnpm wt:setup --sim` upgrades a worktree that turned
 out to need one.
 
-## Every PR ends with "See it working"
+## Every PR ends with a walkthrough artifact
 
 A green CI run says the code does what its tests say. It does not say the
 feature is worth having, and the person who has to decide that is reviewing on
-a phone-sized screen with limited time. So **every PR that changes anything a
-user can see ends with a `## See it working` section**: the shortest path from
-a fresh checkout to the change happening in front of them.
+a phone-sized screen with limited time. Steps they have to run themselves cost
+more attention than they have, so **every PR that changes anything a user can
+see ends with a link to a published walkthrough artifact** that shows the
+change happening, in screenshots, before they decide whether to run anything.
 
-Write it for someone who has not read the diff. Name the accounts, name the
-taps, say what should appear. If setup is needed, give the exact command, and
-prefer one that is already committed over a snippet to paste. Two accounts and
-a login are fine; a hand-written SQL console session is not.
+The PR body carries the link and nothing else about it:
 
 ```markdown
 ## See it working
 
-    pnpm wt:new feat/pla-37-waiting-list --db   # if you don't have it
-    cd ../planazo-worktrees/feat-pla-37-waiting-list
-    pnpm wt:start --login
+[Walkthrough: a member sees Members, not Manage](https://claude.ai/code/artifact/<id>)
 
-1. **Full plan.** Top of the feed, "Padel, two courts" caps at 2 and both
-   places are gone. The primary reads **"Take the next spot"**, an outline
-   button, not the dead "Full" it used to be.
-2. **Join.** Tap it. The footer becomes **"You're 2nd in line"** (Lucia is
-   already waiting). Open the plan to see "If a spot opens, it's yours."
-3. **Watch a place open.** Profile → sign out → sign in as
-   `alex.rivera@example.com` / `Planazo123!`, open the same plan, tap
-   **Change** to withdraw.
-4. **Back to your account.** The plan now reads **"You're in"**, and the
-   people row shows you instead of Alex.
-
-Not covered by this walkthrough: promotion by push (the simulator has no
-APNs), and the re-lock ordering, which only integration tests reach.
+Before and after on the simulator as a plain member, the admin view for
+contrast, and what the shots cannot show.
 ```
 
-That last paragraph matters as much as the steps. **Say what the walkthrough
-cannot show**, so nobody reads "verified on device" as broader than it is.
+**Start from `scripts/walkthrough/template.html`.** It is the page design, the
+app's own palette, and a placeholder for every section, so a walkthrough is a
+fill-in job rather than a design job. Designing a new page each time costs
+fifteen minutes and gives every PR a slightly different-looking artifact, which
+is worse than either extreme.
 
-Rules of thumb:
+```bash
+cp scripts/walkthrough/template.html /tmp/pla-61.html   # then fill it in
+pnpm walkthrough /tmp/pla-61.html                       # → /tmp/pla-61.built.html
+```
 
-- **A path a real user can take beats a script.** Withdrawing as another
-  account proves the trigger fires on the path production uses; deleting the
-  row with the service role only proves the trigger exists. Do **not** write a
-  per-feature seeding script: `pnpm db:seed:demo` plus taps in the app is the
-  walkthrough. If the state you need is genuinely unreachable that way, say so
-  in the PR and give the steps to reach it by hand.
-- **Screenshots go in the PR body**, especially before/after for anything
-  visual. A reviewer who can see it may not need to run it at all.
+`pnpm walkthrough` turns each `__IMG:name__` token into `shots/name.png`,
+downscaled and base64'd inline. That inlining is not a nicety: the artifact CSP
+blocks every external host, so an ordinary `<img src>` publishes as a broken
+image with no error anybody will see. Publish the `.built.html` with the
+`Artifact` tool.
+
+What the page has to contain:
+
+- **Before and after, side by side**, for anything visual. The before shot is
+  worth the extra minutes: `git checkout HEAD~1 -- <files>`, let fast refresh
+  land, shoot, then restore in the same breath. Without it you have shown that
+  the app works, not that the PR did anything.
+- **One caption per shot**, saying what to look at. A reviewer should be able
+  to read the page without the diff open.
+- **The steps anyway**, at the bottom, for whoever does want to drive it: the
+  exact `wt:new` / `wt:start --login` lines, the accounts, the taps. A path a
+  real user can take beats a script. Signing in as a second account proves the
+  trigger fires the way production does; deleting the row with the service role
+  only proves the trigger exists. Do **not** write a per-feature seeding
+  script: `pnpm db:seed:demo` plus taps in the app is the walkthrough. If the
+  state you need is genuinely unreachable that way, say so and give the steps
+  to reach it by hand.
+- **What the walkthrough cannot show**, in its own section, so nobody reads
+  "verified on device" as broader than it is. This matters as much as the
+  screenshots.
+
+Two more rules:
+
 - **Say when there is nothing to see.** A refactor, a CI change or a migration
-  with no UI writes `## See it working` → "Nothing user-visible; the proof is
-  the N tests in `<file>`." Silence reads like an oversight.
+  with no UI needs no artifact. It writes `## See it working` → "Nothing
+  user-visible; the proof is the N tests in `<file>`." Silence reads like an
+  oversight.
+- **Artifacts start private.** Publishing one shares nothing until the user
+  chooses to. Hand over the link and let them decide.
 
 ### A PR body describes this PR, never the next one
 

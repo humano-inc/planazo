@@ -12,16 +12,18 @@ interface Props {
 }
 
 /**
- * "Who gets in": the two dials from PLA-49.
+ * "Who gets in": the two dials from PLA-49, for the admins who own them.
  *
- * Both are shown to everybody and only an admin can move them, matching the
- * card above. A member who cannot find the Invite button gets to see why, and
- * that is worth more than hiding the section from them.
+ * A member used to see both, greyed out, so that whoever could not find the
+ * Invite button got to see why. That answer is now a sentence in "How it runs"
+ * (`memberLimits`), which says the same thing without a switch that ignores the
+ * finger on it (PLA-61).
  */
 export function DoorSettings({ whoCanInvite, joinMode, onChange, pending, isAdmin }: Props) {
+  if (!isAdmin) return null;
+
   const adminsOnly = whoCanInviteOf(whoCanInvite) === 'admins';
   const needsApproval = joinModeOf(joinMode) === 'approval';
-  const locked = !isAdmin || pending;
 
   return (
     <View style={settingsStyles.section}>
@@ -31,7 +33,7 @@ export function DoorSettings({ whoCanInvite, joinMode, onChange, pending, isAdmi
           label="Only admins can invite"
           caption="Off means any member can share the link"
           value={adminsOnly}
-          disabled={locked}
+          disabled={pending}
           onChange={(on) => onChange({ whoCanInvite: on ? 'admins' : 'members' })}
           testID="pref-admins-invite"
         />
@@ -39,7 +41,7 @@ export function DoorSettings({ whoCanInvite, joinMode, onChange, pending, isAdmi
           label="Approve people who use the link"
           caption="Off means the link lets them straight in"
           value={needsApproval}
-          disabled={locked}
+          disabled={pending}
           onChange={(on) => onChange({ joinMode: on ? 'approval' : 'open' })}
           divided
           testID="pref-join-approval"

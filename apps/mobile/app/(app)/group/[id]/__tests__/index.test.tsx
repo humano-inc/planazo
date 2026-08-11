@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { render, screen, fireEvent } from '@testing-library/react-native';
+import { render, screen, fireEvent, within } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MIN_TOUCH_TARGET } from '../../../../../lib/a11y';
 import GroupDetailScreen from '../index';
@@ -122,6 +122,8 @@ describe('GroupDetailScreen', () => {
 
     expect(await screen.findByText('Piso Gràcia')).toBeTruthy();
     expect(screen.getByText('You run this group')).toBeTruthy();
+    // PLA-61: an admin is the only person who manages anything through here.
+    expect(within(screen.getByTestId('manage')).getByText('Manage')).toBeTruthy();
     expect(screen.getByText('The flat, plus honorary members')).toBeTruthy();
     expect(screen.getByText('2 people')).toBeTruthy();
 
@@ -157,6 +159,8 @@ describe('GroupDetailScreen', () => {
     await renderDetail();
 
     expect(await screen.findByText('You’re a member here')).toBeTruthy();
+    // Same route, honest label: there is nothing here for them to manage.
+    expect(within(screen.getByTestId('manage')).getByText('Members')).toBeTruthy();
     // Closed by default — it costs one line until you want it
     expect(screen.queryByText('Cancelled thing')).toBeNull();
     // No live plans → empty card still invites a start

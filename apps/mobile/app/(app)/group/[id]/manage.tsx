@@ -236,7 +236,9 @@ export default function ManageGroupScreen() {
             ‹ {group.name}
           </ThemedText>
         </Pressable>
-        <ThemedText style={styles.navTitle}>Manage</ThemedText>
+        {/* The screen is one route, but it is two screens to read: an admin
+            runs the group here, a member looks at who is in it. */}
+        <ThemedText style={styles.navTitle}>{isAdmin ? 'Manage' : 'Members'}</ThemedText>
         <View style={styles.navSpacer} />
       </View>
 
@@ -274,6 +276,7 @@ export default function ManageGroupScreen() {
           anyoneCanPost={!!group.anyone_can_post}
           onAnyoneCanPost={(on) => setAnyoneCanPost.mutate(on)}
           anyoneCanPostPending={setAnyoneCanPost.isPending}
+          whoCanInvite={group.who_can_invite}
           notify={!!me?.notify_new_plans}
           onNotify={(on) => setNotify.mutate(on)}
           notifyPending={setNotify.isPending}

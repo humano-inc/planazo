@@ -74,10 +74,10 @@ Then exactly one of two things is true:
 
 Two things a simplify pass must never quietly do here:
 
-- **Change behaviour.** `## See it working` in the PR body is a walkthrough
-  someone will follow tap by tap. If the pass makes any of those steps read
-  false, either revert that part or update the body — a stale walkthrough is
-  worse than none.
+- **Change behaviour.** The walkthrough artifact linked from `## See it working`
+  carries screenshots and steps someone will follow tap by tap. If the pass makes
+  any of it read false, either revert that part or republish the artifact — a
+  stale walkthrough is worse than none.
 - **Leave the job half-finished.** If the pass finds a sixth copy of the thing
   this PR just extracted, or the same duplication one file further out, fix it
   here. Filing a follow-up issue for a change that fits in this sitting is how
@@ -123,7 +123,7 @@ first failure and say what would fix it.
 | Every check passed | `gh pr view --json statusCheckRollup` | anything not `SUCCESS`, including still-running. Pending is a wait, not a pass. After a Phase 2 push, confirm the rollup is the run for *your* head SHA and not the previous one |
 | Nothing uncommitted | `git status --short` in the worktree | any output — `wt:rm` refuses a dirty tree, so the reclaim would fail *after* the merge |
 | Nothing unpushed | `git log @{u}.. --oneline` | any commit — you are about to merge without your last change |
-| `## See it working` | the PR body from Phase 1 | missing on a user-visible change (AGENTS.md requires it). Say so; the user decides whether to add it or wave it through |
+| Walkthrough artifact | the PR body from Phase 1 | `## See it working` missing, or carrying steps with no artifact link, on a user-visible change (AGENTS.md requires the artifact). Say so; the user decides whether to add it or wave it through |
 | Issue is real and open | Phase 1's `get_issue` | already `Done` (someone closed it early — confirm this is the right issue) |
 
 ## Phase 4 — Merge

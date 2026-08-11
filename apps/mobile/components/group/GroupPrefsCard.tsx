@@ -1,6 +1,7 @@
 import { View, StyleSheet, Pressable } from 'react-native';
 import { ThemedText, Card } from '../ui';
 import { PrefSwitchRow, settingsStyles } from './PrefSwitchRow';
+import { memberLimits } from '../../lib/groupDoor';
 import { colors } from '../../theme/tokens';
 
 interface Props {
@@ -8,6 +9,8 @@ interface Props {
   anyoneCanPost: boolean;
   onAnyoneCanPost: (on: boolean) => void;
   anyoneCanPostPending: boolean;
+  /** The invite dial, read only here: it is what a member is told about. */
+  whoCanInvite: string | null | undefined;
   /** This user's own push preference for this group. */
   notify: boolean;
   onNotify: (on: boolean) => void;
@@ -19,11 +22,19 @@ interface Props {
   onAdmins: () => void;
 }
 
-/** "How it runs": the two switches, plus the way in to the group profile. */
+/**
+ * "How it runs": what this person can actually change about the group.
+ *
+ * For an admin that is both switches and the two rows below them. For a member
+ * it is their own notifications and nothing else, followed by whatever the
+ * group's settings are keeping from them, said in a line rather than shown as a
+ * switch they cannot move (PLA-61).
+ */
 export function GroupPrefsCard({
   anyoneCanPost,
   onAnyoneCanPost,
   anyoneCanPostPending,
+  whoCanInvite,
   notify,
   onNotify,
   notifyPending,
@@ -32,25 +43,29 @@ export function GroupPrefsCard({
   onEditProfile,
   onAdmins,
 }: Props) {
+  const limits = isAdmin ? [] : memberLimits(whoCanInvite, anyoneCanPost);
+
   return (
     <View style={settingsStyles.section}>
       <ThemedText variant="sectionLabel">How it runs</ThemedText>
       <Card padded={false}>
-        <PrefSwitchRow
-          label="Anyone can post plans"
-          caption="Off means only admins can"
-          value={anyoneCanPost}
-          disabled={!isAdmin || anyoneCanPostPending}
-          onChange={onAnyoneCanPost}
-          testID="pref-anyone-can-post"
-        />
+        {isAdmin ? (
+          <PrefSwitchRow
+            label="Anyone can post plans"
+            caption="Off means only admins can"
+            value={anyoneCanPost}
+            disabled={anyoneCanPostPending}
+            onChange={onAnyoneCanPost}
+            testID="pref-anyone-can-post"
+          />
+        ) : null}
         <PrefSwitchRow
           label="Notify me on new plans"
           caption="Push as soon as something lands"
           value={notify}
           disabled={notifyPending}
           onChange={onNotify}
-          divided
+          divided={isAdmin}
           testID="pref-notify"
         />
         {isAdmin ? (
@@ -91,11 +106,23 @@ export function GroupPrefsCard({
           </>
         ) : null}
       </Card>
+      {limits.length > 0 ? (
+        <View style={styles.limits} testID="member-limits">
+          {limits.map((line) => (
+            <ThemedText key={line} variant="caption" style={settingsStyles.note}>
+              {line}
+            </ThemedText>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  limits: {
+    gap: 2,
+  },
   prefBody: {
     flex: 1,
     gap: 3,
