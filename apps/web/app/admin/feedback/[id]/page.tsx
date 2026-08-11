@@ -2,15 +2,13 @@ import { notFound } from 'next/navigation';
 
 import { requireAppAdmin } from '@/lib/admin/auth';
 import {
-  createFeedbackScreenshotUrl,
-  loadFeedbackCounts,
-  loadFeedbackItem,
+  createFeedbackScreenshotUrls,
   loadFeedbackItems,
 } from '@/lib/admin/feedback';
 import { parseFeedbackFilter } from '@/lib/admin/feedback-utils';
 
 import { FeedbackInbox } from '../FeedbackInbox';
-import { noticeFromSearchParameters, screenshotUrlFor } from '../view';
+import { noticeFromSearchParameters, screenshotUrlsFor } from '../view';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,29 +23,26 @@ export default async function FeedbackDetailPage({ params, searchParams }: Detai
     Array.isArray(parameters.status) ? parameters.status[0] : parameters.status,
   );
   const { email, supabase } = await requireAppAdmin();
-  const [items, counts, selected] = await Promise.all([
-    loadFeedbackItems(supabase, filter),
-    loadFeedbackCounts(supabase),
-    loadFeedbackItem(supabase, id),
-  ]);
+  const items = await loadFeedbackItems(supabase);
+  const selected = items.find((item) => item.id === id) ?? null;
 
   if (!selected) {
     notFound();
   }
 
-  const screenshotUrl = await screenshotUrlFor(selected, (path) =>
-    createFeedbackScreenshotUrl(supabase, path),
+  const screenshotUrls = await screenshotUrlsFor(items, (feedbackItems) =>
+    createFeedbackScreenshotUrls(supabase, feedbackItems),
   );
 
   return (
     <FeedbackInbox
       adminEmail={email}
-      counts={counts}
       filter={filter}
       items={items}
+      key={`${filter}:${selected.id}`}
       mobileDetail
       notice={noticeFromSearchParameters(parameters)}
-      screenshotUrl={screenshotUrl}
+      screenshotUrls={screenshotUrls}
       selected={selected}
     />
   );

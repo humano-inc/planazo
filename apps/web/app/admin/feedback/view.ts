@@ -59,18 +59,18 @@ export function noticeFromSearchParameters(parameters: SearchParameters) {
   return null;
 }
 
-export async function screenshotUrlFor(
-  item: FeedbackItem | null,
-  createUrl: (path: string | null) => Promise<string | null>,
+export async function screenshotUrlsFor(
+  items: FeedbackItem[],
+  createUrls: (items: FeedbackItem[]) => Promise<Record<string, string>>,
 ) {
-  if (!item) {
-    return null;
+  if (items.length === 0) {
+    return {};
   }
 
   try {
-    return await createUrl(item.screenshot_path);
+    return await createUrls(items);
   } catch (error) {
-    console.error(`Could not sign screenshot for feedback ${item.id}.`, error);
-    return null;
+    console.error('Could not sign feedback screenshots.', error);
+    return {};
   }
 }

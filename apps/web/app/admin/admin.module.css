@@ -101,8 +101,7 @@
 
 .queueKicker,
 .loginKicker,
-.dialogKicker,
-.decisionLabel {
+.dialogKicker {
   margin-bottom: 7px;
   color: var(--muted);
   font-size: 12px;
@@ -295,21 +294,7 @@
   max-width: 1040px;
   min-height: 100%;
   margin: 0 auto;
-  padding: clamp(34px, 5vw, 68px) clamp(28px, 6vw, 76px) 0;
-  animation: evidence-reveal 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes evidence-reveal {
-  from {
-    opacity: 0.72;
-    clip-path: inset(0 0 16px 0);
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    clip-path: inset(0 0 0 0);
-    transform: translateY(0);
-  }
+  padding: clamp(30px, 4vw, 50px) clamp(28px, 5vw, 64px) 0;
 }
 
 .mobileBack {
@@ -357,14 +342,27 @@
 }
 
 .evidenceHeader {
-  max-width: 780px;
+  max-width: 76ch;
+}
+
+.evidenceMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.evidenceMeta > time {
+  flex: 0 0 auto;
+  color: var(--muted-2);
+  font-size: 12px;
 }
 
 .evidenceLabels {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 17px;
 }
 
 .kindBadge,
@@ -417,37 +415,28 @@
   border-color: #efd79b;
 }
 
-.evidenceHeader h2 {
-  max-width: 18ch;
-  font-family: var(--font-serif), Georgia, serif;
-  font-size: clamp(34px, 4.4vw, 58px);
-  font-weight: 400;
-  line-height: 1.06;
-  letter-spacing: -0.025em;
+.feedbackMessage {
+  max-width: 70ch;
+  color: #2f262a;
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.55;
   overflow-wrap: anywhere;
-  text-wrap: balance;
+  white-space: pre-wrap;
 }
 
-.submittedLine {
-  margin-top: 16px;
+.feedbackMessage.emptyMessage {
   color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
+  font-style: italic;
 }
 
 .evidenceGrid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 218px;
-  gap: clamp(36px, 6vw, 72px);
-  margin-top: clamp(38px, 5vw, 60px);
+  gap: clamp(34px, 5vw, 60px);
+  margin-top: clamp(28px, 4vw, 42px);
 }
 
-.reportColumn {
-  min-width: 0;
-}
-
-.messageSection h3,
-.screenshotSection h3 {
+.screenshotSection h2 {
   margin-bottom: 13px;
   color: var(--muted);
   font-size: 12px;
@@ -456,22 +445,8 @@
   text-transform: uppercase;
 }
 
-.messageSection > p {
-  max-width: 68ch;
-  color: #2f262a;
-  font-size: 17px;
-  line-height: 1.72;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.messageSection .emptyMessage {
-  color: var(--muted);
-  font-style: italic;
-}
-
 .screenshotSection {
-  margin-top: 42px;
+  margin-top: 0;
 }
 
 .sectionHeadingRow {
@@ -609,35 +584,13 @@
   overflow-wrap: anywhere;
 }
 
-.contextList .feedbackId {
-  color: var(--muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 10px;
-}
-
 .decisionFooter {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 28px;
-  margin-top: 58px;
-  padding: 25px 0 32px;
+  justify-content: flex-end;
+  margin-top: 38px;
+  padding: 22px 0 32px;
   border-top: 1px solid var(--line-strong);
-}
-
-.decisionFooter > div:first-child {
-  max-width: 46ch;
-}
-
-.decisionFooter > div:first-child > p:last-child {
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.decisionLabel {
-  margin-bottom: 4px;
-  color: var(--ink);
 }
 
 .actionRow {
@@ -1087,10 +1040,6 @@
     grid-column: 1 / -1;
   }
 
-  .decisionFooter {
-    align-items: flex-start;
-    flex-direction: column;
-  }
 }
 
 @media (max-width: 820px) {
@@ -1134,9 +1083,8 @@
     font-weight: 700;
   }
 
-  .evidenceHeader h2 {
-    max-width: 20ch;
-    font-size: clamp(34px, 10vw, 48px);
+  .feedbackMessage {
+    font-size: clamp(18px, 5vw, 21px);
   }
 
   .decisionFooter {
@@ -1213,7 +1161,14 @@
 
   .evidenceGrid {
     gap: 35px;
-    margin-top: 36px;
+    margin-top: 30px;
+  }
+
+  .evidenceMeta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 18px;
   }
 
   .contextColumn,

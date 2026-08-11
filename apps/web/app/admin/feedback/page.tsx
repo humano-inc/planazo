@@ -7,14 +7,16 @@
  */
 import { requireAppAdmin } from '@/lib/admin/auth';
 import {
-  createFeedbackScreenshotUrl,
-  loadFeedbackCounts,
+  createFeedbackScreenshotUrls,
   loadFeedbackItems,
 } from '@/lib/admin/feedback';
-import { parseFeedbackFilter } from '@/lib/admin/feedback-utils';
+import {
+  feedbackMatchesFilter,
+  parseFeedbackFilter,
+} from '@/lib/admin/feedback-utils';
 
 import { FeedbackInbox } from './FeedbackInbox';
-import { noticeFromSearchParameters, screenshotUrlFor } from './view';
+import { noticeFromSearchParameters, screenshotUrlsFor } from './view';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,24 +30,21 @@ export default async function FeedbackPage({ searchParams }: PageProps) {
     Array.isArray(parameters.status) ? parameters.status[0] : parameters.status,
   );
   const { email, supabase } = await requireAppAdmin();
-  const [items, counts] = await Promise.all([
-    loadFeedbackItems(supabase, filter),
-    loadFeedbackCounts(supabase),
-  ]);
-  const selected = items[0] ?? null;
-  const screenshotUrl = await screenshotUrlFor(selected, (path) =>
-    createFeedbackScreenshotUrl(supabase, path),
+  const items = await loadFeedbackItems(supabase);
+  const selected = items.find((item) => feedbackMatchesFilter(item, filter)) ?? null;
+  const screenshotUrls = await screenshotUrlsFor(items, (feedbackItems) =>
+    createFeedbackScreenshotUrls(supabase, feedbackItems),
   );
 
   return (
     <FeedbackInbox
       adminEmail={email}
-      counts={counts}
       filter={filter}
       items={items}
+      key={`${filter}:${selected?.id ?? 'empty'}`}
       mobileDetail={false}
       notice={noticeFromSearchParameters(parameters)}
-      screenshotUrl={screenshotUrl}
+      screenshotUrls={screenshotUrls}
       selected={selected}
     />
   );
