@@ -96,6 +96,21 @@ describe('Group profile', () => {
 
     expect(screen.getByText('Colour')).toBeTruthy();
     expect(screen.getByText('Add a photo')).toBeTruthy();
+    expect(screen.getByTestId('swatch-2')).toBeTruthy();
+  });
+
+  it('stores the colour selected through the shared field', async () => {
+    await renderEdit();
+
+    await fireEvent.press(screen.getByTestId('swatch-3'));
+    await fireEvent.press(screen.getByTestId('save'));
+
+    await waitFor(() => {
+      expect(groupUpdate).toHaveBeenCalledWith({
+        name: 'Padel Dilluns',
+        color: '#B7E4C7',
+      });
+    });
   });
 
   // The colour is still stored and still drives the feed stripe. It just has

@@ -11,12 +11,12 @@ import {
   ThemedText,
   FormScreen,
   GroupTile,
+  GroupColourField,
   GroupPhotoField,
   HeaderAction,
-  ColorSwatchPicker,
   colorForName,
 } from '../../../../components/ui';
-import { colors, fonts, groupColors, spacing } from '../../../../theme/tokens';
+import { colors, fonts, spacing } from '../../../../theme/tokens';
 
 type PhotoDraft = { kind: 'keep' } | { kind: 'remove' } | { kind: 'new'; uri: string };
 
@@ -156,14 +156,7 @@ export default function EditGroupScreen() {
           Colour is hidden while a photo is set. It comes back the moment the photo goes.
         </ThemedText>
       ) : (
-        <View style={styles.section}>
-          <ThemedText variant="sectionLabel">Colour</ThemedText>
-          <ColorSwatchPicker
-            swatches={groupColors}
-            selected={draftColor}
-            onSelect={setColor}
-          />
-        </View>
+        <GroupColourField value={draftColor} onChange={setColor} />
       )}
     </FormScreen>
   );
@@ -205,8 +198,5 @@ const styles = StyleSheet.create({
   rule: {
     height: 2,
     backgroundColor: colors.borderStrong,
-  },
-  section: {
-    gap: 10,
   },
 });
