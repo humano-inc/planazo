@@ -120,7 +120,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
       >
         {({ pressed }) => (
           <View style={[styles.create, pressed && styles.createPressed]}>
-            <PlusGlyph size={30} color={colors.textOnAccent} />
+            <PlusGlyph size={23} color={colors.textOnAccent} />
           </View>
         )}
       </Pressable>
