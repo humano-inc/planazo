@@ -3,9 +3,10 @@ export { Button } from './Button';
 export { BackButton } from './BackButton';
 export { HeaderAction } from './HeaderAction';
 export { TextAction } from './TextAction';
-// BackGlyph and ForwardGlyph are not here: BackButton and MonthCalendar reach
-// for them directly, and nothing outside components/ui ever has.
+// BackGlyph is not here: BackButton, MonthCalendar and SwipeRow reach for it
+// directly, and nothing outside components/ui ever has.
 export {
+  ForwardGlyph,
   MoreGlyph,
   DisclosureGlyph,
   CloseGlyph,
