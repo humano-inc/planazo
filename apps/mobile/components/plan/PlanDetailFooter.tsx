@@ -133,7 +133,7 @@ export function PlanDetailFooter({
         primary={
           picked.length === 0
             ? {
-                label: 'Tap the dates you can do',
+                label: 'Choose dates',
                 variant: 'secondary',
                 disabled: true,
                 haptic: false,

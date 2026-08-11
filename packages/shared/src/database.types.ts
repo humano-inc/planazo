@@ -509,6 +509,42 @@ export type Database = {
           },
         ]
       }
+      plan_poll_vote_receipts: {
+        Row: {
+          first_voted_at: string
+          plan_id: string
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          first_voted_at?: string
+          plan_id: string
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          first_voted_at?: string
+          plan_id?: string
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_poll_vote_receipts_poll_id_plan_id_fkey"
+            columns: ["poll_id", "plan_id"]
+            isOneToOne: false
+            referencedRelation: "plan_polls"
+            referencedColumns: ["id", "plan_id"]
+          },
+          {
+            foreignKeyName: "plan_poll_vote_receipts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_poll_votes: {
         Row: {
           created_at: string

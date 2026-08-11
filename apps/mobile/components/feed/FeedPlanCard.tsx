@@ -12,20 +12,11 @@ import {
 } from '../ui';
 import { fmtDay } from '../../lib/dates';
 import { waitingLabel } from '../../lib/rsvp';
-import { useVotePlanPoll } from '../../lib/usePlanPoll';
-import { useAuthStore } from '../../stores/authStore';
 import { colors, spacing } from '../../theme/tokens';
 
 /** One feed card's slice of the decorated plan the feed screen computes. */
-export interface FeedPlan {
+interface FeedPlan {
   plan: any;
-  poll: {
-    id: string;
-    question: string;
-    options: { id: string; label: string; votes: number; mine: boolean }[];
-    caption: string;
-    canVote: boolean;
-  } | null;
   needs: boolean;
   confirmed: boolean;
   userRsvp?: { response: RsvpResponse | null };
@@ -65,14 +56,8 @@ export function FeedPlanCard({
   onDecline,
 }: FeedPlanCardProps) {
   const { plan } = item;
-  const { user } = useAuthStore();
   const groupName = plan.groups?.name ?? 'Group';
   const groupColor = plan.groups?.color ?? colorForName(groupName);
-
-  // One pick each, straight from the card: another option moves the vote,
-  // your own withdraws it (PLA-47). The write, its invalidations and its
-  // refusal copy all live in the shared hook, same as PlanPolls.
-  const voteOnPoll = useVotePlanPoll();
 
   const renderAnswer = () => {
     // A called-off plan is a record — the notice above the feed carries it.
@@ -154,7 +139,7 @@ export function FeedPlanCard({
           primary={
             picked.length === 0
               ? {
-                  label: 'Tap the dates you can do',
+                  label: 'Choose dates',
                   variant: 'secondary',
                   disabled: true,
                   haptic: false,
@@ -212,73 +197,12 @@ export function FeedPlanCard({
         ) : null}
       </Pressable>
 
-      {/* The plan's poll, votable without opening the plan
-          (PLA-47). Outside the onOpen Pressable: a tap on an
-          option is a vote, never a navigation. */}
-      {item.poll ? (
-        <View style={styles.pollSection} testID={`poll-feed-${plan.id}`}>
-          <View style={styles.pollHead}>
-            <ThemedText variant="sectionLabel" style={styles.pollQuestion} numberOfLines={1}>
-              {item.poll.question}
-            </ThemedText>
-            <ThemedText
-              variant="caption"
-              color={item.poll.canVote ? colors.accentPressed : colors.textMuted}
-              numberOfLines={1}
-              style={styles.pollCaption}
-            >
-              {item.poll.caption}
-            </ThemedText>
-          </View>
-          {item.poll.options.map((opt) => (
-            <DateOptionRow
-              key={opt.id}
-              label={opt.label}
-              meta={opt.votes === 1 ? '1 vote' : `${opt.votes} votes`}
-              selected={opt.mine}
-              onPress={
-                item.poll!.canVote
-                  ? () =>
-                      voteOnPoll.mutate({
-                        planId: plan.id,
-                        pollId: item.poll!.id,
-                        userId: user!.id,
-                        optionId: opt.mine ? null : opt.id,
-                      })
-                  : undefined
-              }
-              testID={`poll-feed-option-${opt.id}`}
-            />
-          ))}
-        </View>
-      ) : null}
-
       <View style={styles.answer}>{renderAnswer()}</View>
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  pollSection: {
-    marginTop: spacing.lg,
-    paddingTop: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-    gap: spacing.sm,
-  },
-  pollHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    gap: spacing.md,
-  },
-  pollQuestion: {
-    flexShrink: 0,
-  },
-  pollCaption: {
-    flexShrink: 1,
-    textAlign: 'right',
-  },
   cardTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',

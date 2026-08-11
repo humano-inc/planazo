@@ -5,7 +5,7 @@ import type { PlanPollRow, PollVoteRow } from './usePlanPoll';
  * Pure cache edits behind the optimistic poll vote (PLA-94). A tap must
  * highlight before the network answers, and the two caches that render a
  * poll — the detail screen's ['plan-poll', planId] rows and the feed's
- * ['home-plans'] rows with their embedded first poll — each need my vote
+ * ['home-plans'] rows with their embedded polls — each need my vote
  * moved the same way: my old row out, my new pick in, null withdrawing.
  * Both return new arrays and never touch the input, because these run
  * against live react-query cache snapshots that rollback must restore.

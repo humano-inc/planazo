@@ -7,13 +7,20 @@ import {
   Pressable,
   ActivityIndicator,
 } from 'react-native';
+import Animated, {
+  Easing,
+  FadeOut,
+  FadeOutUp,
+  LinearTransition,
+  ReduceMotion,
+  useReducedMotion,
+} from 'react-native-reanimated';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   canVoteOnPolls,
   countAvailabilityByDate,
-  countPollVotes,
   earliestViableDate,
   flattenNestedOptions,
   isPlanConfirmed,
@@ -24,7 +31,6 @@ import {
   planGoingCount,
   planGoingPeople,
   pollPeopleIn,
-  pollVotedPhrase,
   waitlistPosition,
 } from '@planazo/shared';
 import { supabase } from '../../../lib/supabase';
@@ -34,10 +40,13 @@ import { useCancelNotices } from '../../../lib/useCancelNotices';
 import { useMyGroups } from '../../../lib/useMyGroups';
 import { errorCopy } from '../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../lib/usePullToRefresh';
+import { deriveFeedPollItems } from '../../../lib/feedPolls';
+import { useFeedPollVoteTransition } from '../../../lib/useFeedPollVoteTransition';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
 import { useAuthStore } from '../../../stores/authStore';
 import { ThemedText, Chip, Avatar, EmptyState, ErrorState } from '../../../components/ui';
-import { FeedPlanCard, type FeedPlan } from '../../../components/feed/FeedPlanCard';
+import { FeedPlanCard } from '../../../components/feed/FeedPlanCard';
+import { FeedPollCard } from '../../../components/feed/FeedPollCard';
 import { CancelNotices } from '../../../components/feed/CancelNotices';
 import { NeedsGroupState } from '../../../components/group/NeedsGroupState';
 import { colors, spacing } from '../../../theme/tokens';
@@ -50,6 +59,7 @@ export default function FeedScreen() {
   const [filter, setFilter] = useState<Filter>('all');
   // Local date selections per flexible plan, committed on "Send N dates"
   const [pickedDates, setPickedDates] = useState<Record<string, string[]>>({});
+  const reducedMotion = useReducedMotion();
 
   const { data: plans, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['home-plans', user?.id],
@@ -67,22 +77,18 @@ export default function FeedScreen() {
         .from('plans')
         .select(
           // lib/pollVoteCache.ts patches the plan_polls embed optimistically
-          // on a vote — reshaping it here silently no-ops that patch, so
-          // keep the two in step.
+          // on a vote. The current vote makes its poll item disappear before
+          // the receipt trigger and settle-time refetch arrive, so keep this
+          // nested shape in step with that cache edit.
           `*,
           groups(id, name, color),
           rsvps(user_id, response, waitlist_seq, profile:profiles(display_name)),
           plan_date_options(id, date, date_availability(user_id, profile:profiles(display_name))),
-          plan_polls(id, question, created_at, plan_poll_options!plan_poll_options_poll_id_plan_id_fkey(id, label, position), plan_poll_votes(option_id, user_id))`
+          plan_polls(id, question, created_at, plan_poll_options!plan_poll_options_poll_id_plan_id_fkey(id, label, position), plan_poll_votes(option_id, user_id), plan_poll_vote_receipts(user_id))`
         )
         .in('group_id', groupIds)
         .neq('status', 'cancelled')
-        .order('created_at', { ascending: false })
-        // A feed card is a summary: it carries the plan's first poll only,
-        // and whoever wants the second is one tap from the plan. Selecting
-        // it here keeps the embed small and deletes the client-side sort.
-        .order('created_at', { referencedTable: 'plan_polls', ascending: true })
-        .limit(1, { referencedTable: 'plan_polls' });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       return data;
@@ -153,41 +159,7 @@ export default function FeedScreen() {
       // Only you see your own place in the queue (PLA-37).
       const waitPosition = waitlistPosition(plan.rsvps, user?.id);
 
-      // The plan's first poll (PLA-47), votable right on the card — the
-      // query keeps only the oldest one. The pick gate and the turnout
-      // phrase are the shared derivations the plan screen also uses, so the
-      // two surfaces cannot disagree about either.
-      const pollRow = (plan.plan_polls ?? [])[0] ?? null;
-      let poll: FeedPlan['poll'] = null;
-      if (pollRow) {
-        const canVote = canVoteOnPolls(
-          { created_by: plan.created_by, rsvps: plan.rsvps, availabilities },
-          user?.id
-        );
-        const votes: { option_id: string; user_id: string }[] = pollRow.plan_poll_votes ?? [];
-        const sortedOptions = [...(pollRow.plan_poll_options ?? [])].sort(
-          (a: any, b: any) => a.position - b.position
-        );
-        const counts = countPollVotes(sortedOptions, votes);
-        const myVote = votes.find((v) => v.user_id === user?.id);
-        const options = sortedOptions.map((o: any) => ({
-          id: o.id as string,
-          label: o.label as string,
-          votes: counts[o.id] ?? 0,
-          mine: myVote?.option_id === o.id,
-        }));
-        const myPick = options.find((o) => o.mine);
-        const base = pollVotedPhrase(votes.length, pollPeopleIn(plan.rsvps, availabilities));
-        const caption = myPick
-          ? `You picked ${myPick.label} · tap to change`
-          : canVote
-            ? `${base} · tap to vote`
-            : base;
-        poll = { id: pollRow.id, question: pollRow.question, options, caption, canVote };
-      }
-
       return {
-        poll,
         plan,
         isPast,
         confirmed,
@@ -202,10 +174,33 @@ export default function FeedScreen() {
         goingCount,
         dateOptions,
         countByDate,
+        canVoteOnPolls: canVoteOnPolls(
+          { created_by: plan.created_by, rsvps: plan.rsvps, availabilities },
+          user?.id
+        ),
+        pollPeopleIn: pollPeopleIn(plan.rsvps, availabilities),
         sortKey: sortDate ? new Date(sortDate).getTime() : Number.MAX_SAFE_INTEGER,
       };
     });
   }, [plans, user?.id]);
+
+  const pollItems = useMemo(
+    () =>
+      deriveFeedPollItems(
+        decorated.map((item) => ({
+          planId: item.plan.id,
+          planTitle: item.plan.title,
+          groupName: item.plan.groups?.name ?? 'Group',
+          groupColor: item.plan.groups?.color,
+          isPast: item.isPast,
+          canVote: item.canVoteOnPolls,
+          peopleIn: item.pollPeopleIn,
+          polls: item.plan.plan_polls,
+        })),
+        user?.id
+      ),
+    [decorated, user?.id]
+  );
 
   const visible = useMemo(() => {
     const filtered = decorated.filter(
@@ -216,6 +211,24 @@ export default function FeedScreen() {
       a.needs !== b.needs ? (a.needs ? -1 : 1) : a.sortKey - b.sortKey
     );
   }, [decorated, filter]);
+
+  const {
+    sendPollVote,
+    transitions: pollTransitions,
+    visiblePolls,
+  } = useFeedPollVoteTransition(pollItems, user?.id, filter !== 'happening');
+  const hasVisibleItems = visible.length > 0 || visiblePolls.length > 0;
+
+  const pollExit = reducedMotion
+    ? FadeOut.duration(160).reduceMotion(ReduceMotion.Never)
+    : FadeOutUp.duration(220)
+        .easing(Easing.out(Easing.exp))
+        .reduceMotion(ReduceMotion.System);
+  const feedLayout = reducedMotion
+    ? undefined
+    : LinearTransition.duration(260)
+        .easing(Easing.out(Easing.exp))
+        .reduceMotion(ReduceMotion.System);
 
   const openPlan = (planId: string) => router.push(`/(app)/plan/${planId}`);
 
@@ -279,13 +292,13 @@ export default function FeedScreen() {
         >
           <CancelNotices notices={notices} onDismiss={dismiss} />
 
-          {visible.length === 0 && !hasGroups ? (
+          {!hasVisibleItems && !hasGroups ? (
             // Sending this user to the create sheet was the loop PLA-68 is
             // about: the one action offered was the one thing they could not
             // do. A filter they cannot have set yet is not worth a branch —
             // with no groups there are no plans to filter.
             <NeedsGroupState testID="feed-needs-group" />
-          ) : visible.length === 0 ? (
+          ) : !hasVisibleItems ? (
             <EmptyState
               title={filter === 'needs' ? 'Nothing to answer' : 'Nothing on the table'}
               body={
@@ -297,19 +310,37 @@ export default function FeedScreen() {
               onPress={() => router.push('/(app)/plan/create')}
             />
           ) : (
-            visible.map((d) => (
-              <FeedPlanCard
-                key={d.plan.id}
-                item={d}
-                picked={pickedDates[d.plan.id] ?? []}
-                onTogglePicked={togglePicked}
-                onOpen={openPlan}
-                onAnswer={answers.answer}
-                onClearAnswer={answers.clearAnswer}
-                onSendDates={answers.sendDates}
-                onDecline={answers.decline}
-              />
-            ))
+            <>
+              {visiblePolls.map((poll) => (
+                <Animated.View
+                  key={poll.id}
+                  layout={feedLayout}
+                  exiting={pollExit}
+                  testID={`poll-card-motion-${poll.id}`}
+                >
+                  <FeedPollCard
+                    item={poll}
+                    transition={pollTransitions[poll.id]}
+                    onOpen={openPlan}
+                    onSendVote={(optionId) => sendPollVote(poll, optionId)}
+                  />
+                </Animated.View>
+              ))}
+              {visible.map((d) => (
+                <Animated.View key={d.plan.id} layout={feedLayout}>
+                  <FeedPlanCard
+                    item={d}
+                    picked={pickedDates[d.plan.id] ?? []}
+                    onTogglePicked={togglePicked}
+                    onOpen={openPlan}
+                    onAnswer={answers.answer}
+                    onClearAnswer={answers.clearAnswer}
+                    onSendDates={answers.sendDates}
+                    onDecline={answers.decline}
+                  />
+                </Animated.View>
+              ))}
+            </>
           )}
         </ScrollView>
       )}
