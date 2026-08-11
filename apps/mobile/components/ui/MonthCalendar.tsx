@@ -27,30 +27,30 @@ export function MonthCalendar({ selected, onToggleDay }: MonthCalendarProps) {
   const weeks = buildMonthGrid(base.getFullYear(), base.getMonth());
 
   const label = base.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const atStart = offset === 0;
+  const atEnd = offset === MAX_MONTHS_AHEAD;
 
   return (
     <View style={styles.card}>
       <View style={styles.header}>
         <Pressable
           onPress={() => setOffset((o) => Math.max(0, o - 1))}
-          disabled={offset === 0}
+          disabled={atStart}
           accessibilityRole="button"
-          accessibilityState={{ disabled: offset === 0 }}
           accessibilityLabel="Previous month"
           testID="cal-prev"
-          style={[styles.arrow, offset === 0 && styles.arrowDisabled]}
+          style={[styles.arrow, atStart && styles.arrowDisabled]}
         >
           <BackGlyph />
         </Pressable>
         <ThemedText style={styles.monthLabel}>{label}</ThemedText>
         <Pressable
           onPress={() => setOffset((o) => Math.min(MAX_MONTHS_AHEAD, o + 1))}
-          disabled={offset === MAX_MONTHS_AHEAD}
+          disabled={atEnd}
           accessibilityRole="button"
-          accessibilityState={{ disabled: offset === MAX_MONTHS_AHEAD }}
           accessibilityLabel="Next month"
           testID="cal-next"
-          style={[styles.arrow, offset === MAX_MONTHS_AHEAD && styles.arrowDisabled]}
+          style={[styles.arrow, atEnd && styles.arrowDisabled]}
         >
           <ForwardGlyph />
         </Pressable>

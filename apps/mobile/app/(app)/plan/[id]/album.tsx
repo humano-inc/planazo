@@ -91,12 +91,7 @@ export default function PlanAlbumScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <BackButton
-          label="Back"
-          accessibilityLabel="Back"
-          onPress={leave}
-          testID="album-back"
-        />
+        <BackButton label="Back" onPress={leave} testID="album-back" />
       </View>
 
       <View style={styles.title}>

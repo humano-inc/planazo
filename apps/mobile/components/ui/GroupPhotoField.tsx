@@ -118,7 +118,7 @@ export function GroupPhotoField({
               />
               <TextAction
                 label="Remove"
-                tone="destructive"
+                tone="quiet"
                 onPress={onRemove}
                 testID="remove-photo"
               />

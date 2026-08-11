@@ -21,13 +21,12 @@ describe('TextAction', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
-  it('uses the destructive action color when requested', async () => {
-    await render(
-      <TextAction label="Remove" tone="destructive" onPress={() => {}} testID="remove" />
-    );
+  it('quiets the secondary of an action pair', async () => {
+    await render(<TextAction label="Remove" tone="quiet" onPress={() => {}} testID="remove" />);
 
     const style = StyleSheet.flatten(screen.getByText('Remove').props.style) as TextStyle;
-    expect(style.color).toBe(colors.accentPressed);
+    expect(style.color).toBe(colors.textMuted);
+    expect(style.color).not.toBe(colors.accentText);
   });
 
   it('announces and enforces its disabled state', async () => {

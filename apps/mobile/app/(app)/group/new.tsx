@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
+import { View, StyleSheet, TextInput, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
@@ -7,7 +7,6 @@ import { useDismissTo, useLeaveFor } from '../../../lib/navigation';
 import { contentViolation } from '../../../lib/moderation';
 import { uploadGroupPhoto } from '../../../lib/images';
 import { captureError } from '../../../lib/sentry';
-import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
 import { FriendPicker } from '../../../components/group/FriendPicker';
 import {
   ThemedText,
@@ -16,6 +15,7 @@ import {
   GroupTile,
   GroupPhotoField,
   HeaderAction,
+  ColorSwatchPicker,
   showToast,
 } from '../../../components/ui';
 import { colors, fonts, groupColors, spacing, type } from '../../../theme/tokens';
@@ -173,23 +173,11 @@ export default function NewGroupScreen() {
       ) : (
         <View style={styles.section}>
           <ThemedText variant="sectionLabel">Colour</ThemedText>
-          <View style={styles.swatches}>
-            {groupColors.map((swatch, i) => (
-              <Pressable
-                key={swatch}
-                accessibilityRole="button"
-                accessibilityLabel={`Group color ${i + 1}`}
-                accessibilityState={{ selected: i === colorIdx }}
-                onPress={() => setColorIdx(i)}
-                style={[
-                  styles.swatch,
-                  { backgroundColor: swatch },
-                  i === colorIdx && styles.swatchSelected,
-                ]}
-                testID={`swatch-${i}`}
-              />
-            ))}
-          </View>
+          <ColorSwatchPicker
+            swatches={groupColors}
+            selected={groupColors[colorIdx]}
+            onSelect={(_color, index) => setColorIdx(index)}
+          />
         </View>
       )}
 
@@ -253,20 +241,6 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 10,
-  },
-  swatches: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  swatch: {
-    width: MIN_TOUCH_TARGET,
-    height: MIN_TOUCH_TARGET,
-    borderRadius: 15,
-    borderWidth: 2.5,
-    borderColor: 'transparent',
-  },
-  swatchSelected: {
-    borderColor: colors.ink,
   },
   descInput: {
     ...type.body,

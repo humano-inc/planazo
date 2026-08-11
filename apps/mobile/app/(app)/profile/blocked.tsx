@@ -68,12 +68,7 @@ export default function BlockedPeopleScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.navRow}>
-        <BackButton
-          onPress={goBack}
-          testID="back"
-          style={styles.backAction}
-          color={colors.textPrimary}
-        />
+        <BackButton onPress={goBack} testID="back" color={colors.textPrimary} />
         <ThemedText style={styles.navTitle}>Blocked people</ThemedText>
       </View>
 
@@ -139,9 +134,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
-  },
-  backAction: {
-    flexShrink: 0,
   },
   navTitle: {
     fontFamily: fonts.display,

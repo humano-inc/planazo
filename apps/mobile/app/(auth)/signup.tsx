@@ -208,7 +208,6 @@ export default function SignupScreen() {
     <View style={styles.backRow}>
       <BackButton
         label="Back"
-        accessibilityLabel="Back"
         color={colors.textSecondary}
         onPress={goBack}
         testID="back"

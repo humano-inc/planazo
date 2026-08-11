@@ -25,15 +25,8 @@ describe('BackButton', () => {
     expect(screen.getByLabelText('Back to Weekend Crew')).toBeTruthy();
   });
 
-  it('accepts an explicit accessibility label for a generic visible label', async () => {
-    await render(
-      <BackButton
-        label="Back"
-        accessibilityLabel="Back"
-        onPress={() => {}}
-        testID="back"
-      />
-    );
+  it('does not say "Back to Back" when the label is already the word', async () => {
+    await render(<BackButton label="Back" onPress={() => {}} testID="back" />);
 
     expect(screen.getByLabelText('Back')).toBeTruthy();
     expect(screen.queryByLabelText('Back to Back')).toBeNull();

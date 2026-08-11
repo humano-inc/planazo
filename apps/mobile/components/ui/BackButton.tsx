@@ -1,11 +1,12 @@
-import { Platform, Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import { MIN_TOUCH_TARGET } from '../../lib/a11y';
-import { colors, fonts, spacing } from '../../theme/tokens';
+import { Platform, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { colors, spacing } from '../../theme/tokens';
+import { ActionButton } from './ActionButton';
 import { BackGlyph } from './NavigationGlyphs';
 import { ThemedText } from './ThemedText';
 
 interface BackButtonProps {
   onPress: () => void;
+  /** Where back goes, e.g. "Weekend Crew". Announced as "Back to Weekend Crew". */
   label?: string;
   color?: string;
   accessibilityLabel?: string;
@@ -22,46 +23,36 @@ export function BackButton({
   style,
   testID,
 }: BackButtonProps) {
-  const visibleLabel = Platform.OS === 'ios' ? label : undefined;
+  // "Back to Back" helps nobody: a label that is already the word stands alone.
+  const spokenLabel = label && label !== 'Back' ? `Back to ${label}` : 'Back';
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? (label ? `Back to ${label}` : 'Back')}
+    <ActionButton
       onPress={onPress}
-      style={({ pressed }) => [styles.control, style, pressed && styles.pressed]}
+      align="start"
+      accessibilityLabel={accessibilityLabel ?? spokenLabel}
+      style={[styles.row, style]}
       testID={testID}
     >
       <BackGlyph color={color} />
-      {visibleLabel ? (
-        <ThemedText
-          color={color}
-          numberOfLines={1}
-          style={styles.label}
-        >
-          {visibleLabel}
+      {Platform.OS === 'ios' && label ? (
+        <ThemedText variant="control" color={color} numberOfLines={1}>
+          {label}
         </ThemedText>
       ) : null}
-    </Pressable>
+    </ActionButton>
   );
 }
 
 const styles = StyleSheet.create({
-  control: {
-    minWidth: MIN_TOUCH_TARGET,
-    minHeight: MIN_TOUCH_TARGET,
+  // A row, so the box's own centring means the wrong axis: `alignItems` now
+  // centres the glyph against the label, and the chevron has to stay hard left
+  // against the screen edge with no padding of its own.
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
+    paddingHorizontal: 0,
     gap: spacing.xxs,
-    flexShrink: 0,
-  },
-  label: {
-    fontFamily: fonts.body,
-    fontSize: 17,
-    lineHeight: 22,
-  },
-  pressed: {
-    opacity: 0.55,
   },
 });

@@ -3,11 +3,15 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
 import { PollOptionsEditor } from '../../PollComposer';
 import { AnswerFooter } from '../AnswerFooter';
+import { BackButton } from '../BackButton';
 import { Button } from '../Button';
 import { Chip } from '../Chip';
+import { ColorSwatchPicker } from '../ColorSwatchPicker';
 import { DateOptionRow } from '../DateOptionRow';
+import { HeaderAction } from '../HeaderAction';
 import { ListRow } from '../ListRow';
 import { MonthCalendar } from '../MonthCalendar';
+import { TextAction } from '../TextAction';
 
 /**
  * PLA-40. Every one of these controls was sized by how it looked — padding
@@ -113,6 +117,36 @@ describe('touch targets meet the adaptive floor', () => {
       await fireEvent.press(screen.getByTestId('cal-next'));
     }
     expect(screen.getByTestId('cal-next').props.accessibilityState.disabled).toBe(true);
+  });
+
+  // These three share one box (`ActionButton`), so the interesting case is not
+  // the default: it is a caller passing `style`, which lands after the box in
+  // the style array and could quietly flatten the floor away.
+  it.each([
+    ['HeaderAction', <HeaderAction label="Save" onPress={() => {}} testID="action" />],
+    ['TextAction', <TextAction label="Invite" onPress={() => {}} testID="action" />],
+    ['BackButton', <BackButton onPress={() => {}} testID="action" />],
+  ])('%s, on both axes', async (_name, control) => {
+    await render(control);
+    expectMeetsMinimum('action', 'both');
+  });
+
+  it.each([
+    ['HeaderAction', <HeaderAction label="Save" onPress={() => {}} style={{ flexGrow: 1 }} testID="action" />],
+    ['TextAction', <TextAction label="Invite" onPress={() => {}} style={{ flexGrow: 1 }} testID="action" />],
+    ['BackButton', <BackButton onPress={() => {}} style={{ flexGrow: 1 }} testID="action" />],
+  ])('%s, even when a caller passes its own style', async (_name, control) => {
+    await render(control);
+    expectMeetsMinimum('action', 'both');
+  });
+
+  it('ColorSwatchPicker swatches, on both axes', async () => {
+    await render(
+      <ColorSwatchPicker swatches={['#AA0000', '#00BB00']} selected="#AA0000" onSelect={() => {}} />,
+    );
+
+    expectMeetsMinimum('swatch-0', 'both');
+    expectMeetsMinimum('swatch-1', 'both');
   });
 
   it('PollOptionsEditor remove actions use real boxes instead of overlapping hit slop', async () => {

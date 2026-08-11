@@ -1,112 +1,131 @@
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolView } from 'expo-symbols';
+import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 import { colors } from '../../theme/tokens';
+import { glyphFallback, type MaterialName } from './glyphFallback';
+
+interface GlyphSpec {
+  sf: SymbolViewProps['name'];
+  material: MaterialName;
+  /** SF Symbols optically centre their own box, so the two sizes differ. */
+  size: number;
+  fallbackSize: number;
+  color: string;
+}
+
+const GLYPHS = {
+  back: {
+    sf: 'chevron.backward',
+    material: 'chevron-left',
+    size: 20,
+    fallbackSize: 24,
+    color: colors.accent,
+  },
+  forward: {
+    sf: 'chevron.forward',
+    material: 'chevron-right',
+    size: 20,
+    fallbackSize: 24,
+    color: colors.accent,
+  },
+  more: {
+    sf: 'ellipsis',
+    material: 'more-horiz',
+    size: 22,
+    fallbackSize: 24,
+    color: colors.textMuted,
+  },
+  up: {
+    sf: 'chevron.up',
+    material: 'keyboard-arrow-up',
+    size: 16,
+    fallbackSize: 22,
+    color: colors.textMuted,
+  },
+  down: {
+    sf: 'chevron.down',
+    material: 'keyboard-arrow-down',
+    size: 16,
+    fallbackSize: 22,
+    color: colors.textMuted,
+  },
+  close: {
+    sf: 'xmark',
+    material: 'close',
+    size: 16,
+    fallbackSize: 20,
+    color: colors.textMuted,
+  },
+  plus: {
+    sf: 'plus',
+    material: 'add',
+    size: 18,
+    fallbackSize: 22,
+    color: colors.textPrimary,
+  },
+  minus: {
+    sf: 'minus',
+    material: 'remove',
+    size: 18,
+    fallbackSize: 22,
+    color: colors.textPrimary,
+  },
+} satisfies Record<string, GlyphSpec>;
+
+type GlyphName = keyof typeof GLYPHS;
 
 interface GlyphProps {
   color?: string;
+  /**
+   * Override when a screen draws the same glyph twice. The default is shared,
+   * so two on one screen make `getByTestId` ambiguous.
+   */
+  testID?: string;
 }
 
 /** SF Symbol on iOS, Material icon everywhere SF Symbols are unavailable. */
-export function BackGlyph({ color = colors.accent }: GlyphProps) {
+function Glyph({ name, color, testID }: GlyphProps & { name: GlyphName }) {
+  const spec = GLYPHS[name];
+  const tint = color ?? spec.color;
+
   return (
     <SymbolView
-      name="chevron.backward"
-      fallback={
-        <MaterialIcons name="chevron-left" color={color} size={24} testID="back-glyph-fallback" />
-      }
-      size={20}
+      name={spec.sf}
+      fallback={glyphFallback(spec.material, spec.fallbackSize, tint)}
+      size={spec.size}
       weight="semibold"
-      tintColor={color}
-      testID="back-glyph"
+      tintColor={tint}
+      testID={testID ?? `${name}-glyph`}
     />
   );
 }
 
-/** SF Symbol on iOS, Material icon everywhere SF Symbols are unavailable. */
-export function ForwardGlyph({ color = colors.accent }: GlyphProps) {
-  return (
-    <SymbolView
-      name="chevron.forward"
-      fallback={<MaterialIcons name="chevron-right" color={color} size={24} />}
-      size={20}
-      weight="semibold"
-      tintColor={color}
-      testID="forward-glyph"
-    />
-  );
+export function BackGlyph(props: GlyphProps) {
+  return <Glyph name="back" {...props} />;
 }
 
-/** SF Symbol on iOS, Material icon everywhere SF Symbols are unavailable. */
-export function MoreGlyph({ color = colors.textMuted }: GlyphProps) {
-  return (
-    <SymbolView
-      name="ellipsis"
-      fallback={<MaterialIcons name="more-horiz" color={color} size={24} />}
-      size={22}
-      weight="semibold"
-      tintColor={color}
-      testID="more-glyph"
-    />
-  );
+export function ForwardGlyph(props: GlyphProps) {
+  return <Glyph name="forward" {...props} />;
+}
+
+export function MoreGlyph(props: GlyphProps) {
+  return <Glyph name="more" {...props} />;
 }
 
 export function DisclosureGlyph({
   expanded,
-  color = colors.textMuted,
+  color,
+  testID = 'disclosure-glyph',
 }: GlyphProps & { expanded: boolean }) {
-  return (
-    <SymbolView
-      name={expanded ? 'chevron.up' : 'chevron.down'}
-      fallback={
-        <MaterialIcons
-          name={expanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-          color={color}
-          size={22}
-        />
-      }
-      size={16}
-      weight="semibold"
-      tintColor={color}
-      testID="disclosure-glyph"
-    />
-  );
+  return <Glyph name={expanded ? 'up' : 'down'} color={color} testID={testID} />;
 }
 
-export function CloseGlyph({ color = colors.textMuted }: GlyphProps) {
-  return (
-    <SymbolView
-      name="xmark"
-      fallback={<MaterialIcons name="close" color={color} size={20} />}
-      size={16}
-      weight="semibold"
-      tintColor={color}
-      testID="close-glyph"
-    />
-  );
+export function CloseGlyph(props: GlyphProps) {
+  return <Glyph name="close" {...props} />;
 }
 
-export function PlusGlyph({ color = colors.textPrimary }: GlyphProps) {
-  return (
-    <SymbolView
-      name="plus"
-      fallback={<MaterialIcons name="add" color={color} size={22} />}
-      size={18}
-      weight="semibold"
-      tintColor={color}
-      testID="plus-glyph"
-    />
-  );
+export function PlusGlyph(props: GlyphProps) {
+  return <Glyph name="plus" {...props} />;
 }
 
-export function MinusGlyph({ color = colors.textPrimary }: GlyphProps) {
-  return (
-    <SymbolView
-      name="minus"
-      fallback={<MaterialIcons name="remove" color={color} size={22} />}
-      size={18}
-      weight="semibold"
-      tintColor={color}
-      testID="minus-glyph"
-    />
-  );
+export function MinusGlyph(props: GlyphProps) {
+  return <Glyph name="minus" {...props} />;
 }

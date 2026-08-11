@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
+import { View, StyleSheet, TextInput, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../../lib/supabase';
@@ -7,13 +7,13 @@ import { useDismissTo } from '../../../../lib/navigation';
 import { contentViolation } from '../../../../lib/moderation';
 import { removeGroupPhoto, uploadGroupPhoto } from '../../../../lib/images';
 import { captureError } from '../../../../lib/sentry';
-import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 import {
   ThemedText,
   FormScreen,
   GroupTile,
   GroupPhotoField,
   HeaderAction,
+  ColorSwatchPicker,
   colorForName,
 } from '../../../../components/ui';
 import { colors, fonts, groupColors, spacing } from '../../../../theme/tokens';
@@ -158,22 +158,11 @@ export default function EditGroupScreen() {
       ) : (
         <View style={styles.section}>
           <ThemedText variant="sectionLabel">Colour</ThemedText>
-          <View style={styles.swatches}>
-            {groupColors.map((swatch, index) => (
-              <Pressable
-                key={swatch}
-                accessibilityRole="button"
-                accessibilityLabel={`Group color ${index + 1}`}
-                accessibilityState={{ selected: swatch === draftColor }}
-                onPress={() => setColor(swatch)}
-                style={[
-                  styles.swatch,
-                  { backgroundColor: swatch },
-                  swatch === draftColor && styles.swatchSelected,
-                ]}
-              />
-            ))}
-          </View>
+          <ColorSwatchPicker
+            swatches={groupColors}
+            selected={draftColor}
+            onSelect={setColor}
+          />
         </View>
       )}
     </FormScreen>
@@ -219,19 +208,5 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 10,
-  },
-  swatches: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  swatch: {
-    width: MIN_TOUCH_TARGET,
-    height: MIN_TOUCH_TARGET,
-    borderRadius: 15,
-    borderWidth: 2.5,
-    borderColor: 'transparent',
-  },
-  swatchSelected: {
-    borderColor: colors.ink,
   },
 });

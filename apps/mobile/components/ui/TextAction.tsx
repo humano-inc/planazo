@@ -1,15 +1,16 @@
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import { MIN_TOUCH_TARGET } from '../../lib/a11y';
-import { colors, spacing } from '../../theme/tokens';
+import { type StyleProp, type ViewStyle } from 'react-native';
+import { colors } from '../../theme/tokens';
+import { ActionButton, type ActionAlign } from './ActionButton';
 import { ThemedText } from './ThemedText';
 
 interface TextActionProps {
   label: string;
   onPress: () => void;
-  tone?: 'default' | 'destructive';
+  /** `quiet` is the secondary of a pair, e.g. "Remove" beside "Change". */
+  tone?: 'accent' | 'quiet';
   disabled?: boolean;
   accessibilityLabel?: string;
-  align?: 'start' | 'center' | 'end';
+  align?: ActionAlign;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }
@@ -18,7 +19,7 @@ interface TextActionProps {
 export function TextAction({
   label,
   onPress,
-  tone = 'default',
+  tone = 'accent',
   disabled = false,
   accessibilityLabel,
   align = 'center',
@@ -26,53 +27,21 @@ export function TextAction({
   testID,
 }: TextActionProps) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
+    <ActionButton
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.control,
-        styles[align],
-        style,
-        pressed && styles.pressed,
-        disabled && styles.disabled,
-      ]}
+      align={align}
+      disabled={disabled}
+      accessibilityLabel={accessibilityLabel}
+      style={style}
       testID={testID}
     >
       <ThemedText
         variant="bodyStrong"
-        color={tone === 'destructive' ? colors.accentPressed : colors.accentText}
+        color={tone === 'quiet' ? colors.textMuted : colors.accentText}
         numberOfLines={1}
       >
         {label}
       </ThemedText>
-    </Pressable>
+    </ActionButton>
   );
 }
-
-const styles = StyleSheet.create({
-  control: {
-    minWidth: MIN_TOUCH_TARGET,
-    minHeight: MIN_TOUCH_TARGET,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
-    flexShrink: 0,
-  },
-  start: {
-    alignItems: 'flex-start',
-  },
-  center: {
-    alignItems: 'center',
-  },
-  end: {
-    alignItems: 'flex-end',
-  },
-  pressed: {
-    opacity: 0.55,
-  },
-  disabled: {
-    opacity: 0.4,
-  },
-});

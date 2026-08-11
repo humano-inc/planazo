@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
-import { MIN_TOUCH_TARGET } from '../../lib/a11y';
-import { colors, fonts, spacing } from '../../theme/tokens';
+import { type StyleProp, type ViewStyle } from 'react-native';
+import { colors } from '../../theme/tokens';
+import { ActionButton } from './ActionButton';
 import { ThemedText } from './ThemedText';
 
 type HeaderActionTone = 'accent' | 'muted';
@@ -28,55 +28,21 @@ export function HeaderAction({
   testID,
 }: HeaderActionProps) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
+    <ActionButton
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.control,
-        styles[align],
-        style,
-        pressed && styles.pressed,
-        disabled && styles.disabled,
-      ]}
+      align={align}
+      disabled={disabled}
+      accessibilityLabel={accessibilityLabel}
+      style={style}
       testID={testID}
     >
       <ThemedText
+        variant="control"
         color={tone === 'muted' ? colors.textSecondary : colors.accentText}
         numberOfLines={1}
-        style={styles.label}
       >
         {label}
       </ThemedText>
-    </Pressable>
+    </ActionButton>
   );
 }
-
-const styles = StyleSheet.create({
-  control: {
-    minWidth: MIN_TOUCH_TARGET,
-    minHeight: MIN_TOUCH_TARGET,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
-    flexShrink: 0,
-  },
-  start: {
-    alignItems: 'flex-start',
-  },
-  end: {
-    alignItems: 'flex-end',
-  },
-  label: {
-    fontFamily: fonts.body,
-    fontSize: 17,
-    lineHeight: 22,
-  },
-  pressed: {
-    opacity: 0.55,
-  },
-  disabled: {
-    opacity: 0.4,
-  },
-});
