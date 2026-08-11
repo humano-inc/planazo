@@ -34,7 +34,7 @@ import {
   waitlistPosition,
 } from '@planazo/shared';
 import { supabase } from '../../../lib/supabase';
-import { fmtDay, fmtTime } from '../../../lib/dates';
+import { planWhenLabel } from '../../../lib/planWhen';
 import { useFeedAnswers } from '../../../lib/useFeedAnswers';
 import { useCancelNotices } from '../../../lib/useCancelNotices';
 import { useMyGroups } from '../../../lib/useMyGroups';
@@ -129,15 +129,6 @@ export default function FeedScreen() {
       // footer and its numbers can never describe two different plans.
       const rsvpDriven = !isVoteRunning(planData);
 
-      let when: string;
-      if (plan.locked_date) {
-        when = `${fmtDay(plan.locked_date)} · ${fmtTime(plan.locked_date)}`;
-      } else if (plan.event_date) {
-        when = `${fmtDay(plan.event_date)} · ${fmtTime(plan.event_date)}`;
-      } else {
-        when = `${dateOptions.length} date${dateOptions.length === 1 ? '' : 's'} on the table`;
-      }
-
       // Two different populations, on purpose. The faces are everyone who has
       // engaged, so someone who withdraws actually leaves the stack. The number
       // beside min_people is the best single date, because that is what decides
@@ -169,7 +160,7 @@ export default function FeedScreen() {
         isFull,
         waitPosition,
         myDates,
-        when,
+        when: planWhenLabel(plan, dateOptions),
         goingNames,
         goingCount,
         dateOptions,

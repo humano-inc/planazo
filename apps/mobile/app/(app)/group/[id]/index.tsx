@@ -11,16 +11,8 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  flattenNestedOptions,
-  goingLabel,
-  isPlanConfirmed,
-  isPlanPast,
-  planGoingCount,
-  planLastDate,
-} from '@planazo/shared';
 import { supabase } from '../../../../lib/supabase';
-import { fmtDay, fmtTime } from '../../../../lib/dates';
+import { deriveGroupPlanRows, type GroupPlanRow } from '../../../../lib/groupPlanRows';
 import { inviteLinkFor } from '../../../../lib/shareLinks';
 import { canInvite } from '../../../../lib/groupDoor';
 import { useAuthStore } from '../../../../stores/authStore';
@@ -83,84 +75,10 @@ export default function GroupDetailScreen() {
   const myRole = members.find((m: any) => m.user_id === user?.id)?.role;
   const memberNames = members.map((m: any) => m.profile?.display_name ?? '?');
 
-  const planRows = useMemo(() => {
-    return (group?.plans ?? []).map((p: any) => {
-      // The row already carries plan_type, status, min_people and rsvps; the
-      // options only need flattening out of their nested select shape.
-      const { dateOptions, availabilities } = flattenNestedOptions(p.plan_date_options);
-      const planData = { ...p, dateOptions, availabilities };
-
-      // Yes-RSVPs once fixed or locked, the best single date while a flexible
-      // plan is open — the same number plan detail renders, never the union of
-      // everyone free on any date (that union is the faces row's business).
-      const going = planGoingCount(planData);
-
-      const optionCount = dateOptions.length;
-      const when = p.locked_date
-        ? `${fmtDay(p.locked_date)} · ${fmtTime(p.locked_date)}`
-        : p.event_date
-          ? `${fmtDay(p.event_date)} · ${fmtTime(p.event_date)}`
-          : `${optionCount} date${optionCount === 1 ? '' : 's'} on the table`;
-
-      const meta = goingLabel(going, p.min_people);
-
-      // 19d: three endings, one Past section. A plan that happened keeps its
-      // white card and the faces of who was there; the two non-events sink
-      // into flat stone with one line of explanation.
-      const optionDates = dateOptions.map((o) => o.date);
-      const cancelled = p.status === 'cancelled';
-      const past = cancelled || isPlanPast(p, optionDates);
-      let ending: 'cancelled' | 'expired' | 'happened' | null = null;
-      let endingLine = '';
-      if (cancelled) {
-        ending = 'cancelled';
-        const who =
-          p.cancelled_by === user?.id ? 'you' : p.canceller?.display_name ?? 'the host';
-        endingLine = `Called off by ${who}`;
-      } else if (past) {
-        const happened = isPlanConfirmed(planData);
-        ending = happened ? 'happened' : 'expired';
-        if (!happened) endingLine = `Didn't happen · ${going} of ${p.min_people}`;
-      }
-
-      const wentNames = (p.rsvps ?? [])
-        .filter((r: any) => r.response === 'yes')
-        .map((r: any) =>
-          r.user_id === user?.id ? 'You' : r.profile?.display_name ?? '?'
-        )
-        .sort((a: string, b: string) => (a === 'You' ? -1 : b === 'You' ? 1 : 0));
-      const youWent = wentNames[0] === 'You';
-      const wentLabel = youWent
-        ? wentNames.length === 1
-          ? 'You went'
-          : `You and ${wentNames.length - 1} other${wentNames.length === 2 ? '' : 's'} went`
-        : `${wentNames.length || going} went`;
-
-      const endDate = planLastDate(p, optionDates);
-
-      return {
-        id: p.id,
-        title: p.title,
-        when,
-        meta,
-        open: p.status === 'open',
-        past,
-        ending,
-        endingLine,
-        wentNames,
-        wentLabel,
-        endDate,
-        sortKey: endDate ? new Date(endDate).getTime() : 0,
-      };
-    });
-  }, [group?.plans, user?.id]);
-
-  const live = planRows.filter((p: any) => !p.past);
-  const waiting = live.filter((p: any) => p.open);
-  const locked = live.filter((p: any) => !p.open);
-  const pastRows = planRows
-    .filter((p: any) => p.past)
-    .sort((a: any, b: any) => b.sortKey - a.sortKey);
+  const { live, waiting, locked, past: pastRows } = useMemo(
+    () => deriveGroupPlanRows({ plans: group?.plans, userId: user?.id }),
+    [group?.plans, user?.id]
+  );
 
   if (!isLoading && (isError || !group)) {
     const notFound = !id || isNotFoundError(error);
@@ -194,7 +112,7 @@ export default function GroupDetailScreen() {
     );
   }
 
-  const renderPlanRow = (p: any, tone: 'waiting' | 'locked') => (
+  const renderPlanRow = (p: GroupPlanRow, tone: 'waiting' | 'locked') => (
     <Card key={p.id}>
       <Pressable onPress={() => router.push(`/(app)/plan/${p.id}`)} testID={`plan-row-${p.id}`}>
         <ThemedText variant="cardTitle" style={styles.planTitle} numberOfLines={1}>
@@ -295,7 +213,7 @@ export default function GroupDetailScreen() {
                     Waiting on answers · {waiting.length}
                   </ThemedText>
                 </View>
-                {waiting.map((p: any) => renderPlanRow(p, 'waiting'))}
+                {waiting.map((p) => renderPlanRow(p, 'waiting'))}
               </View>
             ) : null}
 
@@ -307,7 +225,7 @@ export default function GroupDetailScreen() {
                     Locked in · {locked.length}
                   </ThemedText>
                 </View>
-                {locked.map((p: any) => renderPlanRow(p, 'locked'))}
+                {locked.map((p) => renderPlanRow(p, 'locked'))}
               </View>
             ) : null}
           </>
