@@ -74,6 +74,9 @@ type GlyphName = keyof typeof GLYPHS;
 
 interface GlyphProps {
   color?: string;
+  /** Use one explicit optical size on both platforms. */
+  size?: number;
+  style?: SymbolViewProps['style'];
   /**
    * Override when a screen draws the same glyph twice. The default is shared,
    * so two on one screen make `getByTestId` ambiguous.
@@ -82,17 +85,18 @@ interface GlyphProps {
 }
 
 /** SF Symbol on iOS, Material icon everywhere SF Symbols are unavailable. */
-function Glyph({ name, color, testID }: GlyphProps & { name: GlyphName }) {
+function Glyph({ name, color, size, style, testID }: GlyphProps & { name: GlyphName }) {
   const spec = GLYPHS[name];
   const tint = color ?? spec.color;
 
   return (
     <SymbolView
       name={spec.sf}
-      fallback={glyphFallback(spec.material, spec.fallbackSize, tint)}
-      size={spec.size}
+      fallback={glyphFallback(spec.material, size ?? spec.fallbackSize, tint)}
+      size={size ?? spec.size}
       weight="semibold"
       tintColor={tint}
+      style={style}
       testID={testID ?? `${name}-glyph`}
     />
   );

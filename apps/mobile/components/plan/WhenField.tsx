@@ -3,7 +3,7 @@ import { View, StyleSheet, Pressable, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Animated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
-import { ThemedText, MonthCalendar } from '../ui';
+import { CloseGlyph, ThemedText, MonthCalendar } from '../ui';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 
 const fmtShort = (iso: string) =>
@@ -93,13 +93,11 @@ export function WhenField({ dates, onToggleDay, time, onTimeChange }: Props) {
               <ThemedText variant="bodyStrong" style={styles.chipLabel} color={colors.accentPressed}>
                 {fmtShort(d)}
               </ThemedText>
-              <ThemedText
-                variant="bodyStrong"
-                style={[styles.chipLabel, styles.chipX]}
+              <CloseGlyph
+                testID={`chip-${d}-remove-glyph`}
+                style={styles.chipX}
                 color={colors.accentPressed}
-              >
-                ✕
-              </ThemedText>
+              />
             </Pressable>
           ))}
         </Animated.View>
@@ -162,7 +160,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 18,
   },
-  // 34 (8 + 18 + 8) and it carries a "✕" — the only way to drop a date you
+  // 34 (8 + 18 + 8) and it carries the only way to drop a date you
   // picked by mistake, and the smallest thing being asked to do it (PLA-40).
   dateChip: {
     flexDirection: 'row',

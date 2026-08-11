@@ -1,7 +1,7 @@
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePendingInvites } from '../../lib/usePendingInvites';
-import { ThemedText, Avatar } from '../ui';
+import { ForwardGlyph, ThemedText, Avatar } from '../ui';
 import { colors, radii, spacing } from '../../theme/tokens';
 
 /** The collapsed invites pill above the group list. Renders nothing when the inbox is empty. */
@@ -42,9 +42,7 @@ export function InvitesRow() {
           {inviteLine}
         </ThemedText>
       </View>
-      <ThemedText variant="body" color={colors.tabInactive}>
-        ›
-      </ThemedText>
+      <ForwardGlyph color={colors.tabInactive} />
     </Pressable>
   );
 }

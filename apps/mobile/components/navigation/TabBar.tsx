@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ThemedText } from '../ui/ThemedText';
+import { PlusGlyph } from '../ui/NavigationGlyphs';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { colors, fonts, radii } from '../../theme/tokens';
 import { usePendingInvites } from '../../lib/usePendingInvites';
@@ -93,7 +94,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
     );
   };
 
-  // The "+" always opens a sheet about making a plan; which sheet depends on
+  // The create control always opens a sheet about making a plan; which sheet depends on
   // whether one can be made yet. A short detent needs declaring before the
   // screen mounts, so the choice has to happen here rather than inside the
   // create screen (PLA-68).
@@ -119,9 +120,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
       >
         {({ pressed }) => (
           <View style={[styles.create, pressed && styles.createPressed]}>
-            <ThemedText style={styles.plus} color={colors.textOnAccent}>
-              +
-            </ThemedText>
+            <PlusGlyph size={30} color={colors.textOnAccent} />
           </View>
         )}
       </Pressable>
@@ -202,10 +201,6 @@ const styles = StyleSheet.create({
   },
   createPressed: {
     backgroundColor: colors.accentPressed,
-  },
-  plus: {
-    fontSize: 30,
-    lineHeight: 34,
   },
   badge: {
     position: 'absolute',

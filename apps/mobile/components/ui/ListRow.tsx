@@ -1,5 +1,6 @@
 import { Pressable, View, StyleSheet } from 'react-native';
 import { ThemedText } from './ThemedText';
+import { ForwardGlyph } from './NavigationGlyphs';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { colors, spacing } from '../../theme/tokens';
 
@@ -40,9 +41,10 @@ export function ListRow({ title, value, right, onPress, divider = false, destruc
             {value}
           </ThemedText>
         ) : onPress ? (
-          <ThemedText variant="body" color={colors.textFaint}>
-            ›
-          </ThemedText>
+          <ForwardGlyph
+            color={colors.textFaint}
+            testID={testID ? `${testID}-forward-glyph` : undefined}
+          />
         ) : null)}
     </>
   );

@@ -2,6 +2,7 @@ import { ReactNode, useCallback, useEffect, useRef } from 'react';
 import { Animated, PanResponder, Pressable, StyleSheet, View } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { ThemedText } from './ThemedText';
+import { BackGlyph } from './NavigationGlyphs';
 import { resistPast, settlesOpen } from '../../lib/swipePhysics';
 import { colors } from '../../theme/tokens';
 
@@ -231,9 +232,11 @@ export function SwipeRow({
         }}
       >
         <View style={styles.body}>{children}</View>
-        <ThemedText variant="body" color={colors.textFaint} style={styles.hint}>
-          ‹
-        </ThemedText>
+        <BackGlyph
+          color={colors.textFaint}
+          style={styles.hint}
+          testID={testID ? `${testID}-back-glyph` : undefined}
+        />
 
         {/* Open, a tap on the person shuts the row rather than hitting what is
             under it.

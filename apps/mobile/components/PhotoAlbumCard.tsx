@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ThemedText } from './ui/ThemedText';
 import { Button } from './ui/Button';
 import { PhotoTile } from './ui/PhotoTile';
+import { ForwardGlyph } from './ui/NavigationGlyphs';
 import { usePlanAlbumCard, planPhotosKey } from '../lib/usePlanPhotos';
 import {
   MAX_PHOTOS_PER_PERSON,
@@ -155,9 +156,7 @@ export function PhotoAlbumCard({ planId, userId, albumOpen, canAdd }: Props) {
                     : albumSummary(summary ?? { total: 0, uploaders: 0 })}
             </ThemedText>
             {total > 1 && !uploading ? (
-              <ThemedText variant="body" color={colors.textFaint}>
-                ›
-              </ThemedText>
+              <ForwardGlyph color={colors.textFaint} />
             ) : null}
           </View>
         ) : null}

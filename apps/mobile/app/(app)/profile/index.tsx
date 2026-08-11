@@ -10,7 +10,7 @@ import { clearPushToken, registerPushToken } from '../../../lib/push';
 import { purgeOwnedFiles } from '../../../lib/storage';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
 import { useAuthStore } from '../../../stores/authStore';
-import { Avatar, Card, ListRow, ThemedText } from '../../../components/ui';
+import { Avatar, Card, ForwardGlyph, ListRow, ThemedText } from '../../../components/ui';
 import { colors, fonts, spacing } from '../../../theme/tokens';
 
 /**
@@ -275,9 +275,7 @@ export default function ProfileSheet() {
             <ThemedText variant="bodyStrong">Send feedback</ThemedText>
             <ThemedText variant="caption">Broken thing, or an idea. Takes 10 seconds</ThemedText>
           </View>
-          <ThemedText variant="body" color={colors.accent}>
-            ›
-          </ThemedText>
+          <ForwardGlyph color={colors.accent} />
         </Pressable>
 
         {/* Guideline 5.1.1(i) wants the privacy policy reachable from inside
