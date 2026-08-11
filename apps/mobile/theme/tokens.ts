@@ -132,6 +132,12 @@ export const type = {
     letterSpacing: -0.52,
     color: colors.textPrimary,
   },
+  screenHeader: {
+    fontFamily: fonts.displayHeavy,
+    fontSize: 17,
+    lineHeight: 21,
+    color: colors.textPrimary,
+  },
   cardTitle: {
     fontFamily: fonts.display,
     fontSize: 22,

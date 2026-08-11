@@ -22,6 +22,7 @@ import {
   Avatar,
   GroupTile,
   HeaderAction,
+  HeaderRow,
 } from '../../components/ui';
 import { colors, fonts, sheetDetents, spacing } from '../../theme/tokens';
 
@@ -204,16 +205,20 @@ export default function InvitesSheet() {
       edges={[]}
     >
       <View style={styles.grabber} />
-      <View style={styles.header}>
-        <ThemedText style={styles.headerTitle}>Invites</ThemedText>
-        <HeaderAction
-          label="Done"
-          align="end"
-          onPress={done}
-          tone="muted"
-          testID="done"
-        />
-      </View>
+      <HeaderRow
+        right={
+          <HeaderAction
+            label="Done"
+            align="end"
+            onPress={done}
+            tone="muted"
+            testID="done"
+          />
+        }
+        style={styles.headerInsets}
+        title="Invites"
+        titleStyle={styles.headerTitle}
+      />
 
       <ScrollView
         style={styles.flex}
@@ -247,11 +252,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginTop: 10,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
+  headerInsets: {
     paddingBottom: spacing.xs,
   },
   headerTitle: {

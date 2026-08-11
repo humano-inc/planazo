@@ -15,6 +15,7 @@ import {
   CloseGlyph,
   FormScreen,
   HeaderAction,
+  HeaderRow,
   PlusGlyph,
   ThemedText,
   showToast,
@@ -91,22 +92,19 @@ export default function FeedbackScreen() {
   };
 
   const header = (
-    <View style={styles.header}>
-      <HeaderAction
-        label="Cancel"
-        onPress={cancel}
-        tone="muted"
-        testID="cancel"
-      />
-      <ThemedText style={styles.headerTitle}>Send feedback</ThemedText>
-      <HeaderAction
-        label="Send"
-        align="end"
-        disabled={!valid || send.isPending}
-        onPress={() => send.mutate()}
-        testID="send"
-      />
-    </View>
+    <HeaderRow
+      left={<HeaderAction label="Cancel" onPress={cancel} tone="muted" testID="cancel" />}
+      right={
+        <HeaderAction
+          label="Send"
+          align="end"
+          disabled={!valid || send.isPending}
+          onPress={() => send.mutate()}
+          testID="send"
+        />
+      }
+      title="Send feedback"
+    />
   );
 
   return (
@@ -206,18 +204,6 @@ export default function FeedbackScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  headerTitle: {
-    fontFamily: fonts.displayHeavy,
-    fontSize: 17,
-    lineHeight: 21,
-    color: colors.textPrimary,
-  },
   content: {
     // flexGrow, so `privacy` can still be pushed to the bottom by its auto
     // margin on a screen too short to scroll. FormScreen owns the horizontal

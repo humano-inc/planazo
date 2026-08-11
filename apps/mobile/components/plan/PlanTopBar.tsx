@@ -1,12 +1,11 @@
-import { View, Pressable, StyleSheet, ActionSheetIOS, Alert, Platform } from 'react-native';
+import { StyleSheet, ActionSheetIOS, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import type { PlanDerived } from '../../lib/planDerived';
-import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
 import { planLinkFor } from '../../lib/shareLinks';
-import { BackButton, MoreGlyph, showToast } from '../ui';
-import { spacing } from '../../theme/tokens';
+import { BackButton, HeaderRow, MoreGlyph, showToast } from '../ui';
+import { ActionButton } from '../ui/ActionButton';
 
 type Props = {
   planId: string;
@@ -81,44 +80,31 @@ export function PlanTopBar({ planId, groupId, d, groupName, onNudge }: Props) {
   };
 
   return (
-    <View style={styles.topBar}>
-      <BackButton
-        label={groupName}
-        onPress={goBack}
-        testID="back"
-        style={styles.backAction}
-      />
-      <Pressable
-        onPress={showMenu}
-        accessibilityRole="button"
-        accessibilityLabel="Plan options"
-        testID="plan-menu"
-        style={[styles.navAction, styles.navActionEnd]}
-      >
-        <MoreGlyph />
-      </Pressable>
-    </View>
+    <HeaderRow
+      left={
+        <BackButton
+          label={groupName}
+          onPress={goBack}
+          testID="back"
+          style={styles.backAction}
+        />
+      }
+      right={
+        <ActionButton
+          accessibilityLabel="Plan options"
+          align="end"
+          onPress={showMenu}
+          testID="plan-menu"
+        >
+          <MoreGlyph />
+        </ActionButton>
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
   backAction: {
     maxWidth: '78%',
-  },
-  navAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-  },
-  // "···" is about 30 wide, so the end action needs the width floor too; it
-  // grows leftwards and the glyph stays flush.
-  navActionEnd: {
-    alignItems: 'flex-end',
-    minWidth: MIN_TOUCH_TARGET,
   },
 });

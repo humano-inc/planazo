@@ -9,7 +9,7 @@ import { ThemedText } from '../ThemedText';
  * The rule these tests pin down: cap the display sizes, never the content.
  */
 describe('ThemedText font scaling', () => {
-  it.each(['screenTitle', 'headerTitle', 'cardTitle', 'statusHeadline'] as const)(
+  it.each(['screenTitle', 'headerTitle', 'screenHeader', 'cardTitle', 'statusHeadline'] as const)(
     'caps %s so a heading cannot swallow the screen',
     async (variant) => {
       const view = await render(<ThemedText variant={variant}>Title</ThemedText>);

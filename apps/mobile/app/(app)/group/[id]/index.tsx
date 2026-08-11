@@ -36,6 +36,7 @@ import {
   ErrorState,
   BackButton,
   HeaderAction,
+  HeaderRow,
   TextAction,
 } from '../../../../components/ui';
 import { PastPlansSection } from '../../../../components/group/PastPlansSection';
@@ -213,22 +214,20 @@ export default function GroupDetailScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.navRow}>
-        <BackButton
-          label="Groups"
-          onPress={goBack}
-          testID="back"
-        />
-        {/* Same route either way. A member is not managing anything behind
-            this word, so it does not say they are (PLA-61). */}
-        <HeaderAction
-          label={myRole === 'admin' ? 'Manage' : 'Members'}
-          onPress={() => router.push(`/(app)/group/${id}/manage`)}
-          align="end"
-          tone="muted"
-          testID="manage"
-        />
-      </View>
+      <HeaderRow
+        left={<BackButton label="Groups" onPress={goBack} testID="back" />}
+        right={
+          /* Same route either way. A member is not managing anything behind
+             this word, so it does not say they are (PLA-61). */
+          <HeaderAction
+            label={myRole === 'admin' ? 'Manage' : 'Members'}
+            onPress={() => router.push(`/(app)/group/${id}/manage`)}
+            align="end"
+            tone="muted"
+            testID="manage"
+          />
+        }
+      />
 
       <ScrollView
         style={styles.flex}
@@ -332,12 +331,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  navRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
   },
   content: {
     paddingHorizontal: spacing.xl,

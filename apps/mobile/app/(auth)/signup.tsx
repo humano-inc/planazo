@@ -19,6 +19,7 @@ import {
   FooterPrompt,
   FormField,
   FormScreen,
+  HeaderRow,
   ThemedText,
 } from '../../components/ui';
 import { colors, spacing } from '../../theme/tokens';
@@ -205,14 +206,16 @@ export default function SignupScreen() {
   }
 
   const backRow = (
-    <View style={styles.backRow}>
-      <BackButton
-        label="Back"
-        color={colors.textSecondary}
-        onPress={goBack}
-        testID="back"
-      />
-    </View>
+    <HeaderRow
+      left={
+        <BackButton
+          label="Back"
+          color={colors.textSecondary}
+          onPress={goBack}
+          testID="back"
+        />
+      }
+    />
   );
 
   return (
@@ -322,10 +325,6 @@ export default function SignupScreen() {
 }
 
 const styles = StyleSheet.create({
-  backRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.xl,
-  },
   scroll: {
     paddingTop: 18,
     paddingBottom: spacing.xxl,
