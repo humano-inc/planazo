@@ -8,6 +8,7 @@
     "knip": "knip --include files,dependencies,unlisted,binaries",
     "knip:all": "knip",
     "dev:mobile": "turbo dev --filter=mobile",
+    "appstore:deploy": "cd apps/mobile && eas build --platform ios --profile production --auto-submit",
     "db:push": "npx supabase db push",
     "db:reset": "npx supabase db reset",
     "db:diff": "npx supabase db diff",
