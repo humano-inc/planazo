@@ -1,11 +1,12 @@
 import { StyleSheet } from 'react-native';
-import { render, screen, fireEvent, within } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, fireEvent, within } from '@testing-library/react-native';
 import { MIN_TOUCH_TARGET } from '../../../../../lib/a11y';
 import GroupDetailScreen from '../index';
 import { useAuthStore } from '../../../../../stores/authStore';
 import { supabase } from '../../../../../lib/supabase';
 import { iso } from '../../../../../lib/testing/dates';
+import { chain } from '../../../../../lib/testing/supabase';
+import { renderWithQuery } from '../../../../../lib/testing/render';
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
@@ -16,38 +17,24 @@ jest.mock('../../../../../lib/supabase', () => ({
   supabase: { from: jest.fn(), rpc: jest.fn() },
 }));
 
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    push: mockPush,
-    back: mockBack,
-    replace: mockReplace,
-    canGoBack: () => mockCanGoBack,
-    navigate: jest.fn(),
-  }),
-  useLocalSearchParams: () => ({ id: 'g1' }),
-}));
-
+jest.mock('expo-router', () =>
+  require('../../../../../lib/testing/router').expoRouterMock(
+    () => ({
+      push: mockPush,
+      back: mockBack,
+      replace: mockReplace,
+      canGoBack: () => mockCanGoBack,
+    }),
+    () => ({ id: 'g1' })
+  )
+);
 
 const mockFrom = supabase.from as jest.Mock;
 
 let group: any;
 
-function chain(result: () => unknown) {
-  const c: any = {};
-  ['select', 'eq', 'single'].forEach((m) => {
-    c[m] = jest.fn(() => c);
-  });
-  c.then = (resolve: (v: unknown) => void) => Promise.resolve(result()).then(resolve);
-  return c;
-}
-
 async function renderDetail() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
-  return render(
-    <QueryClientProvider client={client}>
-      <GroupDetailScreen />
-    </QueryClientProvider>
-  );
+  return renderWithQuery(<GroupDetailScreen />);
 }
 
 beforeEach(() => {

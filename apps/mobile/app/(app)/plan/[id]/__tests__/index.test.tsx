@@ -1,7 +1,6 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { screen, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert, Share, StyleSheet, type ViewStyle } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import PlanDetailScreen from '../index';
 import { useAuthStore } from '../../../../../stores/authStore';
 import { takePendingPlan } from '../../../../../lib/pendingPlan';
@@ -9,6 +8,8 @@ import { supabase } from '../../../../../lib/supabase';
 import { fmtDay } from '../../../../../lib/dates';
 import { iso } from '../../../../../lib/testing/dates';
 import { chooseFromSheet, mockActionSheet, sheetOptions } from '../../../../../lib/testing/actionSheet';
+import { chain } from '../../../../../lib/testing/supabase';
+import { renderWithQuery } from '../../../../../lib/testing/render';
 
 jest.mock('../../../../../lib/supabase', () => ({
   supabase: { from: jest.fn(), rpc: jest.fn() },
@@ -21,15 +22,17 @@ let mockCanGoBack = true;
 // Mutable so a test can swap the route param under a mounted screen — what a
 // deep link does to this route (PLA-18).
 let mockParamId = 'plan-1';
-jest.mock('expo-router', () => ({
-  useLocalSearchParams: () => ({ id: mockParamId }),
-  useRouter: () => ({
-    push: mockPush,
-    back: mockBack,
-    replace: mockReplace,
-    canGoBack: () => mockCanGoBack,
-  }),
-}));
+jest.mock('expo-router', () =>
+  require('../../../../../lib/testing/router').expoRouterMock(
+    () => ({
+      push: mockPush,
+      back: mockBack,
+      replace: mockReplace,
+      canGoBack: () => mockCanGoBack,
+    }),
+    () => ({ id: mockParamId })
+  )
+);
 
 jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn() }));
 
@@ -48,14 +51,6 @@ jest.mock('react-native-reanimated', () => {
 const mockFrom = supabase.from as jest.Mock;
 const mockRpc = supabase.rpc as jest.Mock;
 
-function chain(result: unknown) {
-  const c: any = {};
-  ['select', 'eq', 'in', 'neq', 'order', 'upsert', 'delete', 'single', 'maybeSingle'].forEach((m) => {
-    c[m] = jest.fn(() => c);
-  });
-  c.then = (resolve: (v: unknown) => void) => Promise.resolve(result).then(resolve);
-  return c;
-}
 
 const basePlan = {
   id: 'plan-1',
@@ -123,18 +118,9 @@ function prime({
 }
 
 async function renderDetail() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
-  // A fresh element each time: React bails out of re-rendering an identical
-  // element reference, which would make the swap below a silent no-op.
-  const tree = () => (
-    <QueryClientProvider client={client}>
-      <PlanDetailScreen />
-    </QueryClientProvider>
-  );
-  const utils = await render(tree());
-  // Re-render the *same* instance — how new params reach an already-mounted
-  // screen. Remounting would hide the bug this covers.
-  return { ...utils, rerenderSameInstance: () => utils.rerender(tree()) };
+  // rerenderSameInstance is how new params reach an already-mounted screen;
+  // remounting would hide the bug that covers. renderWithQuery carries it.
+  return renderWithQuery(<PlanDetailScreen />);
 }
 
 beforeEach(() => {

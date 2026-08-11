@@ -1,11 +1,12 @@
 import { StyleSheet } from 'react-native';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, fireEvent, waitFor } from '@testing-library/react-native';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 import { DISMISS_MS } from '../../../../lib/navigation';
 import CreatePlanScreen from '../create';
 import { useAuthStore } from '../../../../stores/authStore';
 import { supabase } from '../../../../lib/supabase';
+import { chain } from '../../../../lib/testing/supabase';
+import { renderWithQuery } from '../../../../lib/testing/render';
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
@@ -19,16 +20,18 @@ jest.mock('../../../../lib/supabase', () => ({
   supabase: { from: jest.fn() },
 }));
 
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    push: mockPush,
-    back: mockBack,
-    navigate: mockNavigate,
-    replace: mockReplace,
-    canGoBack: () => mockCanGoBack,
-  }),
-  useLocalSearchParams: () => mockParams,
-}));
+jest.mock('expo-router', () =>
+  require('../../../../lib/testing/router').expoRouterMock(
+    () => ({
+      push: mockPush,
+      back: mockBack,
+      navigate: mockNavigate,
+      replace: mockReplace,
+      canGoBack: () => mockCanGoBack,
+    }),
+    () => mockParams
+  )
+);
 
 
 jest.mock('react-native-reanimated', () => {
@@ -54,14 +57,6 @@ jest.mock('@react-native-community/datetimepicker', () => {
 const mockFrom = supabase.from as jest.Mock;
 
 /** Chainable, awaitable Supabase query-builder stub. */
-function chain(result: unknown) {
-  const c: any = {};
-  ['select', 'eq', 'in', 'order', 'insert', 'upsert', 'delete', 'single'].forEach((m) => {
-    c[m] = jest.fn(() => c);
-  });
-  c.then = (resolve: (v: unknown) => void) => Promise.resolve(result).then(resolve);
-  return c;
-}
 
 const MEMBERSHIPS = [
   { groups: { id: 'g1', name: 'Los de siempre' } },
@@ -95,14 +90,7 @@ function primeSupabase(memberships: unknown[] = MEMBERSHIPS) {
 }
 
 async function renderCreate() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0 } },
-  });
-  return render(
-    <QueryClientProvider client={client}>
-      <CreatePlanScreen />
-    </QueryClientProvider>
-  );
+  return renderWithQuery(<CreatePlanScreen />);
 }
 
 // Freeze only Date (timers stay real so async rendering works):

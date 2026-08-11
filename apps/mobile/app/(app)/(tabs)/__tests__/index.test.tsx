@@ -1,10 +1,11 @@
 import { Alert } from 'react-native';
-import { act, render, screen, fireEvent, waitFor } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { act, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import FeedScreen from '../index';
 import { useAuthStore } from '../../../../stores/authStore';
 import { supabase } from '../../../../lib/supabase';
 import { iso } from '../../../../lib/testing/dates';
+import { chain } from '../../../../lib/testing/supabase';
+import { renderWithQuery } from '../../../../lib/testing/render';
 
 const mockPush = jest.fn();
 const mockNavigate = jest.fn();
@@ -13,14 +14,12 @@ jest.mock('../../../../lib/supabase', () => ({
   supabase: { from: jest.fn() },
 }));
 
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
+jest.mock('expo-router', () =>
+  require('../../../../lib/testing/router').expoRouterMock(() => ({
     push: mockPush,
     navigate: mockNavigate,
-    replace: jest.fn(),
-    back: jest.fn(),
-  }),
-}));
+  }))
+);
 
 jest.mock('expo-haptics', () => ({
   __esModule: true,
@@ -61,14 +60,6 @@ const mockHaptics = jest.requireMock('expo-haptics') as {
 const mockFrom = supabase.from as jest.Mock;
 
 /** Chainable, awaitable Supabase query-builder stub. */
-function chain(result: unknown) {
-  const c: any = {};
-  ['select', 'eq', 'in', 'neq', 'gte', 'order', 'limit', 'upsert', 'update', 'delete'].forEach((m) => {
-    c[m] = jest.fn(() => c);
-  });
-  c.then = (resolve: (v: unknown) => void) => Promise.resolve(result).then(resolve);
-  return c;
-}
 
 const GROUP = { id: 'g1', name: 'Domingueros' };
 
@@ -193,14 +184,7 @@ function primeSupabase(
 }
 
 function renderFeed() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: 0 } },
-  });
-  return render(
-    <QueryClientProvider client={client}>
-      <FeedScreen />
-    </QueryClientProvider>
-  );
+  return renderWithQuery(<FeedScreen />);
 }
 
 beforeEach(() => {

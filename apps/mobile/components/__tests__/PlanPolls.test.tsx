@@ -1,28 +1,20 @@
 import { Alert } from 'react-native';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, fireEvent, waitFor } from '@testing-library/react-native';
 import { PlanPolls } from '../PlanPolls';
 import { supabase } from '../../lib/supabase';
+import { chain } from '../../lib/testing/supabase';
+import { renderWithQuery } from '../../lib/testing/render';
 
 jest.mock('../../lib/supabase', () => ({
   supabase: { from: jest.fn() },
 }));
 
 const mockPush = jest.fn();
-jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, back: jest.fn(), replace: jest.fn() }),
-}));
+jest.mock('expo-router', () =>
+  require('../../lib/testing/router').expoRouterMock(() => ({ push: mockPush }))
+);
 
 const mockFrom = supabase.from as jest.Mock;
-
-function chain(result: unknown) {
-  const c: any = {};
-  ['select', 'eq', 'order', 'upsert', 'delete'].forEach((m) => {
-    c[m] = jest.fn(() => c);
-  });
-  c.then = (resolve: (v: unknown) => void) => Promise.resolve(result).then(resolve);
-  return c;
-}
 
 const filmPoll = {
   id: 'q-film',
@@ -74,12 +66,7 @@ const defaultProps = {
 };
 
 function renderPolls(props: Partial<typeof defaultProps> = {}) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={client}>
-      <PlanPolls {...defaultProps} {...props} />
-    </QueryClientProvider>
-  );
+  return renderWithQuery(<PlanPolls {...defaultProps} {...props} />);
 }
 
 beforeEach(() => {
