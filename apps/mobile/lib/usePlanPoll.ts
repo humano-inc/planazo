@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
 import { contentViolation } from './moderation';
 import { cleanPollDraft, type PollDraft } from './pollDraft';
+import { applyVoteToHomePlans, applyVoteToPolls, type VoteIntent } from './pollVoteCache';
 import { actionErrorCopy, isForbiddenError } from './queryErrors';
 
 /**
@@ -114,22 +115,16 @@ function voteErrorCopy(error: unknown): { title: string; body: string } {
  * single-choice contract — the (poll_id, user_id) conflict key, delete as
  * withdrawal — lives in exactly one place. optionId null withdraws. Owns its
  * own invalidation and refusal copy; callers just call mutate.
+ *
+ * The tap lands optimistically (PLA-94): both caches that render the poll
+ * show the new pick before the write returns, an error puts the snapshots
+ * back, and settling invalidates so the server's tally reconciles either way.
  */
 export function useVotePlanPoll() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      planId,
-      pollId,
-      userId,
-      optionId,
-    }: {
-      planId: string;
-      pollId: string;
-      userId: string;
-      optionId: string | null;
-    }) => {
+    mutationFn: async ({ pollId, planId, userId, optionId }: VoteIntent) => {
       if (optionId === null) {
         const { error } = await supabase
           .from('plan_poll_votes')
@@ -145,13 +140,40 @@ export function useVotePlanPoll() {
         if (error) throw error;
       }
     },
-    onSuccess: (_data, vars) => {
-      queryClient.invalidateQueries({ queryKey: planPollKey(vars.planId) });
-      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+    onMutate: async (vars) => {
+      // Stop in-flight fetches from landing stale data over the optimistic
+      // rows between now and the settle-time invalidation.
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: planPollKey(vars.planId) }),
+        queryClient.cancelQueries({ queryKey: ['home-plans'] }),
+      ]);
+
+      // One snapshot list restores both caches on error; the feed key
+      // carries the user id, so everything goes by prefix.
+      const prev = [
+        ...queryClient.getQueriesData({ queryKey: planPollKey(vars.planId) }),
+        ...queryClient.getQueriesData({ queryKey: ['home-plans'] }),
+      ];
+
+      queryClient.setQueryData(planPollKey(vars.planId), (old: PlanPollRow[] | undefined) =>
+        old ? applyVoteToPolls(old, vars) : old
+      );
+      queryClient.setQueriesData({ queryKey: ['home-plans'] }, (old: unknown) =>
+        Array.isArray(old) ? applyVoteToHomePlans(old, vars) : old
+      );
+
+      return { prev };
     },
-    onError: (error: unknown) => {
+    onError: (error: unknown, _vars, context) => {
+      for (const [key, data] of context?.prev ?? []) {
+        queryClient.setQueryData(key, data);
+      }
       const { title, body } = voteErrorCopy(error);
       Alert.alert(title, body);
+    },
+    onSettled: (_data, _error, vars) => {
+      queryClient.invalidateQueries({ queryKey: planPollKey(vars.planId) });
+      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
     },
   });
 }
