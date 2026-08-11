@@ -640,13 +640,20 @@ describe('PlanDetailScreen — the 20a menu', () => {
     await renderDetail();
     await waitFor(() => expect(screen.getByTestId('plan-menu')).toBeTruthy());
 
-    expect(await openMenu()).toEqual([
-      'Copy link to this plan',
-      "Nudge the 3 who haven't answered",
-      'Edit the details',
-      'Call it off',
-      'Cancel',
-    ]);
+    // The ··· button belongs to the plan query; the nudge row counts members,
+    // which arrive on a second one. So the button can exist a tick before the
+    // menu it will carry is complete, and asserting on the first open reads a
+    // half-built menu whenever the machine is loaded enough to interleave the
+    // two. Retry the open until the count has landed.
+    await waitFor(async () =>
+      expect(await openMenu()).toEqual([
+        'Copy link to this plan',
+        "Nudge the 3 who haven't answered",
+        'Edit the details',
+        'Call it off',
+        'Cancel',
+      ])
+    );
 
     await chooseFromSheet(2);
     expect(mockPush).toHaveBeenCalledWith('/plan/plan-1/edit');
