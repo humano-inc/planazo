@@ -12,6 +12,7 @@ import {
 } from '../../lib/moderation';
 import { useDismissTo } from '../../lib/navigation';
 import { actionErrorCopy } from '../../lib/queryErrors';
+import { reportTargets, reportValid } from '../../lib/reportTargets';
 import { useAuthStore } from '../../stores/authStore';
 import {
   Card,
@@ -50,26 +51,18 @@ export default function ReportScreen() {
     personName?: string;
   }>();
 
-  const subjectType: ReportSubject = params.type ?? 'plan';
-  const subjectId = params.id ?? '';
-  // A cold deep link has nothing behind this sheet, so it falls back to the
-  // thing being reported. A profile or a photo has no route of its own, and
-  // the feed is the honest answer for both.
-  const leave = useDismissTo(
-    subjectId && (subjectType === 'plan' || subjectType === 'group')
-      ? `/(app)/${subjectType}/${subjectId}`
-      : '/(app)/(tabs)'
+  // Dismiss target and the self-block guard both live in lib/reportTargets.ts.
+  const { subjectType, subjectId, dismissTo, personId, personName } = reportTargets(
+    params,
+    user?.id
   );
-  // Never offer to block yourself — reporting your own plan is a real thing
-  // people do by accident, and the toggle would be nonsense.
-  const personId = params.personId && params.personId !== user?.id ? params.personId : null;
-  const personName = params.personName?.trim() || 'this person';
+  const leave = useDismissTo(dismissTo);
 
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [note, setNote] = useState('');
   const [alsoBlock, setAlsoBlock] = useState(false);
 
-  const valid = !!reason && !!subjectId && !!user;
+  const valid = reportValid({ subjectId }, reason, user?.id);
 
   const send = useMutation({
     mutationFn: async () => {

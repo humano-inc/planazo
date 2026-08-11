@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '../../../../lib/supabase';
 import { alertActionError } from '../../../../lib/queryErrors';
+import { costLine } from '../../../../lib/cancelCost';
 import { useDismissTo } from '../../../../lib/navigation';
 import { ThemedText, Button, FormScreen } from '../../../../components/ui';
 import { colors, fonts, radii, spacing } from '../../../../theme/tokens';
@@ -87,17 +88,8 @@ export default function CancelPlanScreen() {
     onError: alertActionError,
   });
 
-  // The cost, named out loud: who this lands on.
-  const openFlexible = plan?.plan_type === 'flexible' && plan.status === 'open';
-  const affected = openFlexible
-    ? new Set((availabilities ?? []).map((a) => a.user_id)).size
-    : (rsvps ?? []).filter((r) => r.response === 'yes').length;
-  const costLine =
-    affected === 0
-      ? 'No one has answered yet. The plan moves to Past.'
-      : affected === 1
-        ? `1 person ${openFlexible ? 'sent dates' : "said they're coming"}. They'll get a notification straight away, and the plan moves to Past.`
-        : `${affected} people ${openFlexible ? 'sent dates' : "said they're coming"}. They'll all get a notification straight away, and the plan moves to Past.`;
+  // The cost, named out loud: who this lands on (lib/cancelCost.ts).
+  const line = costLine(plan, rsvps, availabilities);
 
   return (
     // Keeps the `top` edge even though this is a formSheet: on a compact-height
@@ -135,7 +127,7 @@ export default function CancelPlanScreen() {
           Call off {plan ? `“${plan.title}”` : 'this plan'}?
         </ThemedText>
         <ThemedText variant="body" color={colors.textSecondary}>
-          {costLine}
+          {line}
         </ThemedText>
       </View>
 
