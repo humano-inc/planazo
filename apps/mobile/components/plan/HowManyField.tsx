@@ -1,6 +1,6 @@
 import { View, StyleSheet, Pressable } from 'react-native';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
-import { ThemedText } from '../ui';
+import { MinusGlyph, PlusGlyph, ThemedText } from '../ui';
 import { colors, fonts, spacing } from '../../theme/tokens';
 
 interface Props {
@@ -44,9 +44,7 @@ export function HowManyField({ min, cap, onMinChange, onCapChange }: Props) {
               testID="min-down"
               style={styles.stepDown}
             >
-              <ThemedText style={styles.stepLabel} color={colors.textSecondary}>
-                −
-              </ThemedText>
+              <MinusGlyph color={colors.textSecondary} />
             </Pressable>
             <ThemedText style={styles.stepValue} testID="min-value">
               {min}
@@ -58,9 +56,7 @@ export function HowManyField({ min, cap, onMinChange, onCapChange }: Props) {
               testID="min-up"
               style={styles.stepUp}
             >
-              <ThemedText style={styles.stepLabel} color={colors.background}>
-                +
-              </ThemedText>
+              <PlusGlyph color={colors.background} />
             </Pressable>
           </View>
         </View>
@@ -84,9 +80,7 @@ export function HowManyField({ min, cap, onMinChange, onCapChange }: Props) {
               testID="cap-down"
               style={styles.stepDown}
             >
-              <ThemedText style={styles.stepLabel} color={colors.textSecondary}>
-                −
-              </ThemedText>
+              <MinusGlyph color={colors.textSecondary} />
             </Pressable>
             <ThemedText
               style={styles.stepValue}
@@ -102,9 +96,7 @@ export function HowManyField({ min, cap, onMinChange, onCapChange }: Props) {
               testID="cap-up"
               style={styles.stepUp}
             >
-              <ThemedText style={styles.stepLabel} color={colors.background}>
-                +
-              </ThemedText>
+              <PlusGlyph color={colors.background} />
             </Pressable>
           </View>
         </View>
@@ -167,11 +159,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: colors.ink,
-  },
-  stepLabel: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 20,
-    lineHeight: 24,
   },
   stepValue: {
     width: 44,

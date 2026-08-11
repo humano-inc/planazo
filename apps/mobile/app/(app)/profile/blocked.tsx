@@ -6,7 +6,7 @@ import { useDismissTo } from '../../../lib/navigation';
 import { BLOCKED_QUERY_KEY, fetchBlockedIds, unblockUser } from '../../../lib/moderation';
 import { useAuthStore } from '../../../stores/authStore';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
-import { Avatar, Card, ThemedText } from '../../../components/ui';
+import { Avatar, BackButton, Card, ThemedText } from '../../../components/ui';
 import { colors, fonts, radii, spacing } from '../../../theme/tokens';
 
 interface BlockedPerson {
@@ -68,14 +68,12 @@ export default function BlockedPeopleScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.navRow}>
-        <Pressable
+        <BackButton
           onPress={goBack}
-          accessibilityRole="button"
           testID="back"
           style={styles.backAction}
-        >
-          <ThemedText style={styles.backChevron}>‹</ThemedText>
-        </Pressable>
+          color={colors.textPrimary}
+        />
         <ThemedText style={styles.navTitle}>Blocked people</ThemedText>
       </View>
 
@@ -137,24 +135,13 @@ const styles = StyleSheet.create({
   navRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    paddingHorizontal: spacing.xl,
-    paddingTop: 14,
-    paddingBottom: 10,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
-  // Same 44×44 chevron box as find-people, surplus handed back (PLA-40).
   backAction: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: MIN_TOUCH_TARGET,
-    minHeight: MIN_TOUCH_TARGET,
-    marginVertical: -(MIN_TOUCH_TARGET - 26) / 2,
-    marginHorizontal: -(MIN_TOUCH_TARGET - 10) / 2,
-  },
-  backChevron: {
-    fontSize: 22,
-    lineHeight: 26,
-    color: colors.textPrimary,
+    flexShrink: 0,
   },
   navTitle: {
     fontFamily: fonts.display,

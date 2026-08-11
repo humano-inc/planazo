@@ -1,8 +1,7 @@
-import { View, StyleSheet, Pressable } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import type { GroupRole } from '@planazo/shared';
-import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { useSwipeHint } from '../../lib/useSwipeHint';
-import { ThemedText, Card, Avatar, SwipeRow, type SwipeAction } from '../ui';
+import { ThemedText, TextAction, Card, Avatar, SwipeRow, type SwipeAction } from '../ui';
 import { colors, radii, spacing } from '../../theme/tokens';
 
 /**
@@ -141,16 +140,12 @@ export function MemberList({
       <View style={styles.sectionHeader}>
         <ThemedText variant="sectionLabel">People</ThemedText>
         {onInvite ? (
-          <Pressable
+          <TextAction
+            label="Invite"
             onPress={onInvite}
-            accessibilityRole="button"
+            align="end"
             testID="invite"
-            style={styles.sectionAction}
-          >
-            <ThemedText variant="bodyStrong" color={colors.accent}>
-              Invite
-            </ThemedText>
-          </Pressable>
+          />
         ) : null}
       </View>
       <Card padded={false}>
@@ -239,26 +234,17 @@ const styles = StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    // Was `baseline`: a 44pt box aligns by the baseline of the text inside it,
+    // Was `baseline`: a control box aligns by the baseline of the text inside it,
     // which would have dragged the whole row around. Centring the two makes
     // the box's height its own business (PLA-40).
     alignItems: 'center',
-  },
-  // "Invite" is a ~40×20 word; the box grows leftwards so `space-between`
-  // keeps it flush right, and the negative margin keeps the row at 20.
-  sectionAction: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    minWidth: MIN_TOUCH_TARGET,
-    minHeight: MIN_TOUCH_TARGET,
-    marginVertical: -(MIN_TOUCH_TARGET - 20) / 2,
   },
   personRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
     // Back to 16 all round, and so back to a 68pt row. PLA-40 had squeezed
-    // this to 12 to offset the 44pt Remove and Block boxes stacked under the
+    // this to 12 to offset the Remove and Block boxes stacked under the
     // name, which took the row to 91; the swipe took them out of the row
     // entirely, so the height they cost comes back with them.
     paddingVertical: spacing.lg,

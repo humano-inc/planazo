@@ -8,6 +8,7 @@ import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
 import {
   Button,
+  BackButton,
   ConfirmCard,
   FooterPrompt,
   FormField,
@@ -123,16 +124,13 @@ export default function ForgotPasswordScreen() {
 
   const backRow = (
     <View style={styles.backRow}>
-      <Pressable
-        accessibilityRole="button"
-        hitSlop={LINK_HIT_SLOP}
+      <BackButton
+        label="Back"
+        accessibilityLabel="Back"
+        color={colors.textSecondary}
         onPress={goBack}
         testID="back"
-      >
-        <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-          ‹ Back
-        </ThemedText>
-      </Pressable>
+      />
     </View>
   );
 
@@ -205,7 +203,6 @@ const styles = StyleSheet.create({
   backRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.xl,
-    paddingTop: 6,
   },
   body: {
     // flexGrow, not flex. `flex: 1` clamps this to the ScrollView's height, so

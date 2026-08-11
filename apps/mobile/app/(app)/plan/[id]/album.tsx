@@ -15,7 +15,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ThemedText } from '../../../../components/ui/ThemedText';
 import { PhotoTile } from '../../../../components/ui/PhotoTile';
 import { ErrorState } from '../../../../components/ui/ErrorState';
+import { BackButton } from '../../../../components/ui/BackButton';
 import { useDismissTo } from '../../../../lib/navigation';
+import { LINK_HIT_SLOP } from '../../../../lib/a11y';
 import { usePlanPhotos, planPhotosKey } from '../../../../lib/usePlanPhotos';
 import {
   albumSummaryFromRows,
@@ -89,11 +91,12 @@ export default function PlanAlbumScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
       <View style={styles.header}>
-        <Pressable onPress={leave} accessibilityRole="button" testID="album-back">
-          <ThemedText variant="bodyStrong" color={colors.accent}>
-            ‹ Back
-          </ThemedText>
-        </Pressable>
+        <BackButton
+          label="Back"
+          accessibilityLabel="Back"
+          onPress={leave}
+          testID="album-back"
+        />
       </View>
 
       <View style={styles.title}>
@@ -200,7 +203,7 @@ export default function PlanAlbumScreen() {
               onPress={close}
               accessibilityRole="button"
               accessibilityLabel="Close photo"
-              hitSlop={12}
+              hitSlop={LINK_HIT_SLOP}
               testID="viewer-close"
             >
               <ThemedText variant="bodyStrong" color={colors.textOnAccent}>
@@ -241,7 +244,7 @@ export default function PlanAlbumScreen() {
                 });
               }}
               accessibilityRole="button"
-              hitSlop={12}
+              hitSlop={LINK_HIT_SLOP}
               testID="viewer-action"
             >
               <ThemedText variant="bodyStrong" color={colors.textOnAccent}>
@@ -262,7 +265,6 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
   },
   title: {
     paddingHorizontal: spacing.xl,

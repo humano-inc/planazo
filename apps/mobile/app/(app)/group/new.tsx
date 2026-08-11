@@ -15,6 +15,7 @@ import {
   FormScreen,
   GroupTile,
   GroupPhotoField,
+  HeaderAction,
   showToast,
 } from '../../../components/ui';
 import { colors, fonts, groupColors, spacing, type } from '../../../theme/tokens';
@@ -107,16 +108,12 @@ export default function NewGroupScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Pressable
+      <HeaderAction
+        label="Cancel"
         onPress={cancel}
-        accessibilityRole="button"
+        tone="muted"
         testID="cancel"
-        style={styles.headerAction}
-      >
-        <ThemedText variant="bodyStrong" color={colors.textMuted}>
-          Cancel
-        </ThemedText>
-      </Pressable>
+      />
       <ThemedText style={styles.headerTitle}>New group</ThemedText>
       <View style={styles.headerSpacer} />
     </View>
@@ -181,6 +178,7 @@ export default function NewGroupScreen() {
               <Pressable
                 key={swatch}
                 accessibilityRole="button"
+                accessibilityLabel={`Group color ${i + 1}`}
                 accessibilityState={{ selected: i === colorIdx }}
                 onPress={() => setColorIdx(i)}
                 style={[
@@ -219,12 +217,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-  },
-  // Row padding moved onto the button so the whole bar height takes the tap
-  // (PLA-40). Row goes 45 → 44; nothing else moves.
-  headerAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
   },
   headerTitle: {
     fontFamily: fonts.display,
@@ -267,8 +259,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   swatch: {
-    width: 46,
-    height: 46,
+    width: MIN_TOUCH_TARGET,
+    height: MIN_TOUCH_TARGET,
     borderRadius: 15,
     borderWidth: 2.5,
     borderColor: 'transparent',

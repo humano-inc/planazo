@@ -1,6 +1,7 @@
 import { StyleSheet, type ViewStyle } from 'react-native';
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
+import { PollOptionsEditor } from '../../PollComposer';
 import { AnswerFooter } from '../AnswerFooter';
 import { Button } from '../Button';
 import { Chip } from '../Chip';
@@ -10,12 +11,12 @@ import { MonthCalendar } from '../MonthCalendar';
 
 /**
  * PLA-40. Every one of these controls was sized by how it looked — padding
- * plus a line height — and a good number came out under Apple's 44pt: Button
+ * plus a line height, and a good number came out under the native minimum: Button
  * `md` at 42, Chip at 37, the month arrows at 28×24.
  *
  * The fix was structural rather than a layer of hitSlop, so the assertion can
  * be structural too: read the floor off the style the component actually
- * renders. A control whose padding alone clears 44 still declares the floor,
+ * renders. A control whose padding alone clears the floor still declares it,
  * because padding is a function of the font and the font is a function of the
  * user's text-size setting.
  */
@@ -36,7 +37,7 @@ function expectMeetsMinimum(testID: string, axis: 'height' | 'both' = 'height') 
   }
 }
 
-describe('touch targets meet 44pt', () => {
+describe('touch targets meet the adaptive floor', () => {
   it('Button, at both sizes', async () => {
     const { rerender } = await render(<Button label="I'm in" size="lg" testID="btn" />);
     expectMeetsMinimum('btn');
@@ -102,5 +103,24 @@ describe('touch targets meet 44pt', () => {
 
     expectMeetsMinimum('cal-prev', 'both');
     expectMeetsMinimum('cal-next', 'both');
+  });
+
+  it('MonthCalendar disables the arrow at each end of its range', async () => {
+    await render(<MonthCalendar selected={[]} onToggleDay={() => {}} />);
+
+    expect(screen.getByTestId('cal-prev').props.accessibilityState.disabled).toBe(true);
+    for (let month = 0; month < 5; month += 1) {
+      await fireEvent.press(screen.getByTestId('cal-next'));
+    }
+    expect(screen.getByTestId('cal-next').props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('PollOptionsEditor remove actions use real boxes instead of overlapping hit slop', async () => {
+    await render(
+      <PollOptionsEditor options={['One', 'Two', 'Three']} onChange={() => {}} />,
+    );
+
+    expectMeetsMinimum('poll-option-remove-0', 'both');
+    expect(screen.getByTestId('poll-option-remove-0').props.hitSlop).toBeUndefined();
   });
 });

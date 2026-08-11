@@ -13,6 +13,7 @@ import {
   FormScreen,
   GroupTile,
   GroupPhotoField,
+  HeaderAction,
   colorForName,
 } from '../../../../components/ui';
 import { colors, fonts, groupColors, spacing } from '../../../../theme/tokens';
@@ -100,28 +101,20 @@ export default function EditGroupScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Pressable
+      <HeaderAction
+        label="Cancel"
         onPress={leave}
-        accessibilityRole="button"
+        tone="muted"
         testID="cancel"
-        style={styles.headerAction}
-      >
-        <ThemedText variant="bodyStrong" color={colors.textMuted}>
-          Cancel
-        </ThemedText>
-      </Pressable>
+      />
       <ThemedText style={styles.headerTitle}>Group profile</ThemedText>
-      <Pressable
+      <HeaderAction
+        label="Save"
+        align="end"
         onPress={() => save.mutate()}
         disabled={!dirty || !valid || save.isPending}
-        accessibilityRole="button"
         testID="save"
-        style={[styles.headerAction, styles.headerActionEnd]}
-      >
-        <ThemedText variant="bodyStrong" color={dirty && valid ? colors.accent : colors.textFaint}>
-          Save
-        </ThemedText>
-      </Pressable>
+      />
     </View>
   );
 
@@ -166,10 +159,11 @@ export default function EditGroupScreen() {
         <View style={styles.section}>
           <ThemedText variant="sectionLabel">Colour</ThemedText>
           <View style={styles.swatches}>
-            {groupColors.map((swatch) => (
+            {groupColors.map((swatch, index) => (
               <Pressable
                 key={swatch}
                 accessibilityRole="button"
+                accessibilityLabel={`Group color ${index + 1}`}
                 accessibilityState={{ selected: swatch === draftColor }}
                 onPress={() => setColor(swatch)}
                 style={[
@@ -192,17 +186,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-  },
-  // Row padding moved onto the buttons (PLA-40). "Save" is only ~36 wide, so
-  // this needs the width floor too — the box grows, the word does not move.
-  headerAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    minWidth: MIN_TOUCH_TARGET,
-  },
-  // On the right of the row, so grow leftwards and keep the label flush.
-  headerActionEnd: {
-    alignItems: 'flex-end',
   },
   headerTitle: {
     fontFamily: fonts.display,
@@ -242,8 +225,8 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   swatch: {
-    width: 46,
-    height: 46,
+    width: MIN_TOUCH_TARGET,
+    height: MIN_TOUCH_TARGET,
     borderRadius: 15,
     borderWidth: 2.5,
     borderColor: 'transparent',

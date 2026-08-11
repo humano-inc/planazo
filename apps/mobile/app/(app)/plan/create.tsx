@@ -11,7 +11,14 @@ import { HowManyField } from '../../../components/plan/HowManyField';
 import { NEEDS_GROUP_COPY, NeedsGroupState } from '../../../components/group/NeedsGroupState';
 import { useDismissTo } from '../../../lib/navigation';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
-import { ThemedText, Button, FormScreen, colorForName } from '../../../components/ui';
+import {
+  ThemedText,
+  Button,
+  FormScreen,
+  HeaderAction,
+  DisclosureGlyph,
+  colorForName,
+} from '../../../components/ui';
 import { colors, fonts, radii, spacing } from '../../../theme/tokens';
 import { type } from '../../../theme/tokens';
 
@@ -81,16 +88,12 @@ export default function CreatePlanScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Pressable
+      <HeaderAction
+        label="Cancel"
         onPress={cancel}
-        accessibilityRole="button"
+        tone="muted"
         testID="cancel"
-        style={styles.headerAction}
-      >
-        <ThemedText variant="bodyStrong" color={colors.textMuted}>
-          Cancel
-        </ThemedText>
-      </Pressable>
+      />
       <ThemedText style={styles.headerTitle}>New plan</ThemedText>
       <View style={styles.headerSpacer} />
     </View>
@@ -192,15 +195,14 @@ export default function CreatePlanScreen() {
         <Pressable
           onPress={() => setDetailsOpen((o) => !o)}
           accessibilityRole="button"
+          accessibilityState={{ expanded: detailsOpen }}
           testID="details-toggle"
           style={styles.detailsToggle}
         >
           <ThemedText variant="bodyStrong" color={colors.accent}>
             {detailsOpen ? 'Hide extras' : 'Add place & notes'}
           </ThemedText>
-          <ThemedText variant="tag" color={colors.accent}>
-            ▾
-          </ThemedText>
+          <DisclosureGlyph expanded={detailsOpen} color={colors.accentText} />
         </Pressable>
         {detailsOpen ? (
           <Animated.View entering={FadeInDown} exiting={FadeOutUp} style={styles.detailsFields}>
@@ -232,15 +234,14 @@ export default function CreatePlanScreen() {
         <Pressable
           onPress={() => setAskOpen((o) => !o)}
           accessibilityRole="button"
+          accessibilityState={{ expanded: askOpen }}
           testID="poll-toggle"
           style={styles.detailsToggle}
         >
           <ThemedText variant="bodyStrong" color={colors.accent}>
             {askOpen ? 'Hide the question' : 'Add a question to vote on'}
           </ThemedText>
-          <ThemedText variant="tag" color={colors.accent}>
-            ▾
-          </ThemedText>
+          <DisclosureGlyph expanded={askOpen} color={colors.accentText} />
         </Pressable>
         {askOpen ? (
           <Animated.View entering={FadeInDown} exiting={FadeOutUp} style={styles.detailsFields}>
@@ -258,14 +259,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-  },
-  // The 14/10 that used to pad this row now lives on the button, which is what
-  // makes the full bar height tappable rather than just the word (PLA-40).
-  // "Cancel" is already wider than 44, so only the height needed fixing; the
-  // row lands at 44 where it used to be 45.
-  headerAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
   },
   headerTitle: {
     fontFamily: fonts.display,
@@ -331,16 +324,15 @@ const styles = StyleSheet.create({
     height: 14,
     borderRadius: 5,
   },
-  // Full width but only 20pt tall. The surplus goes back as margin, split
-  // unevenly so it stays inside the 22pt gap above and the 10pt one below
-  // rather than landing on the stepper card or the first input (PLA-40).
   detailsToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    justifyContent: 'space-between',
+    gap: spacing.md,
     minHeight: MIN_TOUCH_TARGET,
-    marginTop: -14,
-    marginBottom: -10,
+    paddingHorizontal: spacing.xs,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.divider,
   },
   detailsFields: {
     gap: 10,

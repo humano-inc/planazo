@@ -124,8 +124,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '45deg' }],
   },
   // The padding is the input's, not the box's, so the whole visible rectangle
-  // takes a tap — the same reasoning as FormField, and the same 44pt floor for
-  // large text settings.
+  // takes a tap. It shares FormField's app-wide floor for large text settings.
   input: {
     flex: 1,
     fontFamily: fonts.body,

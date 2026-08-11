@@ -26,7 +26,6 @@ import { canInvite } from '../../../../lib/groupDoor';
 import { useAuthStore } from '../../../../stores/authStore';
 import { errorCopy, isNotFoundError } from '../../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../../lib/usePullToRefresh';
-import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 import { useDismissTo } from '../../../../lib/navigation';
 import {
   ThemedText,
@@ -35,6 +34,9 @@ import {
   AvatarStack,
   GroupTile,
   ErrorState,
+  BackButton,
+  HeaderAction,
+  TextAction,
 } from '../../../../components/ui';
 import { PastPlansSection } from '../../../../components/group/PastPlansSection';
 import { colors, spacing } from '../../../../theme/tokens';
@@ -212,28 +214,20 @@ export default function GroupDetailScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.navRow}>
-        <Pressable
+        <BackButton
+          label="Groups"
           onPress={goBack}
-          accessibilityRole="button"
           testID="back"
-          style={styles.navAction}
-        >
-          <ThemedText variant="bodyStrong" color={colors.accent}>
-            ‹ Groups
-          </ThemedText>
-        </Pressable>
-        <Pressable
+        />
+        {/* Same route either way. A member is not managing anything behind
+            this word, so it does not say they are (PLA-61). */}
+        <HeaderAction
+          label={myRole === 'admin' ? 'Manage' : 'Members'}
           onPress={() => router.push(`/(app)/group/${id}/manage`)}
-          accessibilityRole="button"
+          align="end"
+          tone="muted"
           testID="manage"
-          style={[styles.navAction, styles.navActionEnd]}
-        >
-          {/* Same route either way. A member is not managing anything behind
-              this word, so it does not say they are (PLA-61). */}
-          <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-            {myRole === 'admin' ? 'Manage' : 'Members'}
-          </ThemedText>
-        </Pressable>
+        />
       </View>
 
       <ScrollView
@@ -269,16 +263,12 @@ export default function GroupDetailScreen() {
               label={`${members.length} ${members.length === 1 ? 'person' : 'people'}`}
             />
             {canInvite(group.who_can_invite, myRole) ? (
-              <Pressable
+              <TextAction
+                label="Invite"
                 onPress={() => router.push(`/(app)/group/${id}/invite`)}
-                accessibilityRole="button"
+                align="end"
                 testID="invite"
-                style={styles.inviteAction}
-              >
-                <ThemedText variant="bodyStrong" color={colors.accent}>
-                  Invite
-                </ThemedText>
-              </Pressable>
+              />
             ) : null}
           </View>
         </View>
@@ -349,15 +339,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
   },
-  // Row padding moved onto the buttons (PLA-40). This row was only 40 tall
-  // (14 + 20 + 6), so it gains 4 — both labels are already wider than 44.
-  navAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-  },
-  navActionEnd: {
-    alignItems: 'flex-end',
-  },
   content: {
     paddingHorizontal: spacing.xl,
     paddingTop: 6,
@@ -381,15 +362,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  // "Invite" was a ~40×20 word. The row is 30 tall (the avatar stack), so the
-  // box takes its 44 and gives the surplus straight back (PLA-40).
-  inviteAction: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    minWidth: MIN_TOUCH_TARGET,
-    minHeight: MIN_TOUCH_TARGET,
-    marginVertical: -(MIN_TOUCH_TARGET - 30) / 2,
   },
   emptyCard: {
     backgroundColor: colors.surface,

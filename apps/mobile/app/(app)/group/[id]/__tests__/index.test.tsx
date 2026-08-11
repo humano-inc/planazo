@@ -76,10 +76,9 @@ describe('GroupDetailScreen', () => {
   /**
    * PLA-40. Back, "Manage" and "Invite" were all bare words: the nav row was
    * 40pt tall around 20pt targets, and "Invite" sat in a row sized by the
-   * 30pt avatar stack beside it. Each is a real 44 now, reached by moving the
-   * container's padding onto the button rather than by invisible hitSlop.
+   * 30pt avatar stack beside it. Each now uses the shared adaptive floor.
    */
-  it('gives its nav actions the 44pt minimum', async () => {
+  it('gives its nav actions the adaptive minimum', async () => {
     await renderDetail();
     await screen.findByTestId('manage');
 
@@ -87,6 +86,10 @@ describe('GroupDetailScreen', () => {
       const style = StyleSheet.flatten(screen.getByTestId(id).props.style);
       expect(style.minHeight).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
     }
+
+    expect(screen.getByText('Groups').props.numberOfLines).toBe(1);
+    expect(screen.getByText('Manage').props.numberOfLines).toBe(1);
+    expect(screen.getByText('Invite').props.numberOfLines).toBe(1);
   });
 
   it('shows identity, role note and members, splits plans by status', async () => {

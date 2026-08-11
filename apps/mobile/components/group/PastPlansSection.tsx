@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
-import { ThemedText, AvatarStack } from '../ui';
+import { ThemedText, AvatarStack, DisclosureGlyph } from '../ui';
 import { colors, fonts, spacing } from '../../theme/tokens';
 
 /** One plan's slice of the rows the group screen derives, as the Past section reads it. */
@@ -73,6 +73,7 @@ export function PastPlansSection({ rows }: { rows: PastPlanRow[] }) {
       <Pressable
         onPress={() => setShowPast((s) => !s)}
         accessibilityRole="button"
+        accessibilityState={{ expanded: showPast }}
         style={styles.pastHeader}
         testID="past-toggle"
       >
@@ -82,9 +83,12 @@ export function PastPlansSection({ rows }: { rows: PastPlanRow[] }) {
             {rows.length}
           </ThemedText>
         </View>
-        <ThemedText variant="caption" color={colors.textMuted}>
-          {showPast ? 'Hide ⌃' : 'Show ⌄'}
-        </ThemedText>
+        <View style={styles.disclosureLabel}>
+          <ThemedText variant="caption" color={colors.textMuted}>
+            {showPast ? 'Hide' : 'Show'}
+          </ThemedText>
+          <DisclosureGlyph expanded={showPast} />
+        </View>
       </Pressable>
       {showPast ? rows.map((p) => renderPastRow(p)) : null}
     </View>
@@ -104,12 +108,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    // Its content is 17pt tall. Reach the 44 by growing up into the 24pt gap
-    // above rather than down into the 10pt one below, where the first past
-    // card — tappable itself — would have ended up under this box (PLA-40).
     minHeight: MIN_TOUCH_TARGET,
-    marginTop: -20,
-    marginBottom: -7,
+    paddingHorizontal: spacing.xs,
+  },
+  disclosureLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
   },
   // 19d past cards: a happened plan keeps its white card and the faces of
   // who was there; called off and never-quite sink into flat stone.

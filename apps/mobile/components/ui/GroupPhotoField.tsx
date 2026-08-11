@@ -11,6 +11,8 @@ import {
   View,
 } from 'react-native';
 import { ThemedText } from './ThemedText';
+import { TextAction } from './TextAction';
+import { PlusGlyph } from './NavigationGlyphs';
 import { tileRadius } from './GroupTile';
 import { pickFromLibrary, takePhoto } from '../../lib/images';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
@@ -109,26 +111,17 @@ export function GroupPhotoField({
           </Pressable>
           <View style={styles.setBody}>
             <View style={styles.actions}>
-              <Pressable
-                accessibilityRole="button"
+              <TextAction
+                label="Change"
                 onPress={openPhotoOptions}
-                style={styles.action}
                 testID="change-photo"
-              >
-                <ThemedText style={styles.actionLabel} color={colors.accentText}>
-                  Change
-                </ThemedText>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
+              />
+              <TextAction
+                label="Remove"
+                tone="destructive"
                 onPress={onRemove}
-                style={styles.action}
                 testID="remove-photo"
-              >
-                <ThemedText style={styles.actionLabel} color={colors.textMuted}>
-                  Remove
-                </ThemedText>
-              </Pressable>
+              />
             </View>
             <ThemedText variant="caption" color={colors.textMuted} style={styles.caption}>
               {caption}
@@ -143,9 +136,7 @@ export function GroupPhotoField({
           testID="add-photo"
         >
           <View style={[styles.tile, styles.tileEmpty]}>
-            <ThemedText style={styles.plus} color={colors.textFaint}>
-              +
-            </ThemedText>
+            <PlusGlyph color={colors.textFaint} />
           </View>
           <View style={styles.emptyBody}>
             <ThemedText style={styles.actionLabel} color={colors.accentText}>
@@ -241,11 +232,6 @@ const styles = StyleSheet.create({
   tileSending: {
     opacity: 0.5,
   },
-  plus: {
-    fontFamily: fonts.bodyBold,
-    fontSize: 26,
-    lineHeight: undefined,
-  },
   emptyBody: {
     gap: spacing.xxs,
   },
@@ -259,14 +245,7 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.lg,
-  },
-  // The words are 20 tall; the box takes 44 and gives the surplus back, so the
-  // row does not grow and the two targets still do not overlap (PLA-40).
-  action: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    marginVertical: -12,
+    gap: spacing.sm,
   },
   actionLabel: {
     fontFamily: fonts.bodyBold,

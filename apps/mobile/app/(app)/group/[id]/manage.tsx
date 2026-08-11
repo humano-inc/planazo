@@ -30,7 +30,7 @@ import { MemberList, type GroupMemberRow } from '../../../../components/group/Me
 import { GroupPrefsCard } from '../../../../components/group/GroupPrefsCard';
 import { DoorSettings } from '../../../../components/group/DoorSettings';
 import { JoinRequests } from '../../../../components/group/JoinRequests';
-import { ThemedText, ErrorState, ConfirmSheet } from '../../../../components/ui';
+import { BackButton, ThemedText, ErrorState, ConfirmSheet } from '../../../../components/ui';
 import { colors, fonts, spacing } from '../../../../theme/tokens';
 
 type PendingConfirm = { kind: 'remove' | 'block'; userId: string; name: string };
@@ -226,16 +226,12 @@ export default function ManageGroupScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <View style={styles.navRow}>
-        <Pressable
+        <BackButton
+          label={group.name}
           onPress={goBack}
-          accessibilityRole="button"
           testID="back"
-          style={styles.navAction}
-        >
-          <ThemedText variant="bodyStrong" color={colors.accent} numberOfLines={1}>
-            ‹ {group.name}
-          </ThemedText>
-        </Pressable>
+          style={styles.navBack}
+        />
         {/* The screen is one route, but it is two screens to read: an admin
             runs the group here, a member looks at who is in it. */}
         <ThemedText style={styles.navTitle}>{isAdmin ? 'Manage' : 'Members'}</ThemedText>
@@ -353,11 +349,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
   },
-  // Row padding moved onto the button (PLA-40); the row lands at 44 where it
-  // was 45. The label is "‹ <group name>", always wider than 44.
-  navAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
+  navBack: {
+    maxWidth: '42%',
   },
   navTitle: {
     fontFamily: fonts.display,
@@ -366,7 +359,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   navSpacer: {
-    width: 20,
+    width: MIN_TOUCH_TARGET,
   },
   content: {
     paddingHorizontal: spacing.xl,
@@ -377,14 +370,10 @@ const styles = StyleSheet.create({
   rowPressed: {
     backgroundColor: colors.surfaceSunken,
   },
-  // 33 (8 + 17 + 8), with the "Leave group" card 8pt below it — hence the
-  // surplus going back as margin rather than the box simply growing into its
-  // neighbour's target (PLA-40).
   reportRow: {
     alignSelf: 'center',
     justifyContent: 'center',
     minHeight: MIN_TOUCH_TARGET,
-    marginVertical: -(MIN_TOUCH_TARGET - 33) / 2,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
   },

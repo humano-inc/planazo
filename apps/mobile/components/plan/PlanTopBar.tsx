@@ -5,8 +5,8 @@ import type { PlanDerived } from '../../lib/planDerived';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
 import { planLinkFor } from '../../lib/shareLinks';
-import { ThemedText, showToast } from '../ui';
-import { colors, spacing } from '../../theme/tokens';
+import { BackButton, MoreGlyph, showToast } from '../ui';
+import { spacing } from '../../theme/tokens';
 
 type Props = {
   planId: string;
@@ -82,16 +82,12 @@ export function PlanTopBar({ planId, groupId, d, groupName, onNudge }: Props) {
 
   return (
     <View style={styles.topBar}>
-      <Pressable
+      <BackButton
+        label={groupName}
         onPress={goBack}
-        accessibilityRole="button"
         testID="back"
-        style={styles.navAction}
-      >
-        <ThemedText variant="bodyStrong" color={colors.accent}>
-          ‹ {groupName}
-        </ThemedText>
-      </Pressable>
+        style={styles.backAction}
+      />
       <Pressable
         onPress={showMenu}
         accessibilityRole="button"
@@ -99,9 +95,7 @@ export function PlanTopBar({ planId, groupId, d, groupName, onNudge }: Props) {
         testID="plan-menu"
         style={[styles.navAction, styles.navActionEnd]}
       >
-        <ThemedText variant="bodyStrong" color={colors.textMuted} style={styles.dots}>
-          ···
-        </ThemedText>
+        <MoreGlyph />
       </Pressable>
     </View>
   );
@@ -114,10 +108,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
   },
-  // This bar was already exactly 44 tall (12 + 20 + 12) while the two things
-  // in it were 20 — the clearest case in the app of a target that should have
-  // filled its bar and didn't. Moving the padding onto the buttons changes
-  // nothing visually and makes the whole bar tappable (PLA-40).
+  backAction: {
+    maxWidth: '78%',
+  },
   navAction: {
     justifyContent: 'center',
     minHeight: MIN_TOUCH_TARGET,
@@ -127,9 +120,5 @@ const styles = StyleSheet.create({
   navActionEnd: {
     alignItems: 'flex-end',
     minWidth: MIN_TOUCH_TARGET,
-  },
-  dots: {
-    letterSpacing: 2,
-    fontSize: 19,
   },
 });

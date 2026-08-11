@@ -16,6 +16,7 @@
   "dependencies": {
     "@expo-google-fonts/bricolage-grotesque": "^0.4.1",
     "@expo-google-fonts/instrument-sans": "^0.4.2",
+    "@expo/vector-icons": "^15.0.3",
     "@planazo/shared": "workspace:*",
     "@react-native-community/datetimepicker": "^8.4.4",
     "@sentry/cli": "2.55.0",
@@ -40,6 +41,7 @@
     "expo-secure-store": "^15.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
+    "expo-symbols": "~1.0.8",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-keyboard-controller": "1.22.3",
