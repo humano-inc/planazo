@@ -1,0 +1,483 @@
+<!--
+  Planazo walkthrough page. Copy this file, fill it in, then:
+
+      pnpm walkthrough <your-copy.html>
+
+  and publish the .built.html it prints with the Artifact tool.
+
+  Everything in {curly braces} is yours to replace, and every section marked
+  OPTIONAL can be deleted whole. The one section that is never optional is the
+  last one: what the shots cannot show.
+
+  Screenshots go in a `shots/` folder beside your copy, named to match each
+  __IMG:name__ token. Do not add <img src="http…"> of any kind: the artifact
+  CSP blocks every external host and the image will simply not appear.
+
+  The palette below is the app's own. Leave it alone unless the page has a
+  reason of its own to look different.
+-->
+<title>{PLA-00} walkthrough: {the change in five words}</title>
+<style>
+  :root {
+    --ground: #F7F2EA;
+    --surface: #FFFFFF;
+    --sunken: #EFE7DC;
+    --ink: #191512;
+    --muted: #8A7E74;
+    --accent: #E14A24;
+    --line: rgba(25, 21, 18, 0.13);
+    --shadow: 0 1px 2px rgba(25, 21, 18, 0.05), 0 12px 28px rgba(25, 21, 18, 0.07);
+    --display: ui-rounded, "SF Pro Rounded", "Avenir Next", system-ui, sans-serif;
+    --body: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  /* The viewer has three theme states, and "system" stamps nothing on the
+     root, so both of these blocks have to exist: the media query catches the
+     unstamped default, the attribute selector catches an explicit toggle. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #141110;
+      --surface: #1F1B18;
+      --sunken: #272220;
+      --ink: #F4EEE6;
+      --muted: #A2958A;
+      --accent: #FF6E48;
+      --line: rgba(244, 238, 230, 0.14);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px rgba(0, 0, 0, 0.34);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #141110;
+    --surface: #1F1B18;
+    --sunken: #272220;
+    --ink: #F4EEE6;
+    --muted: #A2958A;
+    --accent: #FF6E48;
+    --line: rgba(244, 238, 230, 0.14);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px rgba(0, 0, 0, 0.34);
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+  }
+
+  /* ── Masthead ───────────────────────────────────────────── */
+
+  .masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(32px, 5vw, 46px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    font-weight: 700;
+    text-wrap: balance;
+    max-width: 18ch;
+  }
+
+  .standfirst {
+    font-size: 19px;
+    color: var(--muted);
+    max-width: 62ch;
+  }
+
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .fact {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    padding: 5px 11px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    background: var(--surface);
+  }
+
+  .fact b {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* ── Sections ───────────────────────────────────────────── */
+
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .sechead {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+  }
+
+  .sechead .tag {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .tag .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+
+  /* The one section the reader should land on. Use it once. */
+  .tag.is-now {
+    color: var(--accent);
+  }
+
+  .tag.is-now .dot {
+    background: var(--accent);
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-size: clamp(22px, 3vw, 27px);
+    letter-spacing: -0.015em;
+    font-weight: 650;
+    text-wrap: balance;
+  }
+
+  .lede {
+    color: var(--muted);
+    max-width: 60ch;
+  }
+
+  /* ── Screenshot grid ────────────────────────────────────── */
+
+  .shots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 26px;
+    align-items: start;
+  }
+
+  figure {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  figure img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+
+  figcaption {
+    font-size: 14.5px;
+    line-height: 1.45;
+    color: var(--muted);
+  }
+
+  figcaption b {
+    color: var(--ink);
+    font-weight: 620;
+    display: block;
+    font-family: var(--display);
+    font-size: 15.5px;
+  }
+
+  /* ── Callout, and the app's own words ───────────────────── */
+
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: var(--shadow);
+  }
+
+  .callout h3 {
+    font-family: var(--display);
+    font-size: 17px;
+    font-weight: 650;
+  }
+
+  .callout p {
+    color: var(--muted);
+    max-width: 66ch;
+  }
+
+  .said {
+    font-family: var(--display);
+    font-size: 17px;
+    color: var(--ink);
+    border-left: 3px solid var(--accent);
+    padding-left: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  /* ── Steps, code, limits ────────────────────────────────── */
+
+  ol.steps {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-left: 22px;
+    max-width: 66ch;
+  }
+
+  ol.steps li::marker {
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  ol.steps b {
+    font-weight: 620;
+  }
+
+  pre {
+    background: var(--sunken);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--sunken);
+    padding: 1px 5px;
+    border-radius: 5px;
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: 1em;
+  }
+
+  .limits {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--muted);
+    max-width: 66ch;
+  }
+
+  .limits li {
+    padding-left: 20px;
+    position: relative;
+  }
+
+  .limits li::before {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 11px;
+    width: 7px;
+    height: 1.5px;
+    background: var(--muted);
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    color: var(--muted);
+    font-size: 14.5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+  }
+
+  a {
+    color: var(--accent);
+    text-underline-offset: 3px;
+  }
+
+  @media (max-width: 560px) {
+    .page { padding: 36px 18px 72px; gap: 48px; }
+    body { font-size: 16px; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <div class="eyebrow">{PLA-00} · {branch-name}</div>
+    <h1>{The change, in the words the commit uses}</h1>
+    <p class="standfirst">
+      {Two sentences. What was wrong, and what the reader is about to look at.
+      Name the account and the group or plan the shots were taken on, so nobody
+      wonders whether this was staged.}
+    </p>
+    <!-- OPTIONAL. Only facts a reviewer would otherwise have to go and check. -->
+    <div class="facts">
+      <span class="fact"><b>{N}</b> tests green</span>
+      <span class="fact">typecheck + lint clean</span>
+      <span class="fact">device pass on <b>{iPhone 16 Pro}</b></span>
+      <span class="fact">{shared DB, no migration}</span>
+    </div>
+  </header>
+
+  <!-- BEFORE. Costs one revert and is what turns "the app works" into "this PR
+       did something": git checkout HEAD~1 -- <files>, let fast refresh land,
+       shoot, then restore in the same command so a failure cannot strand the
+       tree. Delete this section only for something genuinely new, with no
+       before to show. -->
+  <section>
+    <div class="sechead">
+      <div class="tag"><span class="dot"></span>Before</div>
+      <h2>{What the reader is looking at, as a sentence}</h2>
+      <p class="lede">{The setup, if it needs one. What state the app is in.}</p>
+    </div>
+    <div class="shots">
+      <figure>
+        <img src="__IMG:before-one__" alt="{what the screenshot shows}">
+        <figcaption>
+          <b>{The problem, named}</b>
+          {One or two lines: what to look at, and why it is wrong.}
+        </figcaption>
+      </figure>
+      <!-- Repeat <figure> per shot. Three across is the most that stays legible. -->
+    </div>
+  </section>
+
+  <!-- AFTER. The same account, the same screen, so the pair reads as a pair. -->
+  <section>
+    <div class="sechead">
+      <div class="tag is-now"><span class="dot"></span>After</div>
+      <h2>{What changed, as a sentence}</h2>
+      <p class="lede">{Why it is better, in one line. No implementation detail.}</p>
+    </div>
+    <div class="shots">
+      <figure>
+        <img src="__IMG:after-one__" alt="{what the screenshot shows}">
+        <figcaption>
+          <b>{The fix, named}</b>
+          {What to look at.}
+        </figcaption>
+      </figure>
+    </div>
+    <!-- OPTIONAL. New copy, quoted in the app's voice, when the words are the change. -->
+    <div class="said">
+      <span>{A line of new copy exactly as it ships.}</span>
+    </div>
+    <!-- OPTIONAL. One rule the screenshots cannot state on their own. -->
+    <div class="callout">
+      <h3>{The rule behind the change}</h3>
+      <p>{Two or three sentences at most. Delete if the shots already say it.}</p>
+    </div>
+  </section>
+
+  <!-- OPTIONAL. Only when a second role, account or state proves something the
+       first cannot: that an admin still gets everything, that the old path is
+       untouched. -->
+  <section>
+    <div class="sechead">
+      <div class="tag"><span class="dot"></span>Unchanged</div>
+      <h2>{What did not move}</h2>
+      <p class="lede">{Whose view this is.}</p>
+    </div>
+    <div class="shots">
+      <figure>
+        <img src="__IMG:unchanged-one__" alt="{what the screenshot shows}">
+        <figcaption>
+          <b>{Named}</b>
+          {What to look at.}
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Steps live at the bottom, for whoever does want to drive it. A path a
+       real user can take beats a script: sign in as the second account rather
+       than writing the row with the service role. -->
+  <section>
+    <div class="sechead">
+      <div class="tag"><span class="dot"></span>Run it yourself</div>
+      <h2>{N} minutes from a fresh checkout</h2>
+    </div>
+    <pre><code>pnpm wt:new {branch-name}   # if you don't have it
+cd ../planazo-worktrees/{slug}
+pnpm wt:start --login</code></pre>
+    <ol class="steps">
+      <li><b>{The tap.}</b> {What to do, and what should appear.}</li>
+      <li>
+        <b>{Switch accounts, if the change needs two.}</b> Profile → sign out → sign in as
+        <code>{alex.rivera@example.com}</code> / <code>Planazo123!</code>.
+      </li>
+    </ol>
+  </section>
+
+  <!-- Never optional. Without it, "verified on device" reads broader than it is. -->
+  <section>
+    <div class="sechead">
+      <div class="tag"><span class="dot"></span>Not covered above</div>
+      <h2>What these shots cannot show</h2>
+    </div>
+    <ul class="limits">
+      <li>{The path only integration tests reach.}</li>
+      <li>{The thing the simulator cannot do, like push.}</li>
+      <li>{The case that is a unit test rather than a screen.}</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>Planazo · {PLA-00}</span>
+    <span>{N} files, +{N} / −{N}</span>
+    <span>Shot on {simulator name}, Metro {port}</span>
+  </footer>
+
+</div>

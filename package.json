@@ -16,6 +16,7 @@
     "db:seed:demo": "node scripts/seed-demo-data.mjs",
     "assets:brand": "node scripts/build-brand-assets.mjs",
     "assets:screenshots": "node scripts/build-store-screenshots.mjs",
+    "walkthrough": "node scripts/walkthrough/build.mjs",
     "test": "turbo test",
     "test:integration": "pnpm --filter @planazo/integration-tests test:integration",
     "wt:new": "bash scripts/worktree-create.sh",

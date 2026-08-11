@@ -429,10 +429,24 @@ Before and after on the simulator as a plain member, the admin view for
 contrast, and what the shots cannot show.
 ```
 
-Build it with the `Artifact` tool, and read the `artifact-design` skill first.
-Screenshots come from a real simulator pass on the branch, inlined as data URIs
-because the artifact CSP blocks every external host. What the page has to
-contain:
+**Start from `scripts/walkthrough/template.html`.** It is the page design, the
+app's own palette, and a placeholder for every section, so a walkthrough is a
+fill-in job rather than a design job. Designing a new page each time costs
+fifteen minutes and gives every PR a slightly different-looking artifact, which
+is worse than either extreme.
+
+```bash
+cp scripts/walkthrough/template.html /tmp/pla-61.html   # then fill it in
+pnpm walkthrough /tmp/pla-61.html                       # → /tmp/pla-61.built.html
+```
+
+`pnpm walkthrough` turns each `__IMG:name__` token into `shots/name.png`,
+downscaled and base64'd inline. That inlining is not a nicety: the artifact CSP
+blocks every external host, so an ordinary `<img src>` publishes as a broken
+image with no error anybody will see. Publish the `.built.html` with the
+`Artifact` tool.
+
+What the page has to contain:
 
 - **Before and after, side by side**, for anything visual. The before shot is
   worth the extra minutes: `git checkout HEAD~1 -- <files>`, let fast refresh

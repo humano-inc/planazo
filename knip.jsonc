@@ -56,5 +56,10 @@
   // supabase/setup-cli at 2.90.0 (newer versions break table grants, see
   // ci.yml) and locally it comes from npx. Declaring it in package.json would
   // give us a second version to keep in sync with that pin.
-  "ignoreBinaries": ["supabase"]
+  //
+  // `sips` is macOS's own image tool, shipped with the OS and never installable
+  // from here. `scripts/walkthrough/build.mjs` uses it to downscale screenshots
+  // and falls back to the full-size original when the call fails, so a machine
+  // without it builds a heavier page rather than no page.
+  "ignoreBinaries": ["supabase", "sips"]
 }
