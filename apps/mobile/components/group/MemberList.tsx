@@ -1,6 +1,7 @@
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { GroupRole } from '@planazo/shared';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
+import { useSwipeHint } from '../../lib/useSwipeHint';
 import { ThemedText, Card, Avatar, SwipeRow, type SwipeAction } from '../ui';
 import { colors, radii, spacing } from '../../theme/tokens';
 
@@ -56,6 +57,11 @@ export function RemoveGlyph({ color, size = 17 }: { color: string; size?: number
  * Promotion got its real interaction in PLA-50: the Admins screen, reached
  * through the labelled "Admins" row in the "How it runs" card. This badge
  * stays a badge.
+ *
+ * It sits beside the name rather than out at the right edge, where it was
+ * crowding the swipe chevron with a few points between them. Next to the name
+ * it is also next to "Blocked", which is where the other thing worth knowing
+ * about a person already lives.
  */
 function adminBadge(m: GroupMemberRow) {
   return m.role === 'admin' ? (
@@ -97,6 +103,8 @@ export function MemberList({
   // Only an admin gets Remove, and whether this user is one is already in
   // their own row.
   const isAdmin = me?.role === 'admin';
+  // Asking is what spends the one shot, so an empty list must not ask.
+  const showHint = useSwipeHint(others.length > 0);
 
   const actionsFor = (m: GroupMemberRow): SwipeAction[] => {
     const isBlocked = blocked.has(m.user_id);
@@ -154,14 +162,16 @@ export function MemberList({
               imageUrl={me.profile?.avatar_url}
             />
             <View style={styles.personBody}>
-              <ThemedText variant="bodyStrong" numberOfLines={1}>
-                {me.profile?.display_name}{' '}
-                <ThemedText variant="bodyStrong" color={colors.textMuted}>
-                  · you
+              <View style={styles.nameLine}>
+                <ThemedText variant="bodyStrong" numberOfLines={1} style={styles.name}>
+                  {me.profile?.display_name}{' '}
+                  <ThemedText variant="bodyStrong" color={colors.textMuted}>
+                    · you
+                  </ThemedText>
                 </ThemedText>
-              </ThemedText>
+                {adminBadge(me)}
+              </View>
             </View>
-            {adminBadge(me)}
           </View>
         ) : null}
         {others.map((m, index) => {
@@ -172,16 +182,10 @@ export function MemberList({
                 actions={actionsFor(m)}
                 open={openRowId === m.user_id}
                 onOpenChange={(next) => onOpenChange(next ? m.user_id : null)}
-                // One row demonstrates the gesture, once, on the first
-                // load. Every row doing it would be a light show.
-                peek={index === 0}
-                // The badge slides away with the row. Left where it was, it
-                // would end up parked on top of Remove.
-                trailing={
-                  m.role === 'admin' ? (
-                    <View style={styles.personTrailing}>{adminBadge(m)}</View>
-                  ) : null
-                }
+                // One row demonstrates the gesture, once, ever. Every row
+                // doing it would be a light show, and every visit doing it
+                // would be a twitch (PLA-93).
+                peek={index === 0 && showHint}
                 testID={`person-${m.user_id}`}
               >
                 <View style={[styles.personRow, styles.personRowSwipe]}>
@@ -201,6 +205,7 @@ export function MemberList({
                       >
                         {m.profile?.display_name}
                       </ThemedText>
+                      {adminBadge(m)}
                       {isBlocked ? (
                         <View style={styles.blockedPill} testID={`blocked-${m.user_id}`}>
                           <ThemedText variant="tag" color={colors.accentText}>
@@ -295,10 +300,6 @@ const styles = StyleSheet.create({
   },
   swipeHint: {
     paddingHorizontal: spacing.xs,
-  },
-  // The gap the chip used to get from personRow, now that it sits outside it.
-  personTrailing: {
-    marginLeft: spacing.md,
   },
   // A status pill that looks like one, and no longer pretends otherwise. It
   // needed no touch target once it stopped being a button (PLA-40's 44pt

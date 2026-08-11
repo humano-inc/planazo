@@ -360,11 +360,18 @@ itself.
 
 ### One test run at a time
 
-The mobile jest suite is ~500 tests across ~55 suites, and it uses the whole
-machine while it runs. Healthy, that is **seconds**: about 6s locally and about
-40s on a CI runner. **Two runs at once starve each other into timeouts**, and a
-timed-out suite reports as `FAIL` with a real-looking test name. Chasing those
-costs more than the run you were impatient about.
+The mobile jest suite is ~500 tests across ~55 suites. Healthy, that is
+**seconds**: about 6s locally and about 40s on a CI runner. **Two runs at once
+starve each other into timeouts**, and a timed-out suite reports as `FAIL` with
+a real-looking test name. Chasing those costs more than the run you were
+impatient about.
+
+`--maxWorkers=3` is what keeps a run from taking the whole machine. It used to
+be `50%`, which reads like restraint and is not: this laptop has 10 logical
+cores, so 50% *is* five workers, and three sessions asking for half a machine
+each is fifteen workers fighting over ten cores. An absolute number is the only
+kind a second session cannot out-vote. Raise it only for a run you know is
+alone.
 
 Those numbers are the point of the section, so keep them honest: a run measured
 in minutes is the symptom, never the baseline. Quoting a starved figure as
