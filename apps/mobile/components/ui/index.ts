@@ -37,6 +37,7 @@ export { AnswerFooter } from './AnswerFooter';
 export { FooterBar } from './FooterBar';
 export { FooterPrompt } from './FooterPrompt';
 export { FormScreen } from './FormScreen';
+export { HeaderRow } from './HeaderRow';
 export { ListRow } from './ListRow';
 export { EmptyState } from './EmptyState';
 export { ErrorState } from './ErrorState';

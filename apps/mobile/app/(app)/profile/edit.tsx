@@ -18,6 +18,7 @@ import {
   Avatar,
   FormScreen,
   HeaderAction,
+  HeaderRow,
   TextAction,
   ThemedText,
 } from '../../../components/ui';
@@ -112,22 +113,19 @@ export default function ProfileEdit() {
   const draftName = trimmed || profile?.display_name || '?';
 
   const header = (
-    <View style={styles.header}>
-      <HeaderAction
-        label="Cancel"
-        onPress={leave}
-        tone="muted"
-        testID="cancel"
-      />
-      <ThemedText style={styles.headerTitle}>Your profile</ThemedText>
-      <HeaderAction
-        label="Save"
-        align="end"
-        disabled={!dirty || save.isPending}
-        onPress={() => save.mutate()}
-        testID="save"
-      />
-    </View>
+    <HeaderRow
+      left={<HeaderAction label="Cancel" onPress={leave} tone="muted" testID="cancel" />}
+      right={
+        <HeaderAction
+          label="Save"
+          align="end"
+          disabled={!dirty || save.isPending}
+          onPress={() => save.mutate()}
+          testID="save"
+        />
+      }
+      title="Your profile"
+    />
   );
 
   return (
@@ -177,18 +175,6 @@ export default function ProfileEdit() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  headerTitle: {
-    fontFamily: fonts.displayHeavy,
-    fontSize: 17,
-    lineHeight: 21,
-    color: colors.textPrimary,
-  },
   body: {
     // This screen had no ScrollView at all, so at large text sizes the hint
     // under the name field simply ran off the bottom. flexGrow keeps the

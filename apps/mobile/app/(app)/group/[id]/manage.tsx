@@ -30,8 +30,14 @@ import { MemberList, type GroupMemberRow } from '../../../../components/group/Me
 import { GroupPrefsCard } from '../../../../components/group/GroupPrefsCard';
 import { DoorSettings } from '../../../../components/group/DoorSettings';
 import { JoinRequests } from '../../../../components/group/JoinRequests';
-import { BackButton, ThemedText, ErrorState, ConfirmSheet } from '../../../../components/ui';
-import { colors, fonts, spacing } from '../../../../theme/tokens';
+import {
+  BackButton,
+  ThemedText,
+  ErrorState,
+  ConfirmSheet,
+  HeaderRow,
+} from '../../../../components/ui';
+import { colors, spacing } from '../../../../theme/tokens';
 
 type PendingConfirm = { kind: 'remove' | 'block'; userId: string; name: string };
 
@@ -225,18 +231,18 @@ export default function ManageGroupScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.navRow}>
-        <BackButton
-          label={group.name}
-          onPress={goBack}
-          testID="back"
-          style={styles.navBack}
-        />
-        {/* The screen is one route, but it is two screens to read: an admin
-            runs the group here, a member looks at who is in it. */}
-        <ThemedText style={styles.navTitle}>{isAdmin ? 'Manage' : 'Members'}</ThemedText>
-        <View style={styles.navSpacer} />
-      </View>
+      <HeaderRow
+        left={
+          <BackButton
+            label={group.name}
+            onPress={goBack}
+            testID="back"
+            style={styles.navBack}
+          />
+        }
+        rightSpacerWidth={MIN_TOUCH_TARGET}
+        title={isAdmin ? 'Manage' : 'Members'}
+      />
 
       <ScrollView style={styles.flex} contentContainerStyle={styles.content}>
         <JoinRequests
@@ -343,23 +349,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  navRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
   navBack: {
     maxWidth: '42%',
-  },
-  navTitle: {
-    fontFamily: fonts.display,
-    fontSize: 17,
-    lineHeight: 21,
-    color: colors.textPrimary,
-  },
-  navSpacer: {
-    width: MIN_TOUCH_TARGET,
   },
   content: {
     paddingHorizontal: spacing.xl,

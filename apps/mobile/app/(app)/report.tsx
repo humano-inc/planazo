@@ -12,7 +12,14 @@ import {
 } from '../../lib/moderation';
 import { useDismissTo } from '../../lib/navigation';
 import { useAuthStore } from '../../stores/authStore';
-import { Card, FormScreen, HeaderAction, ThemedText, showToast } from '../../components/ui';
+import {
+  Card,
+  FormScreen,
+  HeaderAction,
+  HeaderRow,
+  ThemedText,
+  showToast,
+} from '../../components/ui';
 import { colors, fonts, spacing } from '../../theme/tokens';
 
 const SUBJECT_NOUN: Record<ReportSubject, string> = {
@@ -98,22 +105,19 @@ export default function ReportScreen() {
   });
 
   const header = (
-    <View style={styles.header}>
-      <HeaderAction
-        label="Cancel"
-        onPress={leave}
-        tone="muted"
-        testID="cancel"
-      />
-      <ThemedText style={styles.headerTitle}>Report {SUBJECT_NOUN[subjectType]}</ThemedText>
-      <HeaderAction
-        label={send.isPending ? 'Sending…' : 'Send'}
-        align="end"
-        disabled={!valid || send.isPending}
-        onPress={() => send.mutate()}
-        testID="send-report"
-      />
-    </View>
+    <HeaderRow
+      left={<HeaderAction label="Cancel" onPress={leave} tone="muted" testID="cancel" />}
+      right={
+        <HeaderAction
+          label={send.isPending ? 'Sending…' : 'Send'}
+          align="end"
+          disabled={!valid || send.isPending}
+          onPress={() => send.mutate()}
+          testID="send-report"
+        />
+      }
+      title={`Report ${SUBJECT_NOUN[subjectType]}`}
+    />
   );
 
   return (
@@ -199,18 +203,6 @@ export default function ReportScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  headerTitle: {
-    fontFamily: fonts.displayHeavy,
-    fontSize: 17,
-    lineHeight: 21,
-    color: colors.textPrimary,
-  },
   content: {
     // flexGrow, so `privacy` keeps its auto margin on a screen too short to
     // scroll. FormScreen owns the horizontal padding and the bottom inset.

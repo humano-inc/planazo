@@ -22,6 +22,7 @@ interface ThemedTextProps extends TextProps {
 const MAX_SCALE: Partial<Record<TextVariant, number>> = {
   screenTitle: 1.6,
   headerTitle: 1.6,
+  screenHeader: 1.8,
   cardTitle: 1.7,
   statusHeadline: 1.7,
 };

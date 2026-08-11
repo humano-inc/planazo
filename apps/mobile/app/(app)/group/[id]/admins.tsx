@@ -15,7 +15,6 @@ import {
 } from '../../../../lib/queryErrors';
 import { groupManageQuery, invalidateGroup } from '../../../../lib/groupManageQuery';
 import { splitByRole, demoteConfirmCopy, memberName } from '../../../../lib/groupAdmins';
-import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 import { useDismissTo } from '../../../../lib/navigation';
 import type { GroupMemberRow } from '../../../../components/group/MemberList';
 import { AdminsCard } from '../../../../components/group/AdminsCard';
@@ -26,8 +25,9 @@ import {
   ErrorState,
   ConfirmSheet,
   FormScreen,
+  HeaderRow,
 } from '../../../../components/ui';
-import { colors, fonts, spacing } from '../../../../theme/tokens';
+import { colors, spacing } from '../../../../theme/tokens';
 
 /**
  * Who runs the group, and the one place a role changes ("Group Admins"
@@ -117,15 +117,11 @@ export default function GroupAdminsScreen() {
   );
 
   const navRow = (
-    <View style={styles.navRow}>
-      <BackButton
-        label="Manage"
-        onPress={goBack}
-        testID="back"
-      />
-      <ThemedText style={styles.navTitle}>Admins</ThemedText>
-      <View style={styles.navSpacer} />
-    </View>
+    <HeaderRow
+      left={<BackButton label="Manage" onPress={goBack} testID="back" />}
+      rightSpacerWidth={48}
+      title="Admins"
+    />
   );
 
   return (
@@ -179,21 +175,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  navRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  navTitle: {
-    fontFamily: fonts.display,
-    fontSize: 17,
-    lineHeight: 21,
-    color: colors.textPrimary,
-  },
-  navSpacer: {
-    width: MIN_TOUCH_TARGET,
   },
   content: {
     paddingTop: 6,

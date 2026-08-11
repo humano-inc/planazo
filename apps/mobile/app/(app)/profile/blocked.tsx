@@ -6,7 +6,7 @@ import { useDismissTo } from '../../../lib/navigation';
 import { BLOCKED_QUERY_KEY, fetchBlockedIds, unblockUser } from '../../../lib/moderation';
 import { useAuthStore } from '../../../stores/authStore';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
-import { Avatar, BackButton, Card, ThemedText } from '../../../components/ui';
+import { Avatar, BackButton, Card, HeaderRow, ThemedText } from '../../../components/ui';
 import { colors, fonts, radii, spacing } from '../../../theme/tokens';
 
 interface BlockedPerson {
@@ -67,10 +67,13 @@ export default function BlockedPeopleScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <View style={styles.navRow}>
-        <BackButton onPress={goBack} testID="back" color={colors.textPrimary} />
-        <ThemedText style={styles.navTitle}>Blocked people</ThemedText>
-      </View>
+      <HeaderRow
+        layout="leading"
+        left={<BackButton onPress={goBack} testID="back" color={colors.textPrimary} />}
+        style={styles.headerLayout}
+        title="Blocked people"
+        titleStyle={styles.navTitle}
+      />
 
       <ScrollView style={styles.flex} contentContainerStyle={styles.content}>
         {isPending ? null : people.length === 0 ? (
@@ -127,9 +130,7 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  navRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  headerLayout: {
     gap: spacing.xs,
     paddingHorizontal: spacing.sm,
     paddingTop: spacing.md,

@@ -12,6 +12,7 @@ import {
   Avatar,
   BackButton,
   FormScreen,
+  HeaderRow,
   SearchField,
 } from '../../components/ui';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
@@ -212,10 +213,13 @@ export default function FindPeopleScreen() {
   // thing a raised keyboard pushes away.
   const header = (
     <>
-      <View style={styles.navRow}>
-        <BackButton onPress={goBack} testID="back" color={colors.textPrimary} />
-        <ThemedText style={styles.navTitle}>Find people</ThemedText>
-      </View>
+      <HeaderRow
+        layout="leading"
+        left={<BackButton onPress={goBack} testID="back" color={colors.textPrimary} />}
+        style={styles.headerLayout}
+        title="Find people"
+        titleStyle={styles.navTitle}
+      />
 
       <View style={styles.searchWrap}>
         <SearchField
@@ -275,9 +279,7 @@ export default function FindPeopleScreen() {
 }
 
 const styles = StyleSheet.create({
-  navRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  headerLayout: {
     gap: spacing.xs,
     paddingHorizontal: spacing.sm,
     paddingTop: spacing.md,

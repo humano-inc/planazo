@@ -16,6 +16,7 @@ import {
   GroupColourField,
   GroupPhotoField,
   HeaderAction,
+  HeaderRow,
   showToast,
 } from '../../../components/ui';
 import { colors, fonts, groupColors, spacing, type } from '../../../theme/tokens';
@@ -107,16 +108,11 @@ export default function NewGroupScreen() {
         : 'Create group';
 
   const header = (
-    <View style={styles.header}>
-      <HeaderAction
-        label="Cancel"
-        onPress={cancel}
-        tone="muted"
-        testID="cancel"
-      />
-      <ThemedText style={styles.headerTitle}>New group</ThemedText>
-      <View style={styles.headerSpacer} />
-    </View>
+    <HeaderRow
+      left={<HeaderAction label="Cancel" onPress={cancel} tone="muted" testID="cancel" />}
+      rightSpacerWidth={48}
+      title="New group"
+    />
   );
 
   return (
@@ -193,21 +189,6 @@ export default function NewGroupScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  headerTitle: {
-    fontFamily: fonts.display,
-    fontSize: 17,
-    lineHeight: 21,
-    color: colors.textPrimary,
-  },
-  headerSpacer: {
-    width: 48,
-  },
   content: {
     paddingTop: spacing.sm,
     gap: spacing.xxl,

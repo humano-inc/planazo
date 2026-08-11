@@ -13,6 +13,7 @@ import {
   FooterPrompt,
   FormField,
   FormScreen,
+  HeaderRow,
   ThemedText,
 } from '../../components/ui';
 import { colors, spacing } from '../../theme/tokens';
@@ -123,14 +124,16 @@ export default function ForgotPasswordScreen() {
   }
 
   const backRow = (
-    <View style={styles.backRow}>
-      <BackButton
-        label="Back"
-        color={colors.textSecondary}
-        onPress={goBack}
-        testID="back"
-      />
-    </View>
+    <HeaderRow
+      left={
+        <BackButton
+          label="Back"
+          color={colors.textSecondary}
+          onPress={goBack}
+          testID="back"
+        />
+      }
+    />
   );
 
   return (
@@ -198,10 +201,6 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
-  },
-  backRow: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.xl,
   },
   body: {
     // flexGrow, not flex. `flex: 1` clamps this to the ScrollView's height, so

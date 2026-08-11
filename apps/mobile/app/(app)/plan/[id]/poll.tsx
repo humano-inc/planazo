@@ -7,8 +7,14 @@ import { submitPollDraft, planPollKey } from '../../../../lib/usePlanPoll';
 import { emptyPollDraft, pollDraftValid } from '../../../../lib/pollDraft';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 import { PollOptionsEditor } from '../../../../components/PollComposer';
-import { ThemedText, Button, FormScreen, HeaderAction } from '../../../../components/ui';
-import { colors, fonts, spacing, type } from '../../../../theme/tokens';
+import {
+  ThemedText,
+  Button,
+  FormScreen,
+  HeaderAction,
+  HeaderRow,
+} from '../../../../components/ui';
+import { colors, spacing, type } from '../../../../theme/tokens';
 
 /**
  * PLA-47 — "+ Add a poll" from the plan body, host only.
@@ -47,11 +53,11 @@ export default function NewPollScreen() {
   const onTable = draft.options.filter((o) => o.trim().length > 0).length;
 
   const header = (
-    <View style={styles.header}>
-      <HeaderAction label="Cancel" onPress={leave} tone="muted" testID="cancel" />
-      <ThemedText style={styles.headerTitle}>New poll</ThemedText>
-      <View style={styles.headerSpacer} />
-    </View>
+    <HeaderRow
+      left={<HeaderAction label="Cancel" onPress={leave} tone="muted" testID="cancel" />}
+      rightSpacerWidth={48}
+      title="New poll"
+    />
   );
 
   return (
@@ -123,23 +129,6 @@ export default function NewPollScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  headerTitle: {
-    // fonts.display is already the 700 weight; the fontWeight that used to sit
-    // here restated it.
-    fontFamily: fonts.display,
-    fontSize: 17,
-    lineHeight: 21,
-    color: colors.textPrimary,
-  },
-  headerSpacer: {
-    width: 48,
-  },
   content: {
     paddingTop: spacing.sm,
     gap: 22,

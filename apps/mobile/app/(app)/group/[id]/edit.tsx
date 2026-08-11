@@ -14,6 +14,7 @@ import {
   GroupColourField,
   GroupPhotoField,
   HeaderAction,
+  HeaderRow,
   colorForName,
 } from '../../../../components/ui';
 import { colors, fonts, spacing } from '../../../../theme/tokens';
@@ -100,22 +101,19 @@ export default function EditGroupScreen() {
   });
 
   const header = (
-    <View style={styles.header}>
-      <HeaderAction
-        label="Cancel"
-        onPress={leave}
-        tone="muted"
-        testID="cancel"
-      />
-      <ThemedText style={styles.headerTitle}>Group profile</ThemedText>
-      <HeaderAction
-        label="Save"
-        align="end"
-        onPress={() => save.mutate()}
-        disabled={!dirty || !valid || save.isPending}
-        testID="save"
-      />
-    </View>
+    <HeaderRow
+      left={<HeaderAction label="Cancel" onPress={leave} tone="muted" testID="cancel" />}
+      right={
+        <HeaderAction
+          label="Save"
+          align="end"
+          onPress={() => save.mutate()}
+          disabled={!dirty || !valid || save.isPending}
+          testID="save"
+        />
+      }
+      title="Group profile"
+    />
   );
 
   return (
@@ -163,18 +161,6 @@ export default function EditGroupScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  headerTitle: {
-    fontFamily: fonts.display,
-    fontSize: 17,
-    lineHeight: 21,
-    color: colors.textPrimary,
-  },
   content: {
     paddingTop: spacing.lg,
     gap: spacing.xxl,

@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../../lib/supabase';
 import { useDismissTo } from '../../../../lib/navigation';
 import { contentViolation } from '../../../../lib/moderation';
-import { FormScreen, HeaderAction, ThemedText } from '../../../../components/ui';
+import { FormScreen, HeaderAction, HeaderRow, ThemedText } from '../../../../components/ui';
 import { colors, fonts, radii, spacing, type } from '../../../../theme/tokens';
 
 /**
@@ -110,17 +110,19 @@ export default function EditPlanScreen() {
   });
 
   const header = (
-    <View style={styles.header}>
-      <HeaderAction label="Cancel" onPress={leave} tone="muted" testID="cancel" />
-      <ThemedText style={styles.headerTitle}>Edit plan</ThemedText>
-      <HeaderAction
-        label="Save"
-        align="end"
-        onPress={() => save.mutate()}
-        disabled={!dirty || !valid || save.isPending}
-        testID="save"
-      />
-    </View>
+    <HeaderRow
+      left={<HeaderAction label="Cancel" onPress={leave} tone="muted" testID="cancel" />}
+      right={
+        <HeaderAction
+          label="Save"
+          align="end"
+          onPress={() => save.mutate()}
+          disabled={!dirty || !valid || save.isPending}
+          testID="save"
+        />
+      }
+      title="Edit plan"
+    />
   );
 
   return (
@@ -173,18 +175,6 @@ export default function EditPlanScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-  },
-  headerTitle: {
-    fontFamily: fonts.display,
-    fontSize: 17,
-    lineHeight: 21,
-    color: colors.textPrimary,
-  },
   content: {
     paddingTop: spacing.lg,
     gap: 22,
