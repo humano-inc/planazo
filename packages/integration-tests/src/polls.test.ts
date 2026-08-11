@@ -104,6 +104,15 @@ async function votesOf(pollId: string) {
   );
 }
 
+async function voteReceiptsOf(user: TestUser, pollId: string) {
+  return ok(
+    await user.client
+      .from('plan_poll_vote_receipts')
+      .select('poll_id, user_id, first_voted_at')
+      .eq('poll_id', pollId),
+  );
+}
+
 async function optionsOf(pollId: string) {
   return ok(
     await bed.service
@@ -126,15 +135,25 @@ describe('reading', () => {
       await memberB.client
         .from('plan_polls')
         .select(
-          'question, plan_poll_options!plan_poll_options_poll_id_plan_id_fkey(id), plan_poll_votes(user_id, profile:profiles(display_name))',
+          'question, plan_poll_options!plan_poll_options_poll_id_plan_id_fkey(id), plan_poll_votes(user_id, profile:profiles(display_name)), plan_poll_vote_receipts(user_id)',
         )
         .eq('plan_id', planId),
     );
     expect(seen).toHaveLength(1);
     expect(seen[0].plan_poll_options).toHaveLength(3);
     expect(seen[0].plan_poll_votes).toHaveLength(1);
+    expect(seen[0].plan_poll_vote_receipts).toHaveLength(0);
     // Attributed: the vote carries its name.
     expect((seen[0].plan_poll_votes[0] as any).profile.display_name).toBe('Aina');
+
+    const ownReceipt = ok(
+      await memberA.client
+        .from('plan_polls')
+        .select('plan_poll_vote_receipts(user_id)')
+        .eq('id', pollId)
+        .single(),
+    );
+    expect(ownReceipt.plan_poll_vote_receipts).toEqual([{ user_id: memberA.id }]);
 
     const hidden = ok(await outsider.client.from('plan_polls').select('id').eq('plan_id', planId));
     expect(hidden).toHaveLength(0);
@@ -276,7 +295,7 @@ describe('who gets a pick', () => {
 });
 
 describe('the vote itself', () => {
-  it('is single choice: a second tap moves it, a delete withdraws it', async () => {
+  it('is single choice: a second tap moves it, and clearing keeps its feed receipt', async () => {
     const planId = await createPlan();
     await seatUser(planId, memberA);
     const { pollId, options } = await createPoll(planId);
@@ -297,6 +316,26 @@ describe('the vote itself', () => {
     );
     votes = await votesOf(pollId);
     expect(votes).toHaveLength(0);
+
+    // Current vote state is empty, but answering once is permanent feed state.
+    expect(await voteReceiptsOf(memberA, pollId)).toHaveLength(1);
+    // The receipt is private even though the live tally is visible to the group.
+    expect(await voteReceiptsOf(memberB, pollId)).toHaveLength(0);
+  });
+
+  it('only the vote trigger writes a receipt', async () => {
+    const planId = await createPlan();
+    await seatUser(planId, memberA);
+    const { pollId } = await createPoll(planId);
+
+    const forged = await memberA.client.from('plan_poll_vote_receipts').insert({
+      poll_id: pollId,
+      plan_id: planId,
+      user_id: memberA.id,
+    });
+
+    expect(forged.error).toBeTruthy();
+    expect(await voteReceiptsOf(memberA, pollId)).toHaveLength(0);
   });
 
   it('refuses on a cancelled plan, and refuses another poll’s option outright', async () => {

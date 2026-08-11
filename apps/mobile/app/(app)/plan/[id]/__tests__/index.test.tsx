@@ -349,7 +349,7 @@ describe('PlanDetailScreen — flexible plans', () => {
       expect(screen.getByText(`1 more on ${fmtDay(options[0]!.date)}`)).toBeTruthy()
     );
     expect(screen.getByText('Leading')).toBeTruthy();
-    expect(screen.getByText('Tap the dates you can do')).toBeTruthy();
+    expect(screen.getByText('Choose dates')).toBeTruthy();
 
     await fireEvent.press(screen.getByTestId('vote-d2'));
     await fireEvent.press(screen.getByText('Send 1 date'));
@@ -554,7 +554,7 @@ describe('PlanDetailScreen — flexible plans', () => {
     // Nothing inherited: no phantom Send over zero ticked rows, and the prompt
     // is back to the first-vote one
     expect(screen.queryByText('Send 1 date')).toBeNull();
-    expect(screen.getByText('Tap the dates you can do')).toBeTruthy();
+    expect(screen.getByText('Choose dates')).toBeTruthy();
 
     // ...and picking on B writes B's option under B's plan
     await fireEvent.press(screen.getByTestId('vote-d3'));

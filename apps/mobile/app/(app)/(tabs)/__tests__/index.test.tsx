@@ -1,4 +1,5 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
+import { Alert } from 'react-native';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import FeedScreen from '../index';
 import { useAuthStore } from '../../../../stores/authStore';
@@ -21,6 +22,41 @@ jest.mock('expo-router', () => ({
   }),
 }));
 
+jest.mock('expo-haptics', () => ({
+  __esModule: true,
+  selectionAsync: jest.fn(() => Promise.resolve()),
+  notificationAsync: jest.fn(() => Promise.resolve()),
+  NotificationFeedbackType: { Success: 'success' },
+}));
+
+jest.mock('react-native-reanimated', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const animation: any = {
+    duration: () => animation,
+    easing: () => animation,
+    reduceMotion: () => animation,
+  };
+  const MotionView = ({ entering: _entering, exiting: _exiting, layout: _layout, ...props }: any) =>
+    React.createElement(View, props);
+
+  return {
+    __esModule: true,
+    default: { View: MotionView },
+    Easing: { out: (fn: unknown) => fn, exp: (value: number) => value },
+    FadeOut: animation,
+    FadeOutUp: animation,
+    LinearTransition: animation,
+    ReduceMotion: { Never: 'never', System: 'system' },
+    ZoomIn: animation,
+    useReducedMotion: () => false,
+  };
+});
+
+const mockHaptics = jest.requireMock('expo-haptics') as {
+  selectionAsync: jest.Mock;
+  notificationAsync: jest.Mock;
+};
 
 const mockFrom = supabase.from as jest.Mock;
 
@@ -187,7 +223,7 @@ describe('FeedScreen', () => {
     expect(screen.getAllByText('Unanswered').length).toBeGreaterThan(0);
   });
 
-  it('PLA-47: someone in the plan votes on the card, one pick, changeable', async () => {
+  it('PLA-95: a poll stages one choice, sends it, celebrates, then leaves', async () => {
     const poll = {
       id: 'q1',
       question: 'Which film',
@@ -196,58 +232,180 @@ describe('FeedScreen', () => {
         { id: 'opt-dune', label: 'Dune Part Two', position: 0 },
         { id: 'opt-anora', label: 'Anora', position: 1 },
       ],
-      plan_poll_votes: [
-        { option_id: 'opt-dune', user_id: 'u-marta' },
-        { option_id: 'opt-anora', user_id: 'me' },
-      ],
+      plan_poll_votes: [{ option_id: 'opt-dune', user_id: 'u-marta' }],
+      plan_poll_vote_receipts: [],
     };
-    // fixedAnswered has my yes, so the poll is live for me.
+    // fixedAnswered has my yes, so this unanswered poll is an action for me.
     primeSupabase([{ ...fixedAnswered, plan_polls: [poll] }]);
+    let finishVote!: () => void;
+    pollVotesChain.then = (resolve: (value: unknown) => void) =>
+      new Promise<{ error: null }>((done) => {
+        finishVote = () => done({ error: null });
+      }).then(resolve);
     await renderFeed();
 
-    await waitFor(() => expect(screen.getByTestId('poll-feed-p2')).toBeTruthy());
+    await waitFor(() => expect(screen.getByTestId('poll-card-q1')).toBeTruthy());
     expect(screen.getByText('Which film')).toBeTruthy();
-    expect(screen.getByText('You picked Anora · tap to change')).toBeTruthy();
-    expect(screen.getAllByText('1 vote')).toHaveLength(2);
+    expect(screen.getByText('1 of 3 voted')).toBeTruthy();
+    // The parent plan remains a separate feed item below it.
+    expect(screen.getByTestId('plan-card-p2')).toBeTruthy();
 
-    // Another option moves the vote...
-    await fireEvent.press(screen.getByTestId('poll-feed-option-opt-dune'));
+    await fireEvent.press(screen.getByTestId('poll-card-option-opt-anora'));
+    expect(screen.getByTestId('poll-card-q1')).toBeTruthy();
+    expect(screen.getByTestId('poll-card-option-opt-anora').props.accessibilityState).toEqual({
+      disabled: false,
+      selected: true,
+    });
+    expect(screen.getByTestId('poll-card-check-opt-anora')).toBeTruthy();
+    expect(screen.getByText('Ready to send')).toBeTruthy();
+    expect(screen.getByText('Send vote')).toBeTruthy();
+    expect(pollVotesChain.upsert).not.toHaveBeenCalled();
+
+    // A single-choice poll can be corrected or cleared before anything is sent.
+    await fireEvent.press(screen.getByTestId('poll-card-option-opt-dune'));
+    expect(screen.getByTestId('poll-card-option-opt-anora').props.accessibilityState.selected).toBe(
+      false
+    );
+    expect(screen.getByTestId('poll-card-option-opt-dune').props.accessibilityState.selected).toBe(
+      true
+    );
+    await fireEvent.press(screen.getByTestId('poll-card-option-opt-dune'));
+    expect(screen.getByText('Choose one')).toBeTruthy();
+    expect(screen.getByTestId('poll-card-option-opt-dune').props.accessibilityState.selected).toBe(
+      false
+    );
+
+    await fireEvent.press(screen.getByTestId('poll-card-option-opt-anora'));
+    await fireEvent.press(screen.getByText('Send vote'));
+    expect(screen.getByTestId('poll-card-option-opt-anora').props.accessibilityState).toEqual({
+      disabled: true,
+      selected: true,
+    });
+    expect(screen.getByText('Saving your vote')).toBeTruthy();
+    expect(screen.getByText('Your pick')).toBeTruthy();
+    expect(mockHaptics.selectionAsync).toHaveBeenCalledTimes(1);
     await waitFor(() =>
       expect(pollVotesChain.upsert).toHaveBeenCalledWith(
-        { poll_id: 'q1', plan_id: 'p2', user_id: 'me', option_id: 'opt-dune' },
+        { poll_id: 'q1', plan_id: 'p2', user_id: 'me', option_id: 'opt-anora' },
         { onConflict: 'poll_id,user_id' }
       )
     );
-
-    // ...your own withdraws it.
-    await fireEvent.press(screen.getByTestId('poll-feed-option-opt-anora'));
-    await waitFor(() => expect(pollVotesChain.delete).toHaveBeenCalled());
+    expect(screen.getByTestId('plan-card-p2')).toBeTruthy();
+    await act(async () => finishVote());
+    await waitFor(() => expect(screen.getByText('Vote saved')).toBeTruthy());
+    expect(mockHaptics.notificationAsync).toHaveBeenCalledWith('success');
+    await waitFor(() => expect(screen.queryByTestId('poll-card-q1')).toBeNull(), {
+      timeout: 2000,
+    });
+    expect(screen.getByTestId('plan-card-p2')).toBeTruthy();
   });
 
-  it("PLA-47: a bystander sees the tally but the rows don't take a tap", async () => {
+  it('PLA-95: a failed send keeps the staged choice ready to retry', async () => {
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     const poll = {
       id: 'q1',
       question: 'Which film',
       created_at: '2026-08-04T10:00:00Z',
       plan_poll_options: [{ id: 'opt-dune', label: 'Dune Part Two', position: 0 }],
-      plan_poll_votes: [{ option_id: 'opt-dune', user_id: 'u-marta' }],
+      plan_poll_votes: [],
+      plan_poll_vote_receipts: [],
     };
-    // fixedOpen carries no rsvp of mine, so no pick.
-    primeSupabase([{ ...fixedOpen, plan_polls: [poll] }]);
+    primeSupabase([{ ...fixedAnswered, plan_polls: [poll] }]);
+    let failVote!: () => void;
+    pollVotesChain.then = (resolve: (value: unknown) => void) =>
+      new Promise<{ error: Error }>((done) => {
+        failVote = () => done({ error: new Error('network down') });
+      }).then(resolve);
     await renderFeed();
 
-    await waitFor(() => expect(screen.getByTestId('poll-feed-p1')).toBeTruthy());
-    expect(screen.getByText('1 of 2 voted')).toBeTruthy();
-
-    await fireEvent.press(screen.getByTestId('poll-feed-option-opt-dune'));
+    await waitFor(() => expect(screen.getByTestId('poll-card-q1')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('poll-card-option-opt-dune'));
+    expect(screen.getByText('Send vote')).toBeTruthy();
     expect(pollVotesChain.upsert).not.toHaveBeenCalled();
-    expect(pollVotesChain.delete).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByText('Send vote'));
+    expect(screen.getByText('Saving your vote')).toBeTruthy();
+
+    await act(async () => failVote());
+    await waitFor(() => expect(alertSpy).toHaveBeenCalled());
+    expect(screen.getByTestId('poll-card-q1')).toBeTruthy();
+    expect(screen.queryByText('Saving your vote')).toBeNull();
+    expect(screen.queryByText('Vote saved')).toBeNull();
+    expect(screen.getByText('Ready to send')).toBeTruthy();
+    expect(screen.getByText('Send vote')).toBeTruthy();
+    expect(screen.getByTestId('poll-card-option-opt-dune').props.accessibilityState).toEqual({
+      disabled: false,
+      selected: true,
+    });
+    expect(mockHaptics.notificationAsync).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
   });
 
-  it('picks dates inline and sends them (2a)', async () => {
-    primeSupabase([flexibleOpen]);
+  it('PLA-95: every unanswered poll is fetched and rendered, including the newest', async () => {
+    const poll = (id: string, question: string, createdAt: string) => ({
+      id,
+      question,
+      created_at: createdAt,
+      plan_poll_options: [{ id: `opt-${id}`, label: 'One', position: 0 }],
+      plan_poll_votes: [],
+      plan_poll_vote_receipts: [],
+    });
+    primeSupabase([
+      {
+        ...fixedAnswered,
+        plan_polls: [
+          poll('q-old', 'Which film?', '2026-08-04T10:00:00Z'),
+          poll('q-new', 'Who brings what?', '2026-08-05T10:00:00Z'),
+        ],
+      },
+    ]);
     await renderFeed();
-    await waitFor(() => expect(screen.getByText('Tap the dates you can do')).toBeTruthy());
+
+    await waitFor(() => expect(screen.getByTestId('poll-card-q-new')).toBeTruthy());
+    expect(screen.getByTestId('poll-card-q-old')).toBeTruthy();
+    expect(plansChain.limit).not.toHaveBeenCalled();
+  });
+
+  it('PLA-95: ineligible people and previously answered polls stay off the feed', async () => {
+    const poll = {
+      id: 'q1',
+      question: 'Which film',
+      created_at: '2026-08-04T10:00:00Z',
+      plan_poll_options: [{ id: 'opt-dune', label: 'Dune Part Two', position: 0 }],
+      plan_poll_votes: [],
+      plan_poll_vote_receipts: [],
+    };
+    const answered = {
+      ...poll,
+      id: 'q2',
+      question: 'Which snacks',
+      plan_poll_vote_receipts: [{ user_id: 'me' }],
+    };
+
+    primeSupabase([
+      { ...fixedOpen, plan_polls: [poll] },
+      { ...fixedAnswered, id: 'p5', plan_polls: [answered] },
+    ]);
+    await renderFeed();
+
+    await waitFor(() => expect(screen.getByTestId('plan-card-p1')).toBeTruthy());
+    expect(screen.queryByTestId('poll-card-q1')).toBeNull();
+    expect(screen.queryByTestId('poll-card-q2')).toBeNull();
+  });
+
+  it('PLA-95: a flexible plan keeps its dates when its poll becomes a separate item', async () => {
+    const poll = {
+      id: 'q-flex',
+      question: 'Which escape room?',
+      created_at: '2026-08-04T12:00:00Z',
+      plan_poll_options: [{ id: 'opt-prison', label: 'Prison break', position: 0 }],
+      plan_poll_votes: [],
+      plan_poll_vote_receipts: [],
+    };
+    // A host always holds a poll pick, even before answering their own dates.
+    primeSupabase([{ ...flexibleOpen, created_by: 'me', plan_polls: [poll] }]);
+    await renderFeed();
+    await waitFor(() => expect(screen.getByTestId('poll-card-q-flex')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Choose dates')).toBeTruthy());
     expect(screen.getByText('1 free')).toBeTruthy();
     expect(screen.getByText('0 free')).toBeTruthy();
 
@@ -265,6 +423,28 @@ describe('FeedScreen', () => {
       ],
       { onConflict: 'plan_id,user_id,date_option_id' }
     );
+  });
+
+  it('PLA-95: polls stay in Unanswered and never appear in Happening', async () => {
+    const poll = {
+      id: 'q1',
+      question: 'Which film',
+      created_at: '2026-08-04T10:00:00Z',
+      plan_poll_options: [{ id: 'opt-dune', label: 'Dune Part Two', position: 0 }],
+      plan_poll_votes: [],
+      plan_poll_vote_receipts: [],
+    };
+    primeSupabase([{ ...fixedAnswered, plan_polls: [poll] }]);
+    await renderFeed();
+    await waitFor(() => expect(screen.getByTestId('poll-card-q1')).toBeTruthy());
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Unanswered' }));
+    expect(screen.getByTestId('poll-card-q1')).toBeTruthy();
+    expect(screen.queryByTestId('plan-card-p2')).toBeNull();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Happening' }));
+    expect(screen.queryByTestId('poll-card-q1')).toBeNull();
+    expect(screen.getByTestId('plan-card-p2')).toBeTruthy();
   });
 
   it('answers a fixed plan inline with an RSVP upsert', async () => {
