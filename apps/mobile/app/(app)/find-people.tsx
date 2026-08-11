@@ -4,6 +4,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { useFriends } from '../../lib/useFriends';
+import {
+  MIN_SEARCH_LENGTH,
+  cleanPeopleQuery,
+  partitionPendingFriendships,
+  relationOf,
+  searchResultsWithNotes,
+  sharedPeopleFrom,
+  type PersonRow,
+} from '../../lib/people';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
 import {
@@ -16,16 +25,6 @@ import {
   SearchField,
 } from '../../components/ui';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
-
-interface PersonRow {
-  id: string;
-  name: string;
-  handle: string | null;
-  avatarUrl: string | null;
-  note: string | null;
-}
-
-type Relation = 'friend' | 'requested' | 'incoming' | 'none';
 
 export default function FindPeopleScreen() {
   // The only way in is the Groups tab, which is where the chevron points.
@@ -48,13 +47,7 @@ export default function FindPeopleScreen() {
         .eq('status', 'pending')
         .or(`requester_id.eq.${user?.id},addressee_id.eq.${user?.id}`);
       if (error) throw error;
-      const outgoing = new Set<string>();
-      const incoming = new Set<string>();
-      data.forEach((f: any) => {
-        if (f.requester_id === user?.id) outgoing.add(f.addressee_id);
-        else incoming.add(f.requester_id);
-      });
-      return { outgoing, incoming };
+      return partitionPendingFriendships(data, user?.id);
     },
     enabled: !!user,
   });
@@ -71,27 +64,12 @@ export default function FindPeopleScreen() {
         )
         .eq('user_id', user!.id);
       if (error) throw error;
-
-      const seen = new Map<string, PersonRow>();
-      data.forEach((row: any) => {
-        (row.groups?.group_members ?? []).forEach((m: any) => {
-          const p = m.profile;
-          if (!p || p.id === user?.id || seen.has(p.id)) return;
-          seen.set(p.id, {
-            id: p.id,
-            name: p.display_name,
-            handle: p.handle,
-            avatarUrl: p.avatar_url,
-            note: `both in ${row.groups.name}`,
-          });
-        });
-      });
-      return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name));
+      return sharedPeopleFrom(data as any[], user?.id);
     },
     enabled: !!user,
   });
 
-  const cleanQuery = query.trim().replace(/[%,()]/g, '');
+  const cleanQuery = cleanPeopleQuery(query);
   const { data: results } = useQuery({
     queryKey: ['people-search', cleanQuery],
     queryFn: async (): Promise<PersonRow[]> => {
@@ -101,16 +79,9 @@ export default function FindPeopleScreen() {
         p_query: cleanQuery,
       });
       if (error) throw error;
-      const sharedNote = new Map((sharedPeople ?? []).map((p) => [p.id, p.note]));
-      return (data ?? []).map((p: any) => ({
-        id: p.id,
-        name: p.display_name,
-        handle: p.handle,
-        avatarUrl: p.avatar_url,
-        note: sharedNote.get(p.id) ?? null,
-      }));
+      return searchResultsWithNotes((data ?? []) as any[], sharedPeople ?? []);
     },
-    enabled: !!user && cleanQuery.length >= 2,
+    enabled: !!user && cleanQuery.length >= MIN_SEARCH_LENGTH,
   });
 
   const sendRequest = useMutation({
@@ -142,15 +113,10 @@ export default function FindPeopleScreen() {
     onError: (error: Error) => Alert.alert('Error', error.message),
   });
 
-  const relationOf = (id: string): Relation => {
-    if (friendIds.has(id)) return 'friend';
-    if (sentTo[id] || pending?.outgoing.has(id)) return 'requested';
-    if (pending?.incoming.has(id)) return 'incoming';
-    return 'none';
-  };
+  const relationFor = (id: string) => relationOf({ friendIds, sentTo, pending }, id);
 
   const renderAction = (person: PersonRow) => {
-    const relation = relationOf(person.id);
+    const relation = relationFor(person.id);
     if (relation === 'friend') {
       return (
         <View style={[styles.pill, styles.pillMuted]}>
@@ -204,9 +170,9 @@ export default function FindPeopleScreen() {
     </Card>
   );
 
-  const searching = cleanQuery.length >= 2;
+  const searching = cleanQuery.length >= MIN_SEARCH_LENGTH;
   // Keep just-requested people visible — Add becomes Requested in place (17b)
-  const suggestions = (sharedPeople ?? []).filter((p) => relationOf(p.id) !== 'friend');
+  const suggestions = (sharedPeople ?? []).filter((p) => relationFor(p.id) !== 'friend');
 
   // The search box is fixed above the scroll rather than in it: it is the one
   // control this screen is for, and it autofocuses, so it must not be the first
