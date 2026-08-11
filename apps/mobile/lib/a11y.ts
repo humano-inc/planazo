@@ -4,28 +4,27 @@ import { AccessibilityInfo } from 'react-native';
 /**
  * Touch-target padding for a text link.
  *
- * Apple's HIG asks for 44×44pt. A caption is about 35×17 and a `sub` link
- * about 90×20, so the widths are fine once you account for the word but the
- * heights are not — hence the generous vertical figure. hitSlop grows the
- * touchable area without moving a single pixel of layout, which is the only
- * reason these screens can hit 44pt and still match the design.
+ * The app uses one 48×48 floor on both platforms. That clears Android's 48dp
+ * requirement and gives iOS four points beyond its 44pt minimum, which is a
+ * better fit for a thumb-first planning app than two subtly different control
+ * systems. A caption is about 35×17 and a `sub` link about 90×20, so the
+ * widths are usually fine once you account for the word but the heights are
+ * not. hitSlop grows the touchable area without moving layout and stays the
+ * fallback for genuine inline links and overlay controls.
  */
-export const LINK_HIT_SLOP = { top: 14, bottom: 14, left: 12, right: 12 } as const;
+export const LINK_HIT_SLOP = { top: 16, bottom: 16, left: 12, right: 12 } as const;
 
 /**
- * Apple's minimum touch target, in points (HIG: Buttons).
+ * Planazo's adaptive minimum touch target, in density-independent points.
  *
  * Use it as `minHeight`/`minWidth` in a StyleSheet. Prefer making a control
- * genuinely this big over slopping around a small one: the padding that gets a
- * button to 44 usually already exists on its container, and moving it onto the
- * button means the area you can see is the area you can hit. That is how UIKit
- * does it — a navigation bar is 44pt tall precisely so a `UIBarButtonItem`
- * filling it clears the minimum without the words having to grow.
+ * genuinely this big over slopping around a small one. Visible padding makes
+ * the area a person sees agree with the area they can hit.
  *
  * `hitSlopTo` is the fallback for the cases where there is nothing to reclaim
  * and growing the box would cover something else.
  */
-export const MIN_TOUCH_TARGET = 44;
+export const MIN_TOUCH_TARGET = 48;
 
 /**
  * Slop that lifts a control of `size` points up to {@link MIN_TOUCH_TARGET} on

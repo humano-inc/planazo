@@ -2,7 +2,6 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  Pressable,
   Alert,
   useWindowDimensions,
 } from 'react-native';
@@ -15,9 +14,15 @@ import {
   type PendingFriendRequest,
   type PendingGroupInvite,
 } from '../../lib/usePendingInvites';
-import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
-import { ThemedText, Badge, Button, Avatar, GroupTile } from '../../components/ui';
+import {
+  ThemedText,
+  Badge,
+  Button,
+  Avatar,
+  GroupTile,
+  HeaderAction,
+} from '../../components/ui';
 import { colors, fonts, sheetDetents, spacing } from '../../theme/tokens';
 
 export function timeAgo(iso: string): string {
@@ -201,16 +206,13 @@ export default function InvitesSheet() {
       <View style={styles.grabber} />
       <View style={styles.header}>
         <ThemedText style={styles.headerTitle}>Invites</ThemedText>
-        <Pressable
+        <HeaderAction
+          label="Done"
+          align="end"
           onPress={done}
-          accessibilityRole="button"
+          tone="muted"
           testID="done"
-          style={styles.headerAction}
-        >
-          <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-            Done
-          </ThemedText>
-        </Pressable>
+        />
       </View>
 
       <ScrollView
@@ -250,19 +252,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.sm,
-    paddingBottom: 14,
-  },
-  // "Done" was the 20pt-tall word itself. Here the row is sized by its 27pt
-  // title rather than by the button, so instead of moving the row's padding
-  // the box takes its 44 and hands the surplus straight back — the sheet
-  // header keeps its shape exactly (PLA-40).
-  headerAction: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    minWidth: MIN_TOUCH_TARGET,
-    marginVertical: -(MIN_TOUCH_TARGET - 27) / 2,
+    paddingBottom: spacing.xs,
   },
   headerTitle: {
     fontFamily: fonts.displayHeavy,

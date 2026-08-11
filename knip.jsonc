@@ -31,6 +31,13 @@
     },
 
     "apps/mobile": {
+      // Metro picks these by platform, not by import: `./glyphFallback`
+      // resolves to `glyphFallback.ios.tsx` on iOS and `glyphFallback.tsx`
+      // everywhere else. knip only follows the import graph, so the platform
+      // variant reads as a dead file. Listing it as an entry keeps it analysed
+      // (its own imports and dependencies still count) instead of ignored.
+      "entry": ["**/*.{ios,android,native}.{ts,tsx}"],
+
       "ignoreDependencies": [
         // Declared on purpose in c5f9be9 ("so production builds embed the JS
         // bundle"): the @sentry/react-native/expo plugin shells out to it

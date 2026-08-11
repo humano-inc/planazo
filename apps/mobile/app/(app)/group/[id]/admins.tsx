@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,7 +20,13 @@ import { useDismissTo } from '../../../../lib/navigation';
 import type { GroupMemberRow } from '../../../../components/group/MemberList';
 import { AdminsCard } from '../../../../components/group/AdminsCard';
 import { PromoteCard } from '../../../../components/group/PromoteCard';
-import { ThemedText, ErrorState, ConfirmSheet, FormScreen } from '../../../../components/ui';
+import {
+  BackButton,
+  ThemedText,
+  ErrorState,
+  ConfirmSheet,
+  FormScreen,
+} from '../../../../components/ui';
 import { colors, fonts, spacing } from '../../../../theme/tokens';
 
 /**
@@ -112,16 +118,11 @@ export default function GroupAdminsScreen() {
 
   const navRow = (
     <View style={styles.navRow}>
-      <Pressable
+      <BackButton
+        label="Manage"
         onPress={goBack}
-        accessibilityRole="button"
         testID="back"
-        style={styles.navAction}
-      >
-        <ThemedText variant="bodyStrong" color={colors.accent} numberOfLines={1}>
-          ‹ Manage
-        </ThemedText>
-      </Pressable>
+      />
       <ThemedText style={styles.navTitle}>Admins</ThemedText>
       <View style={styles.navSpacer} />
     </View>
@@ -185,10 +186,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
   },
-  navAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-  },
   navTitle: {
     fontFamily: fonts.display,
     fontSize: 17,
@@ -196,7 +193,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   navSpacer: {
-    width: 20,
+    width: MIN_TOUCH_TARGET,
   },
   content: {
     paddingTop: 6,

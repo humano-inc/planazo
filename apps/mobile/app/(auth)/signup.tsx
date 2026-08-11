@@ -14,6 +14,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { ConfirmEmailStep } from '../../components/auth/ConfirmEmailStep';
 import {
   Avatar,
+  BackButton,
   Button,
   FooterPrompt,
   FormField,
@@ -205,16 +206,12 @@ export default function SignupScreen() {
 
   const backRow = (
     <View style={styles.backRow}>
-      <Pressable
-        accessibilityRole="button"
-        hitSlop={LINK_HIT_SLOP}
+      <BackButton
+        label="Back"
+        color={colors.textSecondary}
         onPress={goBack}
         testID="back"
-      >
-        <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-          ‹ Back
-        </ThemedText>
-      </Pressable>
+      />
     </View>
   );
 
@@ -249,6 +246,7 @@ export default function SignupScreen() {
       <View style={styles.photoBlock}>
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Add profile photo"
           onPress={pickImage}
           style={styles.avatarWrap}
           testID="avatar-press"
@@ -327,7 +325,6 @@ const styles = StyleSheet.create({
   backRow: {
     flexDirection: 'row',
     paddingHorizontal: spacing.xl,
-    paddingTop: 6,
   },
   scroll: {
     paddingTop: 18,

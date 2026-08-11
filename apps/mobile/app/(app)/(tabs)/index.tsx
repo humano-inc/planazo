@@ -254,7 +254,7 @@ export default function FeedScreen() {
           testID="feed-avatar"
           style={styles.avatarAction}
         >
-          <Avatar name={profile?.display_name ?? '?'} dark size={36} imageUrl={profile?.avatar_url} />
+          <Avatar name={profile?.display_name ?? '?'} dark size={42} imageUrl={profile?.avatar_url} />
         </Pressable>
       </View>
 
@@ -358,25 +358,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
   },
-  // The avatar is drawn at 36; the box around it is 44 and the negative margin
-  // hands those 8 points back, so the header keeps its height and the avatar
-  // does not shift off the right edge (PLA-40).
   avatarAction: {
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: MIN_TOUCH_TARGET,
     minHeight: MIN_TOUCH_TARGET,
-    margin: -(MIN_TOUCH_TARGET - 36) / 2,
   },
   filters: {
     flexDirection: 'row',
     gap: spacing.sm,
     paddingHorizontal: spacing.xl,
-    // Chip went from 37 to 44 to be tappable; give 4 of those 7 points back
-    // here so the feed below only moves by 3 (PLA-40).
     paddingBottom: spacing.sm,
   },
   loading: {

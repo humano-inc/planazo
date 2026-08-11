@@ -14,8 +14,13 @@ import { useDismissTo } from '../../../lib/navigation';
 import { contentViolation } from '../../../lib/moderation';
 import { useAuthStore } from '../../../stores/authStore';
 import { pickFromLibrary, takePhoto, uploadAvatar } from '../../../lib/images';
-import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
-import { Avatar, FormScreen, ThemedText } from '../../../components/ui';
+import {
+  Avatar,
+  FormScreen,
+  HeaderAction,
+  TextAction,
+  ThemedText,
+} from '../../../components/ui';
 import { colors, fonts, spacing } from '../../../theme/tokens';
 
 type PhotoDraft = { kind: 'keep' } | { kind: 'remove' } | { kind: 'new'; uri: string };
@@ -108,28 +113,20 @@ export default function ProfileEdit() {
 
   const header = (
     <View style={styles.header}>
-      <Pressable
-        accessibilityRole="button"
+      <HeaderAction
+        label="Cancel"
         onPress={leave}
+        tone="muted"
         testID="cancel"
-        style={styles.headerAction}
-      >
-        <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-          Cancel
-        </ThemedText>
-      </Pressable>
+      />
       <ThemedText style={styles.headerTitle}>Your profile</ThemedText>
-      <Pressable
-        accessibilityRole="button"
+      <HeaderAction
+        label="Save"
+        align="end"
         disabled={!dirty || save.isPending}
         onPress={() => save.mutate()}
         testID="save"
-        style={[styles.headerAction, styles.headerActionEnd]}
-      >
-        <ThemedText variant="bodyStrong" color={dirty ? colors.accent : colors.textFaint}>
-          Save
-        </ThemedText>
-      </Pressable>
+      />
     </View>
   );
 
@@ -138,6 +135,7 @@ export default function ProfileEdit() {
       <View style={styles.photoBlock}>
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel="Change profile photo"
           onPress={openPhotoOptions}
           style={styles.avatarWrap}
           testID="avatar-press"
@@ -149,16 +147,11 @@ export default function ProfileEdit() {
             </ThemedText>
           </View>
         </Pressable>
-        <Pressable
-          accessibilityRole="button"
+        <TextAction
+          label="Change photo"
           onPress={openPhotoOptions}
           testID="change-photo"
-          style={styles.changePhotoAction}
-        >
-          <ThemedText variant="bodyStrong" color={colors.accent} style={styles.changePhoto}>
-            Change photo
-          </ThemedText>
-        </Pressable>
+        />
       </View>
 
       <View style={styles.field}>
@@ -189,16 +182,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-  },
-  // Row padding moved onto the buttons (PLA-40); "Save" needs the width floor
-  // as well as the height one.
-  headerAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    minWidth: MIN_TOUCH_TARGET,
-  },
-  headerActionEnd: {
-    alignItems: 'flex-end',
   },
   headerTitle: {
     fontFamily: fonts.displayHeavy,
@@ -233,19 +216,6 @@ const styles = StyleSheet.create({
     borderColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  // The text and its padding came to 32. The box takes 44 and gives the
-  // surplus back, so the gap under the avatar is unchanged — and 6 is well
-  // inside the 12pt gap, so this never reaches the avatar's own target.
-  changePhotoAction: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    marginVertical: -6,
-  },
-  changePhoto: {
-    paddingVertical: 6,
-    paddingHorizontal: spacing.md,
   },
   field: {
     gap: spacing.sm,

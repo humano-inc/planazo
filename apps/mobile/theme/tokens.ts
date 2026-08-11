@@ -152,6 +152,15 @@ export const type = {
     lineHeight: 22,
     color: colors.textPrimary,
   },
+  // Bar-button type: the words in a header action or a back affordance.
+  // Matches the platform 17pt so a "Cancel" here sits at the same weight as
+  // one in a native sheet.
+  control: {
+    fontFamily: fonts.body,
+    fontSize: 17,
+    lineHeight: 22,
+    color: colors.textPrimary,
+  },
   body: {
     fontFamily: fonts.body,
     fontSize: 15,

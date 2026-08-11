@@ -104,10 +104,10 @@ describe('TabBar', () => {
     expect(mockPush).toHaveBeenCalledWith('/(app)/plan/create');
   });
 
-  // PLA-40: the tabs cleared 44 on their icon and label alone, which made the
+  // PLA-40: the tabs cleared the old floor on their icon and label alone, which made the
   // floor a coincidence of the type scale rather than a promise. Now it is
   // declared, so shrinking either one cannot quietly take the tab under it.
-  it('keeps every tab at the 44pt minimum', async () => {
+  it('keeps every tab at the adaptive minimum', async () => {
     await render(<TabBar {...makeProps()} />);
 
     for (const id of ['tab-index', 'tab-groups']) {

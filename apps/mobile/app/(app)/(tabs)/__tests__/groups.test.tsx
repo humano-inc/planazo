@@ -1,8 +1,10 @@
+import { StyleSheet } from 'react-native';
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import GroupsScreen from '../groups';
 import { useAuthStore } from '../../../../stores/authStore';
 import { supabase } from '../../../../lib/supabase';
+import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 
 const mockPush = jest.fn();
 
@@ -129,6 +131,11 @@ describe('GroupsScreen', () => {
     expect(screen.getByText(/1 plan waiting on you/)).toBeTruthy();
     expect(screen.getByText('Cine i sopar')).toBeTruthy();
     expect(screen.getByText('1 person')).toBeTruthy();
+    expect(screen.getByText('New group')).toBeTruthy();
+
+    const newGroupStyle = StyleSheet.flatten(screen.getByTestId('new-group').props.style);
+    expect(newGroupStyle.minHeight).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
+    expect(screen.getByText('New group').props.numberOfLines).toBe(1);
 
     await fireEvent.press(screen.getByTestId('group-row-g2'));
     expect(mockPush).toHaveBeenCalledWith('/(app)/group/g2');

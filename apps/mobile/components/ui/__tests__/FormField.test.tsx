@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import { FormField } from '../FormField';
+import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
 
 async function renderField(props: Partial<React.ComponentProps<typeof FormField>> = {}) {
   return render(<FormField label="Email" testID="field" {...props} />);
@@ -40,14 +41,14 @@ describe('FormField', () => {
 
     expect(style.paddingVertical).toBeGreaterThanOrEqual(12);
     expect(style.paddingHorizontal).toBeGreaterThanOrEqual(12);
-    expect(style.minHeight).toBeGreaterThanOrEqual(44);
+    expect(style.minHeight).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
   });
 
   it('keeps the tap target when a reveal toggle shares the row', async () => {
     const view = await renderField({ secure: true });
     const style = StyleSheet.flatten(view.getByTestId('field').props.style);
 
-    expect(style.minHeight).toBeGreaterThanOrEqual(44);
+    expect(style.minHeight).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
     expect(style.paddingVertical).toBeGreaterThanOrEqual(12);
   });
 

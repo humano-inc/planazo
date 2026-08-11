@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDismissTo } from '../../../../lib/navigation';
 import { submitPollDraft, planPollKey } from '../../../../lib/usePlanPoll';
 import { emptyPollDraft, pollDraftValid } from '../../../../lib/pollDraft';
+import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 import { PollOptionsEditor } from '../../../../components/PollComposer';
-import { ThemedText, Button, FormScreen } from '../../../../components/ui';
+import { ThemedText, Button, FormScreen, HeaderAction } from '../../../../components/ui';
 import { colors, fonts, spacing, type } from '../../../../theme/tokens';
 
 /**
@@ -47,11 +48,7 @@ export default function NewPollScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Pressable onPress={leave} accessibilityRole="button" testID="cancel">
-        <ThemedText variant="bodyStrong" color={colors.textMuted}>
-          Cancel
-        </ThemedText>
-      </Pressable>
+      <HeaderAction label="Cancel" onPress={leave} tone="muted" testID="cancel" />
       <ThemedText style={styles.headerTitle}>New poll</ThemedText>
       <View style={styles.headerSpacer} />
     </View>
@@ -131,8 +128,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    paddingTop: 14,
-    paddingBottom: 10,
   },
   headerTitle: {
     // fonts.display is already the 700 weight; the fontWeight that used to sit
@@ -182,7 +177,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: spacing.md,
-    minHeight: 44,
+    minHeight: MIN_TOUCH_TARGET,
   },
   howDivider: {
     height: 1,

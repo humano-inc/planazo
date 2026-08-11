@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, TextInputProps, View } from 'react-native';
 import { ThemedText } from './ThemedText';
-import { LINK_HIT_SLOP } from '../../lib/a11y';
+import { LINK_HIT_SLOP, MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { colors, fonts, spacing } from '../../theme/tokens';
 
 interface FormFieldProps extends Omit<TextInputProps, 'style' | 'secureTextEntry'> {
@@ -102,8 +102,8 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: spacing.lg,
     // Belt and braces for large text settings and short line heights alike:
-    // the tap target never drops under Apple's 44pt however the text renders.
-    minHeight: 44,
+    // the tap target never drops under the shared floor however text renders.
+    minHeight: MIN_TOUCH_TARGET,
   },
   inputWithReveal: {
     // Leave the reveal control its own room rather than running under it.

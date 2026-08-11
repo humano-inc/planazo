@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
+import { View, StyleSheet, TextInput, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../../lib/supabase';
@@ -7,12 +7,13 @@ import { useDismissTo } from '../../../../lib/navigation';
 import { contentViolation } from '../../../../lib/moderation';
 import { removeGroupPhoto, uploadGroupPhoto } from '../../../../lib/images';
 import { captureError } from '../../../../lib/sentry';
-import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 import {
   ThemedText,
   FormScreen,
   GroupTile,
   GroupPhotoField,
+  HeaderAction,
+  ColorSwatchPicker,
   colorForName,
 } from '../../../../components/ui';
 import { colors, fonts, groupColors, spacing } from '../../../../theme/tokens';
@@ -100,28 +101,20 @@ export default function EditGroupScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Pressable
+      <HeaderAction
+        label="Cancel"
         onPress={leave}
-        accessibilityRole="button"
+        tone="muted"
         testID="cancel"
-        style={styles.headerAction}
-      >
-        <ThemedText variant="bodyStrong" color={colors.textMuted}>
-          Cancel
-        </ThemedText>
-      </Pressable>
+      />
       <ThemedText style={styles.headerTitle}>Group profile</ThemedText>
-      <Pressable
+      <HeaderAction
+        label="Save"
+        align="end"
         onPress={() => save.mutate()}
         disabled={!dirty || !valid || save.isPending}
-        accessibilityRole="button"
         testID="save"
-        style={[styles.headerAction, styles.headerActionEnd]}
-      >
-        <ThemedText variant="bodyStrong" color={dirty && valid ? colors.accent : colors.textFaint}>
-          Save
-        </ThemedText>
-      </Pressable>
+      />
     </View>
   );
 
@@ -165,21 +158,11 @@ export default function EditGroupScreen() {
       ) : (
         <View style={styles.section}>
           <ThemedText variant="sectionLabel">Colour</ThemedText>
-          <View style={styles.swatches}>
-            {groupColors.map((swatch) => (
-              <Pressable
-                key={swatch}
-                accessibilityRole="button"
-                accessibilityState={{ selected: swatch === draftColor }}
-                onPress={() => setColor(swatch)}
-                style={[
-                  styles.swatch,
-                  { backgroundColor: swatch },
-                  swatch === draftColor && styles.swatchSelected,
-                ]}
-              />
-            ))}
-          </View>
+          <ColorSwatchPicker
+            swatches={groupColors}
+            selected={draftColor}
+            onSelect={setColor}
+          />
         </View>
       )}
     </FormScreen>
@@ -192,17 +175,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-  },
-  // Row padding moved onto the buttons (PLA-40). "Save" is only ~36 wide, so
-  // this needs the width floor too — the box grows, the word does not move.
-  headerAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    minWidth: MIN_TOUCH_TARGET,
-  },
-  // On the right of the row, so grow leftwards and keep the label flush.
-  headerActionEnd: {
-    alignItems: 'flex-end',
   },
   headerTitle: {
     fontFamily: fonts.display,
@@ -236,19 +208,5 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 10,
-  },
-  swatches: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  swatch: {
-    width: 46,
-    height: 46,
-    borderRadius: 15,
-    borderWidth: 2.5,
-    borderColor: 'transparent',
-  },
-  swatchSelected: {
-    borderColor: colors.ink,
   },
 });

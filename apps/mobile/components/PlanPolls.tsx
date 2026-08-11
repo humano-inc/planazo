@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { countPollVotes, pollLeaders, pollVotedPhrase } from '@planazo/shared';
+import { MIN_TOUCH_TARGET } from '../lib/a11y';
 import { ThemedText } from './ui/ThemedText';
 import { Badge } from './ui/Badge';
 import { AvatarStack } from './ui/AvatarStack';
+import { DisclosureGlyph } from './ui/NavigationGlyphs';
 import { usePlanPolls, useVotePlanPoll, type PlanPollRow } from '../lib/usePlanPoll';
 import { colors, spacing } from '../theme/tokens';
 
@@ -83,7 +85,7 @@ export function PlanPolls({ planId, userId, isHost, peopleIn, canVote, planEnded
           testID="poll-add"
           style={styles.addCard}
         >
-          <ThemedText variant="bodyStrong" color={colors.accent}>
+          <ThemedText variant="bodyStrong" color={colors.accentText}>
             {list.length === 0 ? '+ Add a poll' : '+ Add another poll'}
           </ThemedText>
           <ThemedText variant="caption" color={colors.textMuted} style={styles.addHint}>
@@ -148,9 +150,7 @@ function PollSection({
           <ThemedText variant="caption" color={colors.textMuted}>
             {caption}
           </ThemedText>
-          <ThemedText variant="caption" color={colors.accent} style={styles.chevron}>
-            {expanded ? '⌃' : '⌄'}
-          </ThemedText>
+          <DisclosureGlyph expanded={expanded} color={colors.accentText} />
         </View>
       </Pressable>
 
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: spacing.md,
-    minHeight: 44,
+    minHeight: MIN_TOUCH_TARGET,
   },
   headerLabel: {
     flexShrink: 1,
@@ -273,11 +273,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
   },
-  chevron: {
-    fontSize: 15,
-    width: 14,
-    textAlign: 'center',
-  },
   leadRow: {
     backgroundColor: colors.surface,
     borderWidth: 1.5,
@@ -285,7 +280,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingVertical: 14,
     paddingHorizontal: spacing.lg,
-    minHeight: 44,
+    minHeight: MIN_TOUCH_TARGET,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -360,7 +355,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     alignItems: 'center',
     gap: 4,
-    minHeight: 44,
+    minHeight: MIN_TOUCH_TARGET,
     justifyContent: 'center',
   },
   addHint: {

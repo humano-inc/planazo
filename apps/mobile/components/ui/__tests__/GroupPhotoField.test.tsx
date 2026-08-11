@@ -108,7 +108,7 @@ describe('GroupPhotoField', () => {
   // PLA-40's floor, asserted the same way touchTargets.test.tsx does it. It
   // lives here rather than in that suite because this component reaches
   // lib/images, and that suite is deliberately mock-free.
-  it('gives every control the 44pt minimum', async () => {
+  it('gives every control the adaptive minimum', async () => {
     const floorOf = (style: unknown) =>
       ((StyleSheet.flatten(style as ViewStyle) ?? {}) as ViewStyle).minHeight;
 
@@ -117,8 +117,7 @@ describe('GroupPhotoField', () => {
       MIN_TOUCH_TARGET
     );
 
-    // Change and Remove are 20pt words that claim 44 and hand the surplus back
-    // with a negative margin, so the row does not grow.
+    // Change and Remove are one-line text actions at the shared floor.
     await renderField({ uri: PHOTO });
     for (const id of ['change-photo', 'remove-photo']) {
       expect(floorOf(screen.getByTestId(id).props.style)).toBeGreaterThanOrEqual(

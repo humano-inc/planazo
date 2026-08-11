@@ -10,10 +10,9 @@ import {
   ReportSubject,
   submitReport,
 } from '../../lib/moderation';
-import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
 import { useAuthStore } from '../../stores/authStore';
-import { Card, FormScreen, ThemedText, showToast } from '../../components/ui';
+import { Card, FormScreen, HeaderAction, ThemedText, showToast } from '../../components/ui';
 import { colors, fonts, spacing } from '../../theme/tokens';
 
 const SUBJECT_NOUN: Record<ReportSubject, string> = {
@@ -100,28 +99,20 @@ export default function ReportScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Pressable
-        accessibilityRole="button"
+      <HeaderAction
+        label="Cancel"
         onPress={leave}
+        tone="muted"
         testID="cancel"
-        style={styles.headerAction}
-      >
-        <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-          Cancel
-        </ThemedText>
-      </Pressable>
+      />
       <ThemedText style={styles.headerTitle}>Report {SUBJECT_NOUN[subjectType]}</ThemedText>
-      <Pressable
-        accessibilityRole="button"
+      <HeaderAction
+        label={send.isPending ? 'Sending…' : 'Send'}
+        align="end"
         disabled={!valid || send.isPending}
         onPress={() => send.mutate()}
         testID="send-report"
-        style={[styles.headerAction, styles.headerActionEnd]}
-      >
-        <ThemedText variant="bodyStrong" color={valid ? colors.accentText : colors.textFaint}>
-          {send.isPending ? 'Sending…' : 'Send'}
-        </ThemedText>
-      </Pressable>
+      />
     </View>
   );
 
@@ -213,17 +204,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-  },
-  // These two carried hitSlop={8}, which only reached 36 — the row's own 16/10
-  // padding was the thing that should have been on the buttons all along
-  // (PLA-40).
-  headerAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    minWidth: MIN_TOUCH_TARGET,
-  },
-  headerActionEnd: {
-    alignItems: 'flex-end',
   },
   headerTitle: {
     fontFamily: fonts.displayHeavy,

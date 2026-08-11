@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
+import { View, StyleSheet, TextInput, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
@@ -7,7 +7,6 @@ import { useDismissTo, useLeaveFor } from '../../../lib/navigation';
 import { contentViolation } from '../../../lib/moderation';
 import { uploadGroupPhoto } from '../../../lib/images';
 import { captureError } from '../../../lib/sentry';
-import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
 import { FriendPicker } from '../../../components/group/FriendPicker';
 import {
   ThemedText,
@@ -15,6 +14,8 @@ import {
   FormScreen,
   GroupTile,
   GroupPhotoField,
+  HeaderAction,
+  ColorSwatchPicker,
   showToast,
 } from '../../../components/ui';
 import { colors, fonts, groupColors, spacing, type } from '../../../theme/tokens';
@@ -107,16 +108,12 @@ export default function NewGroupScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Pressable
+      <HeaderAction
+        label="Cancel"
         onPress={cancel}
-        accessibilityRole="button"
+        tone="muted"
         testID="cancel"
-        style={styles.headerAction}
-      >
-        <ThemedText variant="bodyStrong" color={colors.textMuted}>
-          Cancel
-        </ThemedText>
-      </Pressable>
+      />
       <ThemedText style={styles.headerTitle}>New group</ThemedText>
       <View style={styles.headerSpacer} />
     </View>
@@ -176,22 +173,11 @@ export default function NewGroupScreen() {
       ) : (
         <View style={styles.section}>
           <ThemedText variant="sectionLabel">Colour</ThemedText>
-          <View style={styles.swatches}>
-            {groupColors.map((swatch, i) => (
-              <Pressable
-                key={swatch}
-                accessibilityRole="button"
-                accessibilityState={{ selected: i === colorIdx }}
-                onPress={() => setColorIdx(i)}
-                style={[
-                  styles.swatch,
-                  { backgroundColor: swatch },
-                  i === colorIdx && styles.swatchSelected,
-                ]}
-                testID={`swatch-${i}`}
-              />
-            ))}
-          </View>
+          <ColorSwatchPicker
+            swatches={groupColors}
+            selected={groupColors[colorIdx]}
+            onSelect={(_color, index) => setColorIdx(index)}
+          />
         </View>
       )}
 
@@ -219,12 +205,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-  },
-  // Row padding moved onto the button so the whole bar height takes the tap
-  // (PLA-40). Row goes 45 → 44; nothing else moves.
-  headerAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
   },
   headerTitle: {
     fontFamily: fonts.display,
@@ -261,20 +241,6 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 10,
-  },
-  swatches: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  swatch: {
-    width: 46,
-    height: 46,
-    borderRadius: 15,
-    borderWidth: 2.5,
-    borderColor: 'transparent',
-  },
-  swatchSelected: {
-    borderColor: colors.ink,
   },
   descInput: {
     ...type.body,

@@ -78,7 +78,7 @@ export function AdminsCard({ admins, myId, createdBy, viewerIsAdmin, disabled, o
 
 /** Row metrics shared by both of the Admins screen's cards. */
 export const adminRowStyles = StyleSheet.create({
-  // Tighter than the People card's 16 vertical: the 44pt control at the row's
+  // Tighter than the People card's 16 vertical: the trailing control at the row's
   // end carries the height, so 12 keeps the row at 68 instead of 76.
   personRow: {
     flexDirection: 'row',

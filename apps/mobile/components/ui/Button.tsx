@@ -91,9 +91,8 @@ const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
-    // `lg` clears 44 on its padding alone; `md` came to 42 (12 + 18 + 12) and
-    // a wrapped label is the caller's to ask for, so the floor lives here
-    // rather than in either size.
+    // Both sizes share the app-wide floor. A wrapped label is the caller's to
+    // ask for, so the minimum lives here rather than in either size.
     minHeight: MIN_TOUCH_TARGET,
   },
   md: {

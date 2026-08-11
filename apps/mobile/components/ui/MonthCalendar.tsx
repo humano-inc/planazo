@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from './ThemedText';
+import { BackGlyph, ForwardGlyph } from './NavigationGlyphs';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { isoOfDate } from '../../lib/dates';
 import { buildMonthGrid } from '../../lib/monthGrid';
-import { colors, fonts } from '../../theme/tokens';
+import { colors, fonts, spacing } from '../../theme/tokens';
 
 const DOW = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 // How far ahead the month arrows can go (design: half a year of runway)
@@ -26,32 +27,32 @@ export function MonthCalendar({ selected, onToggleDay }: MonthCalendarProps) {
   const weeks = buildMonthGrid(base.getFullYear(), base.getMonth());
 
   const label = base.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const atStart = offset === 0;
+  const atEnd = offset === MAX_MONTHS_AHEAD;
 
   return (
     <View style={styles.card}>
       <View style={styles.header}>
         <Pressable
           onPress={() => setOffset((o) => Math.max(0, o - 1))}
+          disabled={atStart}
           accessibilityRole="button"
           accessibilityLabel="Previous month"
           testID="cal-prev"
-          style={styles.arrow}
+          style={[styles.arrow, atStart && styles.arrowDisabled]}
         >
-          <ThemedText color={colors.accent} style={styles.arrowLabel}>
-            ‹
-          </ThemedText>
+          <BackGlyph />
         </Pressable>
         <ThemedText style={styles.monthLabel}>{label}</ThemedText>
         <Pressable
           onPress={() => setOffset((o) => Math.min(MAX_MONTHS_AHEAD, o + 1))}
+          disabled={atEnd}
           accessibilityRole="button"
           accessibilityLabel="Next month"
           testID="cal-next"
-          style={styles.arrow}
+          style={[styles.arrow, atEnd && styles.arrowDisabled]}
         >
-          <ThemedText color={colors.accent} style={styles.arrowLabel}>
-            ›
-          </ThemedText>
+          <ForwardGlyph />
         </Pressable>
       </View>
 
@@ -112,31 +113,23 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 22,
     paddingVertical: 16,
-    paddingHorizontal: 14,
+    paddingHorizontal: spacing.md,
     gap: 10,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 6,
+    minHeight: MIN_TOUCH_TARGET,
   },
-  // A chevron is about 12×24 — the smallest target in the app before this. The
-  // box is a real 44×44 with the glyph centred in it; the negative margins give
-  // back the surplus so the header row keeps its height and each chevron stays
-  // exactly where it was drawn (the 16 is 6 of header padding + the 10 the
-  // wider box would otherwise push it in by).
   arrow: {
     width: MIN_TOUCH_TARGET,
     height: MIN_TOUCH_TARGET,
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: -10,
-    marginHorizontal: -16,
   },
-  arrowLabel: {
-    fontSize: 20,
-    lineHeight: 24,
+  arrowDisabled: {
+    opacity: 0.3,
   },
   monthLabel: {
     fontFamily: fonts.display,
@@ -144,16 +137,12 @@ const styles = StyleSheet.create({
     lineHeight: 21,
     color: colors.textPrimary,
   },
-  // No row gap: the 2pt that used to separate the weeks now belongs to the day
-  // cells themselves, which takes each one from 42 to 44 without the grid
-  // growing by a single point (the row pitch was, and stays, 44). Real boxes
-  // sitting flush cannot overlap the way two hitSlop regions would.
   grid: {
     gap: 0,
   },
   week: {
     flexDirection: 'row',
-    gap: 2,
+    gap: 0,
   },
   dow: {
     flex: 1,

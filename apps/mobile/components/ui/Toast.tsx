@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   // The pill is 48 tall, so the word only needs to claim the full height and a
-  // little either side to clear 44 without the padding showing.
+  // little either side to hold the app-wide floor without showing extra padding.
   action: {
     justifyContent: 'center',
     alignSelf: 'stretch',

@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../../lib/supabase';
 import { useDismissTo } from '../../../../lib/navigation';
 import { contentViolation } from '../../../../lib/moderation';
-import { FormScreen, ThemedText } from '../../../../components/ui';
+import { FormScreen, HeaderAction, ThemedText } from '../../../../components/ui';
 import { colors, fonts, radii, spacing, type } from '../../../../theme/tokens';
 
 /**
@@ -111,25 +111,15 @@ export default function EditPlanScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Pressable onPress={leave} accessibilityRole="button" testID="cancel">
-        <ThemedText variant="bodyStrong" color={colors.textMuted}>
-          Cancel
-        </ThemedText>
-      </Pressable>
+      <HeaderAction label="Cancel" onPress={leave} tone="muted" testID="cancel" />
       <ThemedText style={styles.headerTitle}>Edit plan</ThemedText>
-      <Pressable
+      <HeaderAction
+        label="Save"
+        align="end"
         onPress={() => save.mutate()}
         disabled={!dirty || !valid || save.isPending}
-        accessibilityRole="button"
         testID="save"
-      >
-        <ThemedText
-          variant="bodyStrong"
-          color={dirty && valid ? colors.accent : colors.textFaint}
-        >
-          Save
-        </ThemedText>
-      </Pressable>
+      />
     </View>
   );
 
@@ -188,8 +178,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    paddingTop: 14,
-    paddingBottom: 10,
   },
   headerTitle: {
     fontFamily: fonts.display,

@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { ThemedText } from './ui/ThemedText';
+import { CloseGlyph } from './ui/NavigationGlyphs';
+import { MIN_TOUCH_TARGET } from '../lib/a11y';
 import { MAX_POLL_OPTIONS, type PollDraft } from '../lib/pollDraft';
 import { colors, radii, spacing, type } from '../theme/tokens';
 
@@ -46,12 +48,10 @@ export function PollOptionsEditor({
             onPress={() => removeOption(i)}
             accessibilityRole="button"
             accessibilityLabel={`Remove option ${i + 1}`}
-            hitSlop={8}
+            style={({ pressed }) => [styles.removeButton, pressed && styles.pressed]}
             testID={`poll-option-remove-${i}`}
           >
-            <ThemedText variant="bodyStrong" color={colors.textFaint} style={styles.remove}>
-              ✕
-            </ThemedText>
+            <CloseGlyph color={colors.textFaint} />
           </Pressable>
         </View>
       ))}
@@ -121,17 +121,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderStrong,
     borderRadius: radii.input,
-    paddingHorizontal: 15,
-    minHeight: 44,
+    paddingLeft: 15,
+    minHeight: MIN_TOUCH_TARGET,
   },
   optionInput: {
     ...type.body,
     flex: 1,
     paddingVertical: 15,
   },
-  remove: {
-    width: 20,
-    textAlign: 'center',
+  removeButton: {
+    width: MIN_TOUCH_TARGET,
+    minHeight: MIN_TOUCH_TARGET,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ghostRow: {
     backgroundColor: colors.surface,
@@ -139,7 +141,10 @@ const styles = StyleSheet.create({
     borderColor: colors.borderStrong,
     borderRadius: radii.input,
     padding: 15,
-    minHeight: 44,
+    minHeight: MIN_TOUCH_TARGET,
     justifyContent: 'center',
+  },
+  pressed: {
+    opacity: 0.65,
   },
 });

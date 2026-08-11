@@ -148,20 +148,19 @@ describe('CreatePlanScreen', () => {
   /**
    * PLA-40. "Cancel" was a bare text Pressable with no padding, so its target
    * was exactly the word — about 48×20 in a header that was already 45pt tall.
-   * The row's padding now sits on the button, which is the same reason a UIKit
-   * navigation bar is 44: the bar height *is* the bar button's target.
+   * The shared header action now owns the button's full target.
    *
    * The group and date chips are here too because they are the controls this
    * screen is made of, and both were under (39 and 34).
    */
-  it('gives its header and chips the 44pt minimum', async () => {
+  it('gives its header and chips the adaptive minimum', async () => {
     await renderCreate();
     await screen.findByTestId('group-g1');
 
-    for (const id of ['cancel', 'group-g1']) {
-      const style = StyleSheet.flatten(screen.getByTestId(id).props.style);
-      expect(style.minHeight).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
-    }
+    const cancelStyle = StyleSheet.flatten(screen.getByTestId('cancel').props.style);
+    const groupStyle = StyleSheet.flatten(screen.getByTestId('group-g1').props.style);
+    expect(cancelStyle.minHeight).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
+    expect(groupStyle.minHeight).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
   });
 
   it('shows all group chips with the first preselected and named in the CTA', async () => {

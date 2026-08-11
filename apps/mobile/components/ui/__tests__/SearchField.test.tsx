@@ -2,6 +2,7 @@ import { StyleSheet } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
 import { SearchField, SearchGlyph } from '../SearchField';
 import { colors } from '../../../theme/tokens';
+import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
 
 async function renderField(props: Partial<React.ComponentProps<typeof SearchField>> = {}) {
   return render(<SearchField placeholder="Name or @handle" testID="search" {...props} />);
@@ -84,7 +85,7 @@ describe('SearchField', () => {
     const box = boxStyleOf(view);
 
     expect(input.paddingVertical).toBeGreaterThanOrEqual(12);
-    expect(input.minHeight).toBeGreaterThanOrEqual(44);
+    expect(input.minHeight).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET);
     expect(box.paddingVertical).toBeUndefined();
   });
 

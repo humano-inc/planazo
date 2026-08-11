@@ -6,7 +6,14 @@ import { useAuthStore } from '../../stores/authStore';
 import { useFriends } from '../../lib/useFriends';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
-import { ThemedText, Card, Avatar, FormScreen, SearchField } from '../../components/ui';
+import {
+  ThemedText,
+  Card,
+  Avatar,
+  BackButton,
+  FormScreen,
+  SearchField,
+} from '../../components/ui';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 
 interface PersonRow {
@@ -206,14 +213,7 @@ export default function FindPeopleScreen() {
   const header = (
     <>
       <View style={styles.navRow}>
-        <Pressable
-          onPress={goBack}
-          accessibilityRole="button"
-          testID="back"
-          style={styles.backAction}
-        >
-          <ThemedText style={styles.backChevron}>‹</ThemedText>
-        </Pressable>
+        <BackButton onPress={goBack} testID="back" color={colors.textPrimary} />
         <ThemedText style={styles.navTitle}>Find people</ThemedText>
       </View>
 
@@ -278,27 +278,10 @@ const styles = StyleSheet.create({
   navRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    paddingHorizontal: spacing.xl,
-    paddingTop: 14,
-    paddingBottom: 10,
-  },
-  // The chevron glyph is about 10×26 — the smallest thing anyone is asked to
-  // hit. The box around it is a real 44×44; the negative margins give back
-  // every point it added, so the chevron stays put, the title beside it does
-  // not shift, and the row keeps its height (PLA-40).
-  backAction: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: MIN_TOUCH_TARGET,
-    minHeight: MIN_TOUCH_TARGET,
-    marginVertical: -(MIN_TOUCH_TARGET - 26) / 2,
-    marginHorizontal: -(MIN_TOUCH_TARGET - 10) / 2,
-  },
-  backChevron: {
-    fontSize: 22,
-    lineHeight: 26,
-    color: colors.textPrimary,
+    gap: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
   navTitle: {
     fontFamily: fonts.display,

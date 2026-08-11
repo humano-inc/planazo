@@ -9,9 +9,16 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { pickFromLibrary, uploadJpeg } from '../../lib/images';
 import { feedbackSheetOpen } from '../../lib/feedbackState';
-import { MIN_TOUCH_TARGET, hitSlopTo } from '../../lib/a11y';
+import { hitSlopTo } from '../../lib/a11y';
 import { useDismissTo } from '../../lib/navigation';
-import { FormScreen, ThemedText, showToast } from '../../components/ui';
+import {
+  CloseGlyph,
+  FormScreen,
+  HeaderAction,
+  PlusGlyph,
+  ThemedText,
+  showToast,
+} from '../../components/ui';
 import { colors, fonts, groupColors, spacing } from '../../theme/tokens';
 
 type Kind = 'broken' | 'idea' | 'other';
@@ -85,28 +92,20 @@ export default function FeedbackScreen() {
 
   const header = (
     <View style={styles.header}>
-      <Pressable
-        accessibilityRole="button"
+      <HeaderAction
+        label="Cancel"
         onPress={cancel}
+        tone="muted"
         testID="cancel"
-        style={styles.headerAction}
-      >
-        <ThemedText variant="bodyStrong" color={colors.textSecondary}>
-          Cancel
-        </ThemedText>
-      </Pressable>
+      />
       <ThemedText style={styles.headerTitle}>Send feedback</ThemedText>
-      <Pressable
-        accessibilityRole="button"
+      <HeaderAction
+        label="Send"
+        align="end"
         disabled={!valid || send.isPending}
         onPress={() => send.mutate()}
         testID="send"
-        style={[styles.headerAction, styles.headerActionEnd]}
-      >
-        <ThemedText variant="bodyStrong" color={valid ? colors.accent : colors.textFaint}>
-          Send
-        </ThemedText>
-      </Pressable>
+      />
     </View>
   );
 
@@ -121,6 +120,7 @@ export default function FeedbackScreen() {
               <Pressable
                 key={k.key}
                 accessibilityRole="button"
+                accessibilityState={{ selected: active }}
                 onPress={() => setKind(k.key)}
                 style={[styles.kindTile, active && styles.kindTileActive]}
                 testID={`kind-${k.key}`}
@@ -171,18 +171,16 @@ export default function FeedbackScreen() {
               <Image source={{ uri: attachment }} style={styles.thumb} testID="attachment" />
               <Pressable
                 accessibilityRole="button"
+                accessibilityLabel="Remove attached photo"
                 onPress={() => setAttachment(null)}
                 style={styles.thumbRemove}
                 // The one control in the app that keeps hitSlop: a 20pt
                 // badge sitting on the thumbnail it removes, where a real
-                // 44pt box would cover the image underneath it. 8 only got
-                // it to 36 (PLA-40).
+                // full-size box would cover the image underneath it.
                 hitSlop={hitSlopTo(20)}
                 testID="remove-attachment"
               >
-                <ThemedText variant="caption" color={colors.background}>
-                  ×
-                </ThemedText>
+                <CloseGlyph color={colors.background} />
               </Pressable>
             </View>
           ) : null}
@@ -192,7 +190,7 @@ export default function FeedbackScreen() {
             style={({ pressed }) => [styles.addTile, pressed && styles.pressed]}
             testID="add-photo"
           >
-            <ThemedText style={styles.addPlus}>+</ThemedText>
+            <PlusGlyph color={colors.textFaint} />
             <ThemedText variant="caption" color={colors.textSecondary}>
               Add photo
             </ThemedText>
@@ -213,16 +211,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-  },
-  // Row padding moved onto the buttons (PLA-40): "Send" is ~36 wide, so the
-  // width floor matters as much as the height one here.
-  headerAction: {
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    minWidth: MIN_TOUCH_TARGET,
-  },
-  headerActionEnd: {
-    alignItems: 'flex-end',
   },
   headerTitle: {
     fontFamily: fonts.displayHeavy,
@@ -333,11 +321,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-  },
-  addPlus: {
-    fontSize: 22,
-    lineHeight: 24,
-    color: colors.textFaint,
   },
   privacy: {
     marginTop: 'auto',

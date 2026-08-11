@@ -18,6 +18,7 @@ import { usePullToRefresh } from '../../../lib/usePullToRefresh';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
 import {
   ThemedText,
+  TextAction,
   Card,
   AvatarStack,
   GroupTile,
@@ -152,16 +153,12 @@ export default function GroupsScreen() {
 
           <View style={styles.sectionHeader}>
             <ThemedText variant="sectionLabel">Your groups</ThemedText>
-            <Pressable
-              accessibilityRole="button"
+            <TextAction
+              label="New group"
               onPress={() => router.push('/(app)/group/new')}
+              align="end"
               testID="new-group"
-              style={styles.sectionAction}
-            >
-              <ThemedText variant="bodyStrong" color={colors.accent}>
-                New
-              </ThemedText>
-            </Pressable>
+            />
           </View>
           <Card padded={false}>
             {(rows ?? []).map((g, i) => (
@@ -267,16 +264,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.md,
-  },
-  // "New" is a ~30×20 word with nothing around it. The box is a real 44×44 —
-  // it grows leftwards (so `space-between` keeps the word flush right) and the
-  // negative margin keeps the section header its original 20pt (PLA-40).
-  sectionAction: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    minWidth: MIN_TOUCH_TARGET,
-    minHeight: MIN_TOUCH_TARGET,
-    marginVertical: -(MIN_TOUCH_TARGET - 20) / 2,
   },
   peopleSection: {
     marginTop: 22,
