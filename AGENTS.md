@@ -79,8 +79,7 @@ Every screen with a text input uses `components/ui/FormScreen`. No hand-rolled
 - No constant makes room for the keyboard (`paddingBottom: 140` and friends).
   `marginTop: 'auto'` for short-screen layout is fine.
 
-Check form work on an SE-class simulator with the keyboard up. Fresh checkout
-after adding the keyboard controller: native rebuild
+Fresh checkout after adding the keyboard controller: native rebuild
 (`npx expo run:ios --device "$IOS_SIMULATOR" --no-bundler`).
 
 ## 8. Blocking: the shield rule
