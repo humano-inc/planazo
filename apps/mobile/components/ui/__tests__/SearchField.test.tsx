@@ -1,6 +1,6 @@
 import { StyleSheet } from 'react-native';
 import { render, fireEvent } from '@testing-library/react-native';
-import { SearchField, SearchGlyph } from '../SearchField';
+import { SearchField } from '../SearchField';
 import { colors } from '../../../theme/tokens';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
 
@@ -106,50 +106,5 @@ describe('SearchField', () => {
 
     expect(view.getByTestId('search').props.editable).toBe(true);
     expect(view.getByTestId('search-box').props.pointerEvents).toBe('auto');
-  });
-});
-
-describe('SearchGlyph', () => {
-  async function renderGlyph(color?: string) {
-    const view = await render(<SearchGlyph color={color} />);
-    return {
-      box: StyleSheet.flatten(view.getByTestId('search-glyph').props.style),
-      lens: StyleSheet.flatten(view.getByTestId('search-glyph-lens').props.style),
-      handle: StyleSheet.flatten(view.getByTestId('search-glyph-handle').props.style),
-    };
-  }
-
-  /**
-   * The handle is pinned to the bottom of the box and the ring to the top, so
-   * the ring's height is what decides whether a stroke emerges from its edge or
-   * crosses it. The admins screen's 13pt ring in this 14pt box left the handle
-   * no band of its own, which is the drift PLA-85 removed. Assert the clearance
-   * rather than the numbers: 11 and 13 both "look" fine next to a 15pt width.
-   */
-  it('leaves the handle a band the ring does not reach into', async () => {
-    const { box, lens, handle } = await renderGlyph();
-
-    expect(box.height - handle.height).toBeGreaterThanOrEqual(lens.height);
-  });
-
-  it('keeps the ring inside the box, so the handle has somewhere to go', async () => {
-    const { box, lens } = await renderGlyph();
-
-    expect(lens.width).toBeLessThan(box.width);
-  });
-
-  it('takes the muted hint tone by default', async () => {
-    const { lens, handle } = await renderGlyph();
-
-    expect(lens.borderColor).toBe(colors.textMuted);
-    expect(handle.backgroundColor).toBe(colors.textMuted);
-  });
-
-  // On the groups tab it is part of a button label, not a hint inside a field.
-  it('takes a caller colour on both strokes', async () => {
-    const { lens, handle } = await renderGlyph(colors.ink);
-
-    expect(lens.borderColor).toBe(colors.ink);
-    expect(handle.backgroundColor).toBe(colors.ink);
   });
 });

@@ -23,6 +23,7 @@ import {
   AvatarStack,
   GroupTile,
   ErrorState,
+  ForwardGlyph,
   SearchGlyph,
 } from '../../../components/ui';
 import { GroupsEmptyState } from '../../../components/group/GroupsEmptyState';
@@ -190,9 +191,7 @@ export default function GroupsScreen() {
                     ) : null}
                   </View>
                 </View>
-                <ThemedText variant="body" color={colors.textFaint}>
-                  ›
-                </ThemedText>
+                <ForwardGlyph color={colors.textFaint} testID={`group-${g.id}-forward-glyph`} />
               </Pressable>
             ))}
           </Card>
@@ -213,9 +212,7 @@ export default function GroupsScreen() {
                   <ThemedText variant="bodyStrong" style={styles.peopleLabel}>
                     {friends.length} friend{friends.length === 1 ? '' : 's'}
                   </ThemedText>
-                  <ThemedText variant="body" color={colors.textFaint}>
-                    ›
-                  </ThemedText>
+                  <ForwardGlyph color={colors.textFaint} testID="people-forward-glyph" />
                 </Pressable>
               </Card>
             </View>

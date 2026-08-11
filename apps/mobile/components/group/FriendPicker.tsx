@@ -1,7 +1,7 @@
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useFriends } from '../../lib/useFriends';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
-import { ThemedText, Card, Avatar } from '../ui';
+import { CloseGlyph, ThemedText, Card, Avatar } from '../ui';
 import { colors, radii, spacing } from '../../theme/tokens';
 
 interface Props {
@@ -48,9 +48,7 @@ export function FriendPicker({ picks, onToggle }: Props) {
               <ThemedText variant="caption" color={colors.background}>
                 {f.name.split(' ')[0]}
               </ThemedText>
-              <ThemedText variant="caption" color={colors.textMuted}>
-                ×
-              </ThemedText>
+              <CloseGlyph color={colors.textMuted} testID={`chip-${f.id}-remove-glyph`} />
             </Pressable>
           ))}
         </View>
@@ -115,8 +113,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 7,
   },
-  // 34 (6 + 22 avatar + 6) with a "×" on it — removing someone you added by
-  // mistake should not need aim (PLA-40).
+  // 34 (6 + 22 avatar + 6) with a remove control on it. Removing someone you
+  // added by mistake should not need aim (PLA-40).
   selectedChip: {
     flexDirection: 'row',
     alignItems: 'center',

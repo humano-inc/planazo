@@ -1,5 +1,5 @@
 import { View, StyleSheet, Pressable } from 'react-native';
-import { ThemedText, Card } from '../ui';
+import { ForwardGlyph, ThemedText, Card } from '../ui';
 import { PrefSwitchRow, settingsStyles } from './PrefSwitchRow';
 import { memberLimits } from '../../lib/groupDoor';
 import { colors } from '../../theme/tokens';
@@ -84,9 +84,7 @@ export function GroupPrefsCard({
                 <ThemedText variant="bodyStrong">Admins</ThemedText>
                 <ThemedText variant="caption">{adminSummary}</ThemedText>
               </View>
-              <ThemedText variant="body" color={colors.textFaint}>
-                ›
-              </ThemedText>
+              <ForwardGlyph color={colors.textFaint} testID="admins-forward-glyph" />
             </Pressable>
             <Pressable
               style={({ pressed }) => [
@@ -99,9 +97,7 @@ export function GroupPrefsCard({
               testID="edit-group"
             >
               <ThemedText variant="bodyStrong">Edit group profile</ThemedText>
-              <ThemedText variant="body" color={colors.textFaint}>
-                ›
-              </ThemedText>
+              <ForwardGlyph color={colors.textFaint} testID="edit-group-forward-glyph" />
             </Pressable>
           </>
         ) : null}
