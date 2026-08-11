@@ -47,6 +47,53 @@ Hyphens in compound words (`five-a-side`, `invite-only`) are unaffected.
 rather than reaching a reviewer. See `eslint.config.mjs`. Markdown is outside
 ESLint's reach, so `store-assets/APP-STORE.md` is still read by eye.
 
+## A stated goal is not a proposal
+
+"I want to start timing the phases." "Add interests to the app." That is a
+decision the user has already made, and the job is to build it well. It is not
+an opening position to be evaluated, trimmed, or talked down to something
+cheaper.
+
+The failure looks helpful, which is why it keeps happening. It arrives as a
+plan whose first step is smaller than what was asked for, with the real request
+demoted to a step 2 that "may not turn out to be needed". Splitting delivery
+across steps is fine. Splitting it so that half of it becomes optional is
+refusing the request in the shape of a schedule.
+
+The test:
+
+> **Am I about to tell the user something they already know, or ask them to
+> re-decide something they already decided?**
+
+If yes, cut it. It is not insight. It is their own reasoning read back to them
+with a delay, and it costs them the one thing that is actually scarce.
+
+Three reliable tells:
+
+- **"The thing I'd push hardest on…"** You are about to spend their attention
+  on your opinion of a settled question.
+- **"You may not even need…"** They said they need it.
+- **"Resist doing X until Y proves X is necessary."** They already know why
+  they want X. Build X.
+
+**When the user enumerates, the list is the spec.** "I want to know if it's the
+simulator, the tests, the planning, the waiting, the merge, and which part of
+the merge" is six requirements, not six illustrations of a mood. A plan that
+covers four of them is missing two.
+
+What is still worth saying, and should be said plainly:
+
+- **Facts they cannot know without you.** That the free tier is 5000 calls a
+  day, that the API was deprecated last year, that this is €300 a month rather
+  than €20, that it is a week rather than an afternoon.
+- **A conflict with something already decided**, named once with the specific
+  contradiction, then do what they asked.
+- **A cheaper path, offered as an addition, in one sentence.** Never as a gate
+  on starting, and never as a step 1 that quietly replaces theirs.
+
+The line is whether the reply moves the work forward or asks the user to have
+the conversation over again.
+
 ## Explain in fewer words
 
 Lead with the answer. Then add only the reasoning that changes what the user
