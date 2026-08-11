@@ -34,6 +34,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blocked_users: {
         Row: {
           blocked_id: string
@@ -138,7 +153,12 @@ export type Database = {
           device_model: string | null
           id: string
           kind: string
+          linear_issue_id: string | null
+          linear_issue_identifier: string | null
+          linear_issue_url: string | null
           message: string
+          resolution: string
+          resolution_updated_at: string
           screenshot_path: string | null
           user_id: string
         }
@@ -148,7 +168,12 @@ export type Database = {
           device_model?: string | null
           id?: string
           kind: string
+          linear_issue_id?: string | null
+          linear_issue_identifier?: string | null
+          linear_issue_url?: string | null
           message?: string
+          resolution?: string
+          resolution_updated_at?: string
           screenshot_path?: string | null
           user_id: string
         }
@@ -158,7 +183,12 @@ export type Database = {
           device_model?: string | null
           id?: string
           kind?: string
+          linear_issue_id?: string | null
+          linear_issue_identifier?: string | null
+          linear_issue_url?: string | null
           message?: string
+          resolution?: string
+          resolution_updated_at?: string
           screenshot_path?: string | null
           user_id?: string
         }
@@ -814,6 +844,10 @@ export type Database = {
         Args: { p_plan_id: string; p_reason?: string }
         Returns: Json
       }
+      claim_feedback_for_linear: {
+        Args: { p_feedback_id: string }
+        Returns: boolean
+      }
       color_for_name: { Args: { p_name: string }; Returns: string }
       create_group: {
         Args: { p_color?: string; p_description?: string; p_name: string }
@@ -839,6 +873,7 @@ export type Database = {
         }
       }
       delete_my_account: { Args: never; Returns: undefined }
+      dismiss_feedback: { Args: { p_feedback_id: string }; Returns: boolean }
       dissolve_block_ties: {
         Args: { p_blocked: string; p_blocker: string }
         Returns: undefined
@@ -868,6 +903,7 @@ export type Database = {
         Args: { p_group_id: string; p_invitee: string }
         Returns: Json
       }
+      is_app_admin: { Args: never; Returns: boolean }
       is_blocked_by: { Args: { p_other: string }; Returns: boolean }
       is_group_admin: { Args: { check_group_id: string }; Returns: boolean }
       is_group_image_admin: { Args: { object_name: string }; Returns: boolean }
@@ -893,10 +929,24 @@ export type Database = {
         }[]
       }
       plan_photo_plan_id: { Args: { p_name: string }; Returns: string }
+      record_feedback_linear_issue: {
+        Args: {
+          p_feedback_id: string
+          p_linear_issue_id: string
+          p_linear_issue_identifier: string
+          p_linear_issue_url: string
+        }
+        Returns: boolean
+      }
+      release_feedback_from_linear: {
+        Args: { p_feedback_id: string }
+        Returns: boolean
+      }
       remove_group_member: {
         Args: { p_group_id: string; p_user_id: string }
         Returns: Json
       }
+      reopen_feedback: { Args: { p_feedback_id: string }; Returns: boolean }
       reopen_plan: { Args: { p_plan_id: string }; Returns: Json }
       respond_friend_request: {
         Args: { p_accept: boolean; p_friendship_id: string }

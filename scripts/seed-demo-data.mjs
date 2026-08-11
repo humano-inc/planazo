@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 
@@ -381,6 +382,63 @@ async function upsertProfiles(people) {
   if (error) throw error;
 }
 
+async function grantAppAdmin(primary) {
+  const { error } = await supabase
+    .from('app_admins')
+    .upsert({ user_id: primary.id }, { onConflict: 'user_id' });
+  if (error) throw error;
+}
+
+async function uploadDemoFeedbackScreenshot(primary) {
+  const screenshotPath = `${primary.id}/demo-feedback.png`;
+  const screenshot = readFileSync(
+    path.resolve(__dirname, '../store-assets/screenshots/ios-6.9/02-pick-your-days.png')
+  );
+  const { error } = await supabase.storage
+    .from('feedback-screenshots')
+    .upload(screenshotPath, screenshot, { contentType: 'image/png', upsert: true });
+  if (error) throw error;
+  return screenshotPath;
+}
+
+async function upsertDemoFeedback(primary) {
+  const screenshotPath = await uploadDemoFeedbackScreenshot(primary);
+  const rows = [
+    {
+      id: '10000000-0000-4000-8000-000000000001',
+      user_id: primary.id,
+      kind: 'broken',
+      message: 'The date picker jumped back a month after I selected Friday.',
+      screenshot_path: screenshotPath,
+      app_version: '1.0.0',
+      device_model: 'iPhone 16 Pro',
+      resolution: 'unresolved',
+    },
+    {
+      id: '10000000-0000-4000-8000-000000000002',
+      user_id: primary.id,
+      kind: 'idea',
+      message: 'Could a plan have a short packing list that everyone can add to?',
+      screenshot_path: null,
+      app_version: '1.0.0',
+      device_model: 'iPhone 15',
+      resolution: 'unresolved',
+    },
+    {
+      id: '10000000-0000-4000-8000-000000000003',
+      user_id: primary.id,
+      kind: 'other',
+      message: 'The new group photos make the feed much easier to scan.',
+      screenshot_path: null,
+      app_version: '1.0.0',
+      device_model: 'iPhone 14',
+      resolution: 'dismissed',
+    },
+  ];
+  const { error } = await supabase.from('feedback').upsert(rows, { onConflict: 'id' });
+  if (error) throw error;
+}
+
 async function upsertGroups(primaryUserId) {
   const groupRows = demoGroups.map((group) => ({
     name: group.name,
@@ -637,6 +695,8 @@ async function main() {
   const peopleByHandle = new Map(demoPeople.map((person) => [person.handle, person]));
 
   await upsertProfiles(allPeople);
+  await grantAppAdmin(primary);
+  await upsertDemoFeedback(primary);
   const groupsByKey = await upsertGroups(primary.id);
   await upsertMemberships(groupsByKey, primary, peopleByHandle);
   await deleteExistingDemoPlans(groupsByKey);
