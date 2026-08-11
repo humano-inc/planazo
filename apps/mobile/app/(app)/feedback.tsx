@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Alert, Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Image, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Haptics from 'expo-haptics';
 import { supabase } from '../../lib/supabase';
+import { alertActionError } from '../../lib/queryErrors';
 import { useAuthStore } from '../../stores/authStore';
 import { pickFromLibrary, uploadJpeg } from '../../lib/images';
 import { feedbackSheetOpen } from '../../lib/feedbackState';
@@ -83,7 +84,7 @@ export default function FeedbackScreen() {
       leaveAfterSending();
       showToast('Got it, thanks. We read every one.');
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const addPhoto = async () => {

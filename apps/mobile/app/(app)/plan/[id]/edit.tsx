@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Alert, StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../../lib/supabase';
+import { alertActionError, UserFacingError } from '../../../../lib/queryErrors';
 import { useDismissTo } from '../../../../lib/navigation';
 import { contentViolation } from '../../../../lib/moderation';
 import { FormScreen, HeaderAction, HeaderRow, ThemedText } from '../../../../components/ui';
@@ -74,7 +75,7 @@ export default function EditPlanScreen() {
         'plan description': draftNotes,
         location: draftPlace,
       });
-      if (violation) throw new Error(violation);
+      if (violation) throw new UserFacingError(violation);
 
       const { data, error } = await supabase
         .from('plans')
@@ -93,7 +94,7 @@ export default function EditPlanScreen() {
       // button on every answered plan (PLA-16). Asking for the row back is
       // what turns "you're not the host any more" into something visible.
       if (data.length === 0) {
-        throw new Error(
+        throw new UserFacingError(
           "That didn't save. You're not the host of this plan any more, or it was called off while you had this open."
         );
       }
@@ -106,7 +107,7 @@ export default function EditPlanScreen() {
       }
       leave();
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const header = (

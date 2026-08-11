@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
+import { alertActionError, UserFacingError } from '../../../lib/queryErrors';
 import { useDismissTo } from '../../../lib/navigation';
 import { contentViolation } from '../../../lib/moderation';
 import { useAuthStore } from '../../../stores/authStore';
@@ -49,7 +50,7 @@ export default function ProfileEdit() {
     mutationFn: async () => {
       // Guideline 1.2: objectionable language stops here, not in review.
       const violation = nameChanged ? contentViolation({ name: trimmed }) : null;
-      if (violation) throw new Error(violation);
+      if (violation) throw new UserFacingError(violation);
       const updates: { display_name?: string; avatar_url?: string | null } = {};
       if (nameChanged) updates.display_name = trimmed;
       if (photo.kind === 'new') {
@@ -70,7 +71,7 @@ export default function ProfileEdit() {
       setProfile(data);
       leave();
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const applyChoice = async (index: number) => {

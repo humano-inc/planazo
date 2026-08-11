@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import { supabase } from '../../../lib/supabase';
+import { actionErrorCopy, alertActionError, UserFacingError } from '../../../lib/queryErrors';
 import { signOutOfAccount } from '../../../lib/signOut';
 import { PRIVACY_URL, SUPPORT_URL, TERMS_URL } from '../../../lib/links';
 import { clearPushToken, registerPushToken } from '../../../lib/push';
@@ -48,7 +49,7 @@ export default function ProfileSheet() {
       return data;
     },
     onSuccess: (data) => setProfile(data),
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const setPush = useMutation({
@@ -73,7 +74,7 @@ export default function ProfileSheet() {
       return data;
     },
     onSuccess: (data) => setProfile(data),
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const signOut = async () => {
@@ -110,7 +111,7 @@ export default function ProfileSheet() {
         // good — a public avatar URL that outlives the account it belonged to.
         // Better to fail loudly and let them try again in a moment.
         if (failed.length) {
-          throw new Error(
+          throw new UserFacingError(
             "Your photos couldn't be removed just now, and deleting the account would leave them online for good. Check your connection and try again.",
           );
         }
@@ -134,7 +135,10 @@ export default function ProfileSheet() {
         "It couldn't be signed out on this device. Check your connection and sign out from this screen."
       );
     },
-    onError: (error: Error) => Alert.alert("Couldn't delete your account", error.message),
+    // Same shape as report.tsx: the title names this irreversible action, the
+    // body comes classified rather than raw.
+    onError: (error: unknown) =>
+      Alert.alert("Couldn't delete your account", actionErrorCopy(error).body),
   });
 
   // Two taps, because there is no undo and no support inbox that can put it

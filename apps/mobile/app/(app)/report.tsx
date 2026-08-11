@@ -11,6 +11,7 @@ import {
   submitReport,
 } from '../../lib/moderation';
 import { useDismissTo } from '../../lib/navigation';
+import { actionErrorCopy } from '../../lib/queryErrors';
 import { useAuthStore } from '../../stores/authStore';
 import {
   Card,
@@ -101,7 +102,10 @@ export default function ReportScreen() {
           : 'Reported. A person reads every one of these.',
       );
     },
-    onError: (error: Error) => Alert.alert("Couldn't send that", error.message),
+    // Keeps its own title, which names the action better than the classified
+    // one would, and takes the classified body so a raw postgres message never
+    // reaches the reporter.
+    onError: (error: unknown) => Alert.alert("Couldn't send that", actionErrorCopy(error).body),
   });
 
   const header = (

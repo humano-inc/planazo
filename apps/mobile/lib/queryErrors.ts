@@ -17,6 +17,27 @@ import { TIMED_OUT_PREFIX, UNREACHABLE_PREFIX } from './timeoutFetch';
  * "missing" — the row count lives in `details`.
  */
 const SINGULAR_ROW_CODE = 'PGRST116';
+
+/**
+ * An error whose message was written for the person about to read it: the
+ * content filter naming the field it caught (Guideline 1.2), an update the
+ * host lost the right to make, an answer the plan would not take.
+ *
+ * It exists because PLA-105 routed every write failure through
+ * `actionErrorCopy`, and classifying is the wrong move for these: the whole
+ * value of "That plan title contains language that isn't allowed" is that it
+ * says which field and why, and "Something went wrong saving your answer"
+ * leaves the user retrying the same banned word forever. A raw postgres
+ * message has the opposite problem, which is why everything else is
+ * classified. The type is the difference between copy we wrote and copy the
+ * database wrote.
+ */
+export class UserFacingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'UserFacingError';
+  }
+}
 /** Postgres insufficient_privilege: RLS rejected the statement outright. */
 const FORBIDDEN_CODES = ['42501'];
 /**
@@ -264,6 +285,11 @@ export function errorCopy(error: unknown): { title: string; body: string } {
  * an action the user just took.
  */
 export function actionErrorCopy(error: unknown): { title: string; body: string } {
+  // Ours to begin with, so there is nothing to diagnose. Classifying it here
+  // would throw away the one thing that makes it useful.
+  if (error instanceof UserFacingError) {
+    return { title: "That didn't go through", body: error.message };
+  }
   if (isPlanFullError(error)) {
     return {
       title: "This one's full",

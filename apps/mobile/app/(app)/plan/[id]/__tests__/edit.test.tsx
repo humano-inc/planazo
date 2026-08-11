@@ -136,8 +136,10 @@ describe('EditPlanScreen', () => {
     await fireEvent.press(screen.getByTestId('save'));
 
     await waitFor(() =>
+      // A UserFacingError, so the filter's own sentence survives the trip
+      // through alertActionError instead of being flattened (PLA-105).
       expect(Alert.alert).toHaveBeenCalledWith(
-        'Error',
+        "That didn't go through",
         expect.stringContaining('language that isn’t allowed')
       )
     );
@@ -156,7 +158,7 @@ describe('EditPlanScreen', () => {
 
     await waitFor(() =>
       expect(Alert.alert).toHaveBeenCalledWith(
-        'Error',
+        "That didn't go through",
         expect.stringContaining("You're not the host of this plan any more")
       )
     );
@@ -199,8 +201,13 @@ describe('EditPlanScreen', () => {
     await fireEvent.changeText(screen.getByTestId('title-input'), 'Padel at nine');
     await fireEvent.press(screen.getByTestId('save'));
 
+    // The opposite case: postgres wrote this one, so the user gets classified
+    // copy and never sees the raw message (PLA-105).
     await waitFor(() =>
-      expect(Alert.alert).toHaveBeenCalledWith('Error', 'permission denied for table plans')
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "That didn't go through",
+        'Something went wrong saving your answer. Try again.'
+      )
     );
     expect(mockBack).not.toHaveBeenCalled();
   });

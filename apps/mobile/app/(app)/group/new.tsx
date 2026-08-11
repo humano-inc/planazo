@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { View, StyleSheet, TextInput, Alert } from 'react-native';
+import { View, StyleSheet, TextInput } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
+import { alertActionError, UserFacingError } from '../../../lib/queryErrors';
 import { useDismissTo, useLeaveFor } from '../../../lib/navigation';
 import { contentViolation } from '../../../lib/moderation';
 import { uploadGroupPhoto } from '../../../lib/images';
@@ -53,7 +54,7 @@ export default function NewGroupScreen() {
         'group name': name,
         'group description': desc,
       });
-      if (violation) throw new Error(violation);
+      if (violation) throw new UserFacingError(violation);
       // PLA-35: the group row and the creator's admin membership are one
       // server-side write. The client can no longer insert either, and a
       // half-created group was an orphan nobody could see or delete.
@@ -98,7 +99,7 @@ export default function NewGroupScreen() {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       leaveFor(`/(app)/group/${group.id}`);
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const named = name.trim().length > 0;

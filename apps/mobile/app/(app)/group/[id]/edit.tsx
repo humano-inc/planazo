@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { View, StyleSheet, TextInput, Alert } from 'react-native';
+import { View, StyleSheet, TextInput } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../../lib/supabase';
+import { alertActionError, UserFacingError } from '../../../../lib/queryErrors';
 import { useDismissTo } from '../../../../lib/navigation';
 import { contentViolation } from '../../../../lib/moderation';
 import { removeGroupPhoto, uploadGroupPhoto } from '../../../../lib/images';
@@ -67,7 +68,7 @@ export default function EditGroupScreen() {
     mutationFn: async () => {
       // Guideline 1.2: objectionable language stops here, not in review.
       const violation = contentViolation({ 'group name': draftName });
-      if (violation) throw new Error(violation);
+      if (violation) throw new UserFacingError(violation);
       const updates: { name: string; color: string; image_url?: string | null } = {
         name: draftName.trim(),
         color: draftColor,
@@ -98,7 +99,7 @@ export default function EditGroupScreen() {
       queryClient.invalidateQueries({ queryKey: ['home-plans'] });
       leave();
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const header = (

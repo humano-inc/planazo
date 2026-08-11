@@ -319,7 +319,12 @@ describe('ProfileSheet', () => {
     await second.find((b) => b.text === 'Delete for good')?.onPress?.();
 
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith("Couldn't delete your account", 'network is down');
+      // The RPC's own message, so the user gets classified copy instead of it
+      // (PLA-105). The bespoke title stays: it names what did not happen.
+      expect(alertSpy).toHaveBeenCalledWith(
+        "Couldn't delete your account",
+        'Something went wrong saving your answer. Try again.'
+      );
     });
     expect(signOutOfAccount).not.toHaveBeenCalled();
     expect(mockReplace).not.toHaveBeenCalled();

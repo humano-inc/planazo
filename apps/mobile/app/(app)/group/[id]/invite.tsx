@@ -6,6 +6,7 @@ import type { GroupRole } from '@planazo/shared';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from '../../../../lib/supabase';
+import { alertActionError } from '../../../../lib/queryErrors';
 import { useAuthStore } from '../../../../stores/authStore';
 import { useFriends } from '../../../../lib/useFriends';
 import { inviteLinkFor } from '../../../../lib/shareLinks';
@@ -87,7 +88,7 @@ export default function InviteToGroupSheet() {
         old ? { ...old, inviteCode: code } : old
       );
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const confirmReset = () =>
@@ -112,7 +113,7 @@ export default function InviteToGroupSheet() {
       queryClient.invalidateQueries({ queryKey: ['group-invite-sheet', id] });
       leave();
     },
-    onError: (error: Error) => Alert.alert('Error', error.message),
+    onError: alertActionError,
   });
 
   const togglePick = (personId: string) =>
