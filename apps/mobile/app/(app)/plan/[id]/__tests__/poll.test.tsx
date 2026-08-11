@@ -1,7 +1,8 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, fireEvent, waitFor } from '@testing-library/react-native';
 import AskPollScreen from '../poll';
 import { supabase } from '../../../../../lib/supabase';
+import { chain } from '../../../../../lib/testing/supabase';
+import { renderWithQuery } from '../../../../../lib/testing/render';
 
 const mockBack = jest.fn();
 
@@ -9,22 +10,14 @@ jest.mock('../../../../../lib/supabase', () => ({
   supabase: { from: jest.fn() },
 }));
 
-jest.mock('expo-router', () => ({
-  useLocalSearchParams: () => ({ id: 'plan-1' }),
-  useRouter: () => ({ back: mockBack, push: jest.fn(), replace: jest.fn(), canGoBack: () => true }),
-}));
-
+jest.mock('expo-router', () =>
+  require('../../../../../lib/testing/router').expoRouterMock(
+    () => ({ back: mockBack }),
+    () => ({ id: 'plan-1' })
+  )
+);
 
 const mockFrom = supabase.from as jest.Mock;
-
-function chain(result: unknown) {
-  const c: any = {};
-  ['select', 'eq', 'insert', 'single', 'maybeSingle'].forEach((m) => {
-    c[m] = jest.fn(() => c);
-  });
-  c.then = (resolve: (v: unknown) => void) => Promise.resolve(result).then(resolve);
-  return c;
-}
 
 let pollsChain: ReturnType<typeof chain>;
 let optionsChain: ReturnType<typeof chain>;
@@ -41,12 +34,7 @@ beforeEach(() => {
 });
 
 function renderAsk() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={client}>
-      <AskPollScreen />
-    </QueryClientProvider>
-  );
+  return renderWithQuery(<AskPollScreen />);
 }
 
 describe('AskPollScreen', () => {

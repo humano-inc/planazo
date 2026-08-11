@@ -1,29 +1,23 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { screen, fireEvent, waitFor } from '@testing-library/react-native';
 import CancelPlanScreen from '../cancel';
 import { supabase } from '../../../../../lib/supabase';
+import { chain } from '../../../../../lib/testing/supabase';
+import { renderWithQuery } from '../../../../../lib/testing/render';
 
 jest.mock('../../../../../lib/supabase', () => ({
   supabase: { from: jest.fn(), rpc: jest.fn() },
 }));
 
 const mockBack = jest.fn();
-jest.mock('expo-router', () => ({
-  useLocalSearchParams: () => ({ id: 'plan-1' }),
-  useRouter: () => ({ push: jest.fn(), back: mockBack, replace: jest.fn(), canGoBack: () => true }),
-}));
+jest.mock('expo-router', () =>
+  require('../../../../../lib/testing/router').expoRouterMock(
+    () => ({ back: mockBack }),
+    () => ({ id: 'plan-1' })
+  )
+);
 
 const mockFrom = supabase.from as jest.Mock;
 const mockRpc = supabase.rpc as jest.Mock;
-
-function chain(result: unknown) {
-  const c: any = {};
-  ['select', 'eq', 'single'].forEach((m) => {
-    c[m] = jest.fn(() => c);
-  });
-  c.then = (resolve: (v: unknown) => void) => Promise.resolve(result).then(resolve);
-  return c;
-}
 
 function prime(plan: Record<string, unknown>, rsvps: unknown[] = []) {
   mockFrom.mockImplementation((table: string) => {
@@ -36,12 +30,7 @@ function prime(plan: Record<string, unknown>, rsvps: unknown[] = []) {
 }
 
 function renderSheet() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
-  return render(
-    <QueryClientProvider client={client}>
-      <CancelPlanScreen />
-    </QueryClientProvider>
-  );
+  return renderWithQuery(<CancelPlanScreen />);
 }
 
 beforeEach(() => jest.clearAllMocks());
