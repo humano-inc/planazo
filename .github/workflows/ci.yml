@@ -53,11 +53,16 @@ jobs:
       - name: Unit tests (shared)
         run: pnpm --filter @planazo/shared test
 
-      # Leave --maxWorkers alone: the package script's 50% is load-bearing.
+      # Leave --maxWorkers alone: the package script's 3 is load-bearing.
       # Overriding it to 100% here looked like free speed on a dedicated runner
       # and cost a red main instead — jest's worker count already excludes the
       # coordinator process, so 100% oversubscribes the box and every test blows
       # the 5s timeout. 217s and eight failures, against a 31.8s baseline.
+      #
+      # This said "50%" until PLA-106, describing the intent of 16a641c ("cap
+      # jest at half the cores") rather than what the script has actually run
+      # since. AGENTS.md §10 pins the literal 3, so the comment moved to meet
+      # the script rather than the other way round.
       - name: Component tests (mobile)
         run: pnpm --filter mobile test -- --ci
 
