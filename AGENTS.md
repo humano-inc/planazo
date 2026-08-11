@@ -145,18 +145,38 @@ environment over it.
 | --- | --- |
 | copy, a constant, a comment | the diff |
 | logic with nothing on screen | the tests (name them) |
-| anything a user can see | one simulator pass, screenshots in the PR |
+| a small visual change isolated to one screen | one simulator pass and a screenshot in the PR |
+| a new flow, multiple screens, animation, or major redesign | one simulator pass and a published walkthrough |
+| a rebase with no relevant change to the verified UI or its dependencies | the existing proof; no simulator rerun |
+| a rebase or conflict resolution that affects the verified UI or runtime behaviour | one simulator smoke pass of the affected flow |
+| a rebase or conflict resolution that changes the visible result | update the screenshot or walkthrough |
+| native dependencies or app configuration | a native rebuild and simulator verification |
 
-`pnpm turbo typecheck lint test` for the last two and before a PR, not after
-every four-word edit. Do not skip the simulator on visual work because tests
-pass. Say what you skipped.
+Relevant dependencies include shared UI, navigation, theme, data contracts,
+feature flags, and native configuration. Use the changed paths and
+`git range-diff` to judge whether rebased work is materially the same. A new
+commit hash alone never invalidates proof.
 
-## 12. Every PR ends with a walkthrough artifact
+`pnpm turbo typecheck lint test` for logic and visual changes and before a PR,
+not after every four-word edit. Visual work gets its initial simulator pass as
+required above. Rerun it after a rebase only when the table requires it. Say
+what you skipped.
 
-Visual PRs link a published walkthrough (before/after, captions, what shots
-cannot show). Non-visual PRs say so under `## See it working` with the proof
-tests. Start from `scripts/walkthrough/template.html`, build with
-`pnpm walkthrough`, publish the `.built.html`. Artifacts start private.
+## 12. Every PR ends with proof
+
+Every PR has `## See it working`. Non-visual PRs name the proof diff or tests.
+Small visual PRs include a screenshot. New flows, multiple screens, animations,
+and major redesigns link a published walkthrough with before/after, captions,
+and anything the shots cannot show. Start walkthroughs from
+`scripts/walkthrough/template.html`, build with `pnpm walkthrough`, and publish
+the `.built.html`. Artifacts start private.
+
+Visual proof records the source tree, simulator and device, required seed or
+account state, deep link when available, and reproduction steps. Proof survives
+a rebase when relevant behaviour has not changed. In `## See it working`, say
+that relevant paths were unchanged, or that the affected flow passed a
+post-rebase simulator smoke check. Regenerate a screenshot or walkthrough only
+when the visible result changes.
 
 ### A PR body describes this PR, never the next one
 
