@@ -68,6 +68,27 @@ const GLYPHS = {
     fallbackSize: 22,
     color: colors.textPrimary,
   },
+  search: {
+    sf: 'magnifyingglass',
+    material: 'search',
+    size: 16,
+    fallbackSize: 18,
+    color: colors.textMuted,
+  },
+  remove: {
+    sf: 'minus.circle',
+    material: 'remove-circle-outline',
+    size: 17,
+    fallbackSize: 20,
+    color: colors.textPrimary,
+  },
+  block: {
+    sf: 'nosign',
+    material: 'block',
+    size: 17,
+    fallbackSize: 20,
+    color: colors.textPrimary,
+  },
 } satisfies Record<string, GlyphSpec>;
 
 type GlyphName = keyof typeof GLYPHS;
@@ -132,4 +153,16 @@ export function PlusGlyph(props: GlyphProps) {
 
 export function MinusGlyph(props: GlyphProps) {
   return <Glyph name="minus" {...props} />;
+}
+
+export function SearchGlyph(props: GlyphProps) {
+  return <Glyph name="search" {...props} />;
+}
+
+export function RemoveGlyph(props: GlyphProps) {
+  return <Glyph name="remove" {...props} />;
+}
+
+export function BlockGlyph(props: GlyphProps) {
+  return <Glyph name="block" {...props} />;
 }

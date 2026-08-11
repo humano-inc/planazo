@@ -1,10 +1,10 @@
 import { View, StyleSheet, Pressable } from 'react-native';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { adminSub, adminsNote, memberName } from '../../lib/groupAdmins';
-import { ThemedText, Card, Avatar } from '../ui';
+import { RemoveGlyph, ThemedText, Card, Avatar } from '../ui';
 import { colors, radii, spacing } from '../../theme/tokens';
 import { settingsStyles } from './PrefSwitchRow';
-import { RemoveGlyph, type GroupMemberRow } from './MemberList';
+import type { GroupMemberRow } from './MemberList';
 
 interface Props {
   /** Current admins, already ordered (you first, then by arrival). */
@@ -61,7 +61,11 @@ export function AdminsCard({ admins, myId, createdBy, viewerIsAdmin, disabled, o
                   pressed && adminRowStyles.rowPressed,
                 ]}
               >
-                <RemoveGlyph color={colors.accentText} size={20} />
+                <RemoveGlyph
+                  color={colors.accentText}
+                  size={20}
+                  testID={`demote-${m.user_id}-glyph`}
+                />
               </Pressable>
             ) : null}
           </View>

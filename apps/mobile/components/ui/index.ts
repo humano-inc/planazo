@@ -11,6 +11,9 @@ export {
   CloseGlyph,
   PlusGlyph,
   MinusGlyph,
+  SearchGlyph,
+  RemoveGlyph,
+  BlockGlyph,
 } from './NavigationGlyphs';
 export { ButtonRow } from './ButtonRow';
 export { BrandMark } from './BrandMark';
@@ -20,7 +23,7 @@ export { ConfirmSheet } from './ConfirmSheet';
 export { SwipeRow, ACTION_WIDTH } from './SwipeRow';
 export type { SwipeAction } from './SwipeRow';
 export { FormField } from './FormField';
-export { SearchField, SearchGlyph } from './SearchField';
+export { SearchField } from './SearchField';
 export { Card } from './Card';
 export { Chip } from './Chip';
 export { Badge } from './Badge';

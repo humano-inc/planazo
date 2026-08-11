@@ -1,7 +1,16 @@
 import { View, StyleSheet } from 'react-native';
 import type { GroupRole } from '@planazo/shared';
 import { useSwipeHint } from '../../lib/useSwipeHint';
-import { ThemedText, TextAction, Card, Avatar, SwipeRow, type SwipeAction } from '../ui';
+import {
+  BlockGlyph,
+  RemoveGlyph,
+  ThemedText,
+  TextAction,
+  Card,
+  Avatar,
+  SwipeRow,
+  type SwipeAction,
+} from '../ui';
 import { colors, radii, spacing } from '../../theme/tokens';
 
 /**
@@ -15,33 +24,6 @@ export interface GroupMemberRow {
   notify_new_plans: boolean | null;
   joined_at: string | null;
   profile: { display_name: string | null; avatar_url: string | null } | null;
-}
-
-/** The "no entry" glyph on the Block action: a ring with a slash. */
-function BlockGlyph({ color }: { color: string }) {
-  return (
-    <View style={[styles.glyphRing, { borderColor: color }]}>
-      <View style={[styles.glyphSlash, { backgroundColor: color }]} />
-    </View>
-  );
-}
-
-/**
- * The "minus in a circle" glyph on the Remove action, exported because the
- * Admins screen's demote control is the same shape at 20pt. Sized styles are
- * inline so one drawing serves both.
- */
-export function RemoveGlyph({ color, size = 17 }: { color: string; size?: number }) {
-  return (
-    <View
-      style={[
-        styles.glyphRingCentred,
-        { width: size, height: size, borderRadius: radii.pill, borderWidth: 1.5, borderColor: color },
-      ]}
-    >
-      <View style={{ width: Math.round(size * 0.45), height: 1.5, backgroundColor: color }} />
-    </View>
-  );
 }
 
 /**
@@ -116,7 +98,7 @@ export function MemberList({
         label: isBlocked ? 'Unblock' : 'Block',
         background: colors.ink,
         foreground: colors.background,
-        icon: <BlockGlyph color={colors.background} />,
+        icon: <BlockGlyph color={colors.background} testID={`block-${m.user_id}-glyph`} />,
         onPress: () => onAskBlock(m),
         testID: `block-${m.user_id}`,
       },
@@ -127,7 +109,7 @@ export function MemberList({
         label: 'Remove',
         background: colors.accent,
         foreground: colors.textOnAccent,
-        icon: <RemoveGlyph color={colors.textOnAccent} />,
+        icon: <RemoveGlyph color={colors.textOnAccent} testID={`remove-${m.user_id}-glyph`} />,
         onPress: () => onAskRemove(m),
         testID: `remove-${m.user_id}`,
       });
@@ -297,28 +279,5 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     backgroundColor: colors.ink,
     borderColor: colors.ink,
-  },
-  /**
-   * The glyphs on the swipe actions, drawn rather than imported: two rings of
-   * the same size, one slashed and one with a dash through the middle. An icon
-   * font for two 17pt shapes would be a dependency for nothing.
-   */
-  glyphRing: {
-    width: 17,
-    height: 17,
-    borderRadius: radii.pill,
-    borderWidth: 1.5,
-  },
-  glyphRingCentred: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  glyphSlash: {
-    position: 'absolute',
-    left: -1,
-    top: 6.2,
-    width: 16,
-    height: 1.5,
-    transform: [{ rotate: '-45deg' }],
   },
 });
