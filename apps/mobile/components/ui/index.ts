@@ -3,9 +3,9 @@ export { Button } from './Button';
 export { BackButton } from './BackButton';
 export { HeaderAction } from './HeaderAction';
 export { TextAction } from './TextAction';
+// BackGlyph and ForwardGlyph are not here: BackButton and MonthCalendar reach
+// for them directly, and nothing outside components/ui ever has.
 export {
-  BackGlyph,
-  ForwardGlyph,
   MoreGlyph,
   DisclosureGlyph,
   CloseGlyph,
@@ -17,7 +17,7 @@ export { BrandMark } from './BrandMark';
 export { BrandSplash } from './BrandSplash';
 export { ConfirmCard } from './ConfirmCard';
 export { ConfirmSheet } from './ConfirmSheet';
-export { SwipeRow, ACTION_WIDTH } from './SwipeRow';
+export { SwipeRow } from './SwipeRow';
 export type { SwipeAction } from './SwipeRow';
 export { FormField } from './FormField';
 export { SearchField, SearchGlyph } from './SearchField';
@@ -25,10 +25,11 @@ export { Card } from './Card';
 export { Chip } from './Chip';
 export { Badge } from './Badge';
 export { Avatar, colorForName } from './Avatar';
-export { GroupTile, groupInitial } from './GroupTile';
+export { GroupTile } from './GroupTile';
 export { GroupColourField } from './GroupColourField';
 export { GroupPhotoField } from './GroupPhotoField';
-export { ColorSwatchPicker } from './ColorSwatchPicker';
+// ColorSwatchPicker is not here: GroupColourField is the field screens use, and
+// it is the only thing that has reached for the picker since PLA-53.
 export { AvatarStack } from './AvatarStack';
 export { SlotBar } from './SlotBar';
 export { MonthCalendar } from './MonthCalendar';

@@ -31,7 +31,7 @@ const THUMB_EDGE = 512;
  *  re-signing mid-scroll, short enough that a link someone screenshots out of
  *  a debugger is dead by the time it travels. The query that holds them keeps
  *  a staleTime derived from this. */
-export const SIGNED_URL_TTL_SECONDS = 3600;
+const SIGNED_URL_TTL_SECONDS = 3600;
 
 export interface PlanPhoto {
   id: string;

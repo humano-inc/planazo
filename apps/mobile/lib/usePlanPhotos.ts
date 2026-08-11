@@ -79,7 +79,7 @@ export function usePlanPhotos(planId: string, opts: { enabled?: boolean } = {}) 
  *  other half of the `jsonb_build_object` in
  *  supabase/migrations/20260804000001_plan_album_card.sql — a drifted key
  *  surfaces as photos missing from the strip, not as a type error. */
-export interface AlbumCardPhoto {
+interface AlbumCardPhoto {
   id: string;
   storage_path: string;
   thumb_path: string | null;

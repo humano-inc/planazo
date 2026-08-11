@@ -88,7 +88,7 @@ export async function uploadJpeg(opts: {
  * why both `profiles.avatar_url` and `groups.image_url` hold a full URL with a
  * `?t=` suffix rather than a bare storage path.
  */
-export async function uploadPublicPhoto(bucket: string, path: string, uri: string): Promise<string> {
+async function uploadPublicPhoto(bucket: string, path: string, uri: string): Promise<string> {
   await uploadJpeg({ bucket, path, uri, upsert: true });
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return `${data.publicUrl}?t=${Date.now()}`;

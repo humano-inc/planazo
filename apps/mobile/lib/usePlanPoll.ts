@@ -12,7 +12,7 @@ import { actionErrorCopy, isForbiddenError } from './queryErrors';
  */
 export const planPollKey = (planId: string) => ['plan-poll', planId] as const;
 
-export interface PollOptionRow {
+interface PollOptionRow {
   id: string;
   label: string;
   position: number;

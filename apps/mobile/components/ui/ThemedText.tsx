@@ -1,7 +1,7 @@
 import { Text, TextProps } from 'react-native';
 import { type } from '../../theme/tokens';
 
-export type TextVariant = keyof typeof type;
+type TextVariant = keyof typeof type;
 
 interface ThemedTextProps extends TextProps {
   variant?: TextVariant;

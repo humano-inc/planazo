@@ -6,9 +6,7 @@
  * policy reachable *from inside the app*, not only from the store listing, so
  * `PRIVACY_URL` has to resolve before submission.
  */
-export const SITE_URL = 'https://planazo.me';
+const SITE_URL = 'https://planazo.me';
 export const PRIVACY_URL = `${SITE_URL}/privacy`;
 export const TERMS_URL = `${SITE_URL}/terms`;
 export const SUPPORT_URL = `${SITE_URL}/support`;
-
-export const CONTACT_EMAIL = 'hola@planazo.me';

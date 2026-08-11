@@ -26,7 +26,7 @@ function fontUrl(pkg, weightDir, file) {
   return `file://${join(dirname(entry), weightDir, file)}`;
 }
 
-export const FONTS = {
+const FONTS = {
   displayHeavy: fontUrl(
     'bricolage-grotesque',
     '800ExtraBold',

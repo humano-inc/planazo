@@ -5,7 +5,7 @@
     "dev": "turbo dev --ui tui",
     "build": "turbo build",
     "lint": "turbo lint",
-    "knip": "knip --include files,dependencies,unlisted,binaries",
+    "knip": "knip",
     "knip:all": "knip",
     "dev:mobile": "turbo dev --filter=mobile",
     "appstore:build": "cd apps/mobile && eas build --platform ios --profile production",

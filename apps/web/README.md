@@ -41,8 +41,8 @@ which would have cost a hydration mismatch):
 
 ## Before launch
 
-- `lib/links.ts` has placeholder App Store / Play Store URLs. Set
-  `NEXT_PUBLIC_APP_STORE_URL` and `NEXT_PUBLIC_PLAY_STORE_URL`, or edit them.
+- `lib/links.ts` points the App Store URL at TestFlight until launch. Set
+  `NEXT_PUBLIC_APP_STORE_URL`, or edit it.
 - Privacy and Terms are `href="#"` placeholders. Both need real pages — the App
   Store requires a reachable privacy policy URL.
 - No OG image yet; `opengraph-image.tsx` in `app/` would generate one.

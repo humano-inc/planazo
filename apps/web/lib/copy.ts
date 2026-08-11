@@ -148,8 +148,6 @@ export const COPY = {
   },
 } as const;
 
-export type Copy = (typeof COPY)[Lang];
-
 /**
  * The invite page at /join/<code> (PLA-77).
  *

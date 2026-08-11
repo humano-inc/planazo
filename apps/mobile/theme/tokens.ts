@@ -1,4 +1,4 @@
-import { Platform, TextStyle } from 'react-native';
+import { TextStyle } from 'react-native';
 
 // Design tokens for the Planazo redesign ("Planazo Screens Final" design doc).
 // Every screen and component styles from here — no raw hex values in screens.
@@ -258,17 +258,4 @@ export const sheetDetents = {
   // Measured against the content, not chosen round: art, three lines of copy
   // and two buttons, with the home indicator clear underneath.
   needsGroup: 0.47,
-} as const;
-
-export const shadows = {
-  card: Platform.select({
-    ios: {
-      shadowColor: palette.ink,
-      shadowOpacity: 0.06,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 6 },
-    },
-    android: { elevation: 2 },
-    default: {},
-  }),
 } as const;

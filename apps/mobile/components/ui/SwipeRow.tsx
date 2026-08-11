@@ -35,7 +35,7 @@ interface SwipeRowProps {
 }
 
 /** Each action is a 80pt column, the same square-ish block iOS Mail uses. */
-export const ACTION_WIDTH = 80;
+const ACTION_WIDTH = 80;
 /** Below this a gesture is a tap or a scroll, not a swipe. */
 const AXIS_SLOP = 10;
 /**
