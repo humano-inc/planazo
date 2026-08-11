@@ -26,6 +26,7 @@ export { Chip } from './Chip';
 export { Badge } from './Badge';
 export { Avatar, colorForName } from './Avatar';
 export { GroupTile, groupInitial } from './GroupTile';
+export { GroupColourField } from './GroupColourField';
 export { GroupPhotoField } from './GroupPhotoField';
 export { ColorSwatchPicker } from './ColorSwatchPicker';
 export { AvatarStack } from './AvatarStack';

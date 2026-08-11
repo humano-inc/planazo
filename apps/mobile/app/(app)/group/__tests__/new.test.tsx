@@ -183,4 +183,21 @@ describe('NewGroupScreen', () => {
       expect.objectContaining({ p_color: '#F6C453' })
     );
   });
+
+  it('maps the deep-link colour index to the shared field once at startup', async () => {
+    mockParams = { color: '3' };
+    await renderNew();
+
+    expect(screen.getByTestId('swatch-3').props.accessibilityState).toEqual({ selected: true });
+
+    await fireEvent.changeText(screen.getByTestId('name-input'), 'Cine');
+    await fireEvent.press(screen.getByText('Create group'));
+
+    await waitFor(() => {
+      expect(mockRpc).toHaveBeenCalledWith(
+        'create_group',
+        expect.objectContaining({ p_color: '#B7E4C7' })
+      );
+    });
+  });
 });

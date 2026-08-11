@@ -13,9 +13,9 @@ import {
   Button,
   FormScreen,
   GroupTile,
+  GroupColourField,
   GroupPhotoField,
   HeaderAction,
-  ColorSwatchPicker,
   showToast,
 } from '../../../components/ui';
 import { colors, fonts, groupColors, spacing, type } from '../../../theme/tokens';
@@ -36,8 +36,8 @@ export default function NewGroupScreen() {
 
   const [name, setName] = useState(params.name ?? '');
   const [desc, setDesc] = useState(params.desc ?? '');
-  const [colorIdx, setColorIdx] = useState(() =>
-    Math.min(groupColors.length - 1, Math.max(0, Number(params.color) || 0))
+  const [color, setColor] = useState<string>(
+    () => groupColors[Math.min(groupColors.length - 1, Math.max(0, Number(params.color) || 0))]!
   );
   const [picks, setPicks] = useState<string[]>([]);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -59,7 +59,7 @@ export default function NewGroupScreen() {
       const { data: group, error: groupError } = await supabase.rpc('create_group', {
         p_name: name.trim(),
         p_description: desc.trim() || null,
-        p_color: groupColors[colorIdx],
+        p_color: color,
       });
       if (groupError) throw groupError;
 
@@ -139,7 +139,7 @@ export default function NewGroupScreen() {
       <View style={styles.nameRow}>
         <GroupTile
           name={named ? name : '?'}
-          color={groupColors[colorIdx]}
+          color={color}
           imageUrl={photoUri}
           size={52}
         />
@@ -171,14 +171,7 @@ export default function NewGroupScreen() {
           Colour is hidden while a photo is set. It comes back the moment the photo goes.
         </ThemedText>
       ) : (
-        <View style={styles.section}>
-          <ThemedText variant="sectionLabel">Colour</ThemedText>
-          <ColorSwatchPicker
-            swatches={groupColors}
-            selected={groupColors[colorIdx]}
-            onSelect={(_color, index) => setColorIdx(index)}
-          />
-        </View>
+        <GroupColourField value={color} onChange={setColor} />
       )}
 
       <View style={styles.section}>
