@@ -52,7 +52,8 @@ export async function submitReport(input: ReportInput): Promise<void> {
     p_subject_id: input.subjectId,
     p_reason: input.reason,
     p_note: input.note?.trim() ?? '',
-    p_block_user_id: input.blockUserId ?? null,
+    // Omitted rather than null, so file_report's `DEFAULT NULL` supplies it.
+    p_block_user_id: input.blockUserId ?? undefined,
   });
   if (error) throw error;
 }

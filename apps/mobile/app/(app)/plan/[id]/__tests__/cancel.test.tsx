@@ -99,9 +99,10 @@ describe('CancelPlanScreen (20b)', () => {
 
     await fireEvent.press(screen.getByTestId('confirm-cancel'));
     await waitFor(() =>
+      // Omitted rather than null, so cancel_plan's `DEFAULT NULL` supplies it.
       expect(mockRpc).toHaveBeenCalledWith('cancel_plan', {
         p_plan_id: 'plan-1',
-        p_reason: null,
+        p_reason: undefined,
       })
     );
   });

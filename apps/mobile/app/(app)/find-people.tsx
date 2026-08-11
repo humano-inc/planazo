@@ -26,6 +26,14 @@ import {
 } from '../../components/ui';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
 
+/** Every answer send_friend_request gives. */
+type FriendRequestStatus =
+  | 'accepted'
+  | 'already_friends'
+  | 'already_requested'
+  | 'requested'
+  | 'you_blocked_them';
+
 export default function FindPeopleScreen() {
   // The only way in is the Groups tab, which is where the chevron points.
   const goBack = useDismissTo('/(app)/(tabs)/groups');
@@ -64,7 +72,7 @@ export default function FindPeopleScreen() {
         )
         .eq('user_id', user!.id);
       if (error) throw error;
-      return sharedPeopleFrom(data as any[], user?.id);
+      return sharedPeopleFrom(data, user?.id);
     },
     enabled: !!user,
   });
@@ -79,7 +87,7 @@ export default function FindPeopleScreen() {
         p_query: cleanQuery,
       });
       if (error) throw error;
-      return searchResultsWithNotes((data ?? []) as any[], sharedPeople ?? []);
+      return searchResultsWithNotes(data, sharedPeople ?? []);
     },
     enabled: !!user && cleanQuery.length >= MIN_SEARCH_LENGTH,
   });
@@ -90,7 +98,11 @@ export default function FindPeopleScreen() {
         p_addressee: personId,
       });
       if (error) throw error;
-      return { personId, status: data?.status };
+      // The RPC answers with a jsonb envelope, which the generated types can
+      // only call `Json`. These are every status send_friend_request returns
+      // (20260804000002_block_shield.sql).
+      const answer = data as { status: FriendRequestStatus } | null;
+      return { personId, status: answer?.status };
     },
     onSuccess: ({ personId, status }) => {
       // The one status that should not flip Add to Requested: the block is the

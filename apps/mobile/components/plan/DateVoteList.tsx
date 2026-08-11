@@ -1,12 +1,12 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
-import type { DateCount } from '@planazo/shared';
+import type { DateCount, DateOption } from '@planazo/shared';
 import { fmtDay } from '../../lib/dates';
 import { ThemedText, Badge } from '../ui';
 import { colors, radii, spacing } from '../../theme/tokens';
 
 type Props = {
-  dateOptions?: any[];
+  dateOptions?: DateOption[];
   countByDate: Record<string, DateCount>;
   leadId: string | null;
   picked: string[];

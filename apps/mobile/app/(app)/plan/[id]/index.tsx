@@ -152,8 +152,8 @@ export default function PlanDetailScreen() {
   }
 
   const d = derived;
-  const groupName = plan.groups?.name ?? 'Group';
-  const groupColor = plan.groups?.color ?? colorForName(groupName);
+  const groupName = plan.groups.name;
+  const groupColor = plan.groups.color ?? colorForName(groupName);
   // The date rows are always tappable, so the footer must follow them: you're
   // editing the moment you start picking, even over a standing "no". Gating
   // this on !userRsvp let a declined plan's rows toggle while the footer stayed

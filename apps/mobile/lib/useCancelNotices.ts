@@ -1,11 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { Database } from '@planazo/shared';
 import { supabase } from './supabase';
 import { alertActionError } from './queryErrors';
 import { useAuthStore } from '../stores/authStore';
 
+type Json = Database['public']['Tables']['notifications']['Row']['data'];
+
+/** The cancelled plan a notice names, as the notice renders it. */
+interface CancelledPlan {
+  id: string;
+  title: string;
+  status: string;
+  event_date: string | null;
+  locked_date: string | null;
+  cancel_reason: string | null;
+  /** Null once the canceller deletes their account. */
+  canceller: { display_name: string } | null;
+}
+
 export interface CancelNotice {
   noticeId: string;
-  plan: any;
+  plan: CancelledPlan;
 }
 
 /**
@@ -33,9 +48,11 @@ export function useCancelNotices() {
         .gte('created_at', since)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      const planIds = [
-        ...new Set(notes.map((n: any) => n.data?.plan_id).filter(Boolean)),
-      ];
+      // `notifications.data` is a jsonb bag the generated types can only call
+      // `Json`. A plan_cancelled row always carries the plan it is about.
+      const planIdOf = (note: { data: Json }) =>
+        (note.data as { plan_id?: string } | null)?.plan_id;
+      const planIds = [...new Set(notes.map(planIdOf).filter((id): id is string => !!id))];
       if (planIds.length === 0) return [];
       const { data: cancelledPlans, error: planError } = await supabase
         .from('plans')
@@ -44,11 +61,11 @@ export function useCancelNotices() {
         )
         .in('id', planIds);
       if (planError) throw planError;
-      const byId = new Map(cancelledPlans.map((p: any) => [p.id, p]));
+      const byId = new Map(cancelledPlans.map((p) => [p.id, p]));
       return notes
-        .map((n: any) => ({ noticeId: n.id as string, plan: byId.get(n.data?.plan_id) }))
+        .map((n) => ({ noticeId: n.id, plan: byId.get(planIdOf(n) ?? '') }))
         // A restored plan takes its notice with it
-        .filter((n: any) => n.plan && n.plan.status === 'cancelled');
+        .filter((n): n is CancelNotice => n.plan?.status === 'cancelled');
     },
     enabled: !!user,
   });

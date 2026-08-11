@@ -101,7 +101,7 @@ export default function GroupAdminsScreen() {
     );
   }
 
-  const members = (group.group_members ?? []) as GroupMemberRow[];
+  const members = group.group_members as GroupMemberRow[];
   const { admins, candidates } = splitByRole(members, user?.id);
   const viewerIsAdmin = admins.some((m) => m.user_id === user?.id);
 

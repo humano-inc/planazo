@@ -33,13 +33,14 @@ export default function EditGroupScreen() {
   const { data: group } = useQuery({
     queryKey: ['group-edit', id],
     queryFn: async () => {
+      if (!id) throw new Error('the group edit screen needs a group id');
       const { data, error } = await supabase
         .from('groups')
         .select('id, name, color, image_url')
         .eq('id', id)
         .single();
       if (error) throw error;
-      return data as any;
+      return data;
     },
     enabled: !!id,
   });

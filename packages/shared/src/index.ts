@@ -1,232 +1,24 @@
-// App constants
-export const APP_NAME = 'Planazo';
+import type { Tables } from './database.types';
 
-// Brand colors
-export const COLORS = {
-  orange: '#f8730e',
-  pink: '#f7b0dc',
-  red: '#ed3902',
-  white: '#ffffff',
-  black: '#000000',
-  gray: {
-    50: '#f9fafb',
-    100: '#f3f4f6',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-    800: '#1f2937',
-    900: '#111827',
-  },
-} as const;
+/**
+ * The profiles row, straight from the generated schema. It used to be a
+ * hand-rolled interface that drifted from the database (it claimed
+ * `created_at` was non-null; the column is nullable), so it is an alias now:
+ * one shape, regenerated with the schema, impossible to disagree with it.
+ */
+export type Profile = Tables<'profiles'>;
 
-// User types
-export interface Profile {
-  id: string;
-  email: string;
-  display_name: string;
-  avatar_url: string | null;
-  /** Permanent — invite links resolve through it, so it never changes. */
-  handle: string | null;
-  push_token: string | null;
-  /** The 12b "Notify me" toggle — gates push delivery only, never feed rows. */
-  push_enabled: boolean;
-  add_to_calendar: boolean;
-  /** When they finished the first-run carousel (PLA-75). Null means never. */
-  onboarded_at: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-// Group types
+/**
+ * The domain unions behind the CHECK-constrained `text` columns. The generated
+ * types can only see `string` there, so these stay hand-written, and a query
+ * that feeds domain logic narrows to them at the boundary rather than letting
+ * `string` leak inward. They are the only hand-rolled schema knowledge left in
+ * this file, and each one is a constraint the database really enforces.
+ */
 export type GroupRole = 'admin' | 'member';
-
-export interface Group {
-  id: string;
-  name: string;
-  description: string | null;
-  invite_code: string;
-  /** Null once the creator deletes their account — the group outlives them. */
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface GroupMember {
-  id: string;
-  group_id: string;
-  user_id: string;
-  role: GroupRole;
-  joined_at: string;
-}
-
-export interface GroupWithMemberCount extends Group {
-  member_count: number;
-}
-
-export interface GroupMemberWithProfile extends GroupMember {
-  profile: Profile;
-}
-
-// Plan types
+export type RsvpResponse = 'yes' | 'no' | 'pending';
 export type PlanType = 'fixed' | 'flexible';
 export type PlanStatus = 'open' | 'locked' | 'cancelled';
-
-export interface Plan {
-  id: string;
-  group_id: string;
-  /** Null once the poster deletes their account — the plan keeps its answers. */
-  created_by: string | null;
-  title: string;
-  description: string | null;
-  location: string | null;
-  plan_type: PlanType;
-  event_date: string | null; // ISO string, only for fixed plans
-  min_people: number;
-  max_people: number | null;
-  status: PlanStatus;
-  locked_date: string | null; // ISO string, for flexible plans when locked
-  locked_at: string | null;
-  cancelled_at: string | null;
-  cancelled_by: string | null;
-  cancel_reason: string | null;
-  deadline: string | null; // ISO string
-  created_at: string;
-  updated_at: string;
-}
-
-export interface PlanDateOption {
-  id: string;
-  plan_id: string;
-  date: string; // ISO string
-  created_at: string;
-}
-
-// RSVP types
-export type RsvpResponse = 'yes' | 'no' | 'pending';
-
-export interface Rsvp {
-  id: string;
-  plan_id: string;
-  user_id: string;
-  response: RsvpResponse | null;
-  /**
-   * Place in the plan's waiting list, set only while response is 'pending'
-   * (PLA-37). Assigned by the database and not writable from a client, or the
-   * queue could be jumped. Read positions with waitlistPosition() rather than
-   * showing this number: it is an ordering key, and gaps in it are normal.
-   */
-  waitlist_seq: number | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface RsvpWithProfile extends Rsvp {
-  profile: Profile;
-}
-
-export interface DateAvailability {
-  id: string;
-  plan_id: string;
-  user_id: string;
-  date_option_id: string;
-  available: boolean;
-  created_at: string;
-}
-
-export interface DateAvailabilityWithProfile extends DateAvailability {
-  profile: Profile;
-}
-
-export interface DateOptionWithAvailability extends PlanDateOption {
-  availabilities: DateAvailabilityWithProfile[];
-  available_count: number;
-}
-
-// Notification types
-export type NotificationType =
-  | 'plan_created'
-  | 'plan_locked'
-  | 'plan_cancelled'
-  | 'plan_reopened'
-  | 'plan_promoted'
-  | 'invited_to_group'
-  | 'kicked_from_group';
-
-export interface Notification {
-  id: string;
-  user_id: string;
-  type: NotificationType;
-  title: string;
-  body: string;
-  data: Record<string, string> | null;
-  read: boolean;
-  /** When push delivery was handed off (or deliberately skipped). */
-  pushed_at: string | null;
-  created_at: string;
-}
-
-// Group invite types
-export type InviteStatus = 'pending' | 'accepted' | 'declined';
-
-export interface GroupInvite {
-  id: string;
-  group_id: string;
-  invited_by: string;
-  invited_email: string | null;
-  invite_code: string | null;
-  status: InviteStatus;
-  created_at: string;
-  expires_at: string;
-}
-
-// Extended types for UI
-export interface PlanWithDetails extends Plan {
-  creator: Profile;
-  rsvp_count: number;
-  user_rsvp?: Rsvp;
-  date_options?: DateOptionWithAvailability[];
-}
-
-export interface GroupWithDetails extends Group {
-  member_count: number;
-  members?: GroupMemberWithProfile[];
-  plans?: Plan[];
-}
-
-// API request/response types
-export interface CreateGroupRequest {
-  name: string;
-  description?: string;
-}
-
-export interface JoinGroupRequest {
-  invite_code: string;
-}
-
-export interface CreatePlanRequest {
-  group_id: string;
-  title: string;
-  description?: string;
-  location?: string;
-  plan_type: PlanType;
-  event_date?: string; // For fixed plans
-  date_options?: string[]; // For flexible plans - array of ISO date strings
-  min_people: number;
-  max_people?: number;
-  deadline?: string;
-}
-
-export interface UpdateRsvpRequest {
-  response: RsvpResponse;
-}
-
-export interface UpdateAvailabilityRequest {
-  date_option_id: string;
-  available: boolean;
-}
 
 // Plan domain logic (single source of truth for confirmation math)
 export * from './plan-logic';

@@ -1,4 +1,5 @@
 import 'react-native-url-polyfill/auto';
+import type { Database } from '@planazo/shared';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
 import { createTimeoutFetch } from './timeoutFetch';
@@ -86,7 +87,7 @@ export async function forgetStoredSession(): Promise<boolean> {
   return cleared.every(Boolean);
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   global: {
     fetch: supabaseFetch,
   },

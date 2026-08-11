@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { PlanStatus, PlanType } from '@planazo/shared';
 import { supabase } from './supabase';
 import { deleteOwnRsvp, offerWaitingList } from './rsvp';
 import { alertActionError } from './queryErrors';
+import { requireUserId } from './currentUser';
 import { useAuthStore } from '../stores/authStore';
 
 /**
@@ -24,7 +26,10 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
         .eq('id', id)
         .single();
       if (error) throw error;
-      return data;
+      // `status` and `plan_type` are CHECK-constrained text, which the
+      // generated types can only call `string`. Narrowing at the query means
+      // the screen and its cards never see the widened columns.
+      return { ...data, status: data.status as PlanStatus, plan_type: data.plan_type as PlanType };
     },
     // Waits on the user, not just the id: a shared link can mount this screen
     // with no session, and RLS answers an anonymous request with zero rows for
@@ -115,7 +120,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   const answerRsvp = useMutation({
     mutationFn: async (response: 'yes' | 'no' | 'pending') => {
       const { error } = await supabase.from('rsvps').upsert(
-        { plan_id: id, user_id: user?.id, response },
+        { plan_id: id, user_id: requireUserId(user?.id), response },
         { onConflict: 'plan_id,user_id' }
       );
       if (error) throw error;
@@ -140,7 +145,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
       if (picked.length > 0) {
         const rows = picked.map((optionId) => ({
           plan_id: id,
-          user_id: user?.id,
+          user_id: requireUserId(user?.id),
           date_option_id: optionId,
           available: true,
         }));
@@ -163,7 +168,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
         .from('rsvps')
         .delete()
         .eq('plan_id', id)
-        .eq('user_id', user?.id)
+        .eq('user_id', requireUserId(user?.id))
         .eq('response', 'no');
       if (rsvpError) throw rsvpError;
     },
@@ -177,7 +182,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   const declineAll = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from('rsvps').upsert(
-        { plan_id: id, user_id: user?.id, response: 'no' },
+        { plan_id: id, user_id: requireUserId(user?.id), response: 'no' },
         { onConflict: 'plan_id,user_id' }
       );
       if (error) throw error;

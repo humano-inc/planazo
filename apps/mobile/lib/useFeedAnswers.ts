@@ -3,6 +3,7 @@ import { type RsvpResponse } from '@planazo/shared';
 import { supabase } from './supabase';
 import { deleteOwnRsvp, offerWaitingList } from './rsvp';
 import { alertActionError } from './queryErrors';
+import { requireUserId } from './currentUser';
 import { useAuthStore } from '../stores/authStore';
 
 /**
@@ -24,7 +25,7 @@ export function useFeedAnswers({ onDatesSent }: { onDatesSent: (planId: string) 
   const answerFixed = useMutation({
     mutationFn: async ({ planId, response }: { planId: string; response: RsvpResponse }) => {
       const { error } = await supabase.from('rsvps').upsert(
-        { plan_id: planId, user_id: user?.id, response },
+        { plan_id: planId, user_id: requireUserId(user?.id), response },
         { onConflict: 'plan_id,user_id' }
       );
       if (error) throw error;
@@ -48,7 +49,7 @@ export function useFeedAnswers({ onDatesSent }: { onDatesSent: (planId: string) 
     mutationFn: async ({ planId, optionIds }: { planId: string; optionIds: string[] }) => {
       const rows = optionIds.map((optionId) => ({
         plan_id: planId,
-        user_id: user?.id,
+        user_id: requireUserId(user?.id),
         date_option_id: optionId,
         available: true,
       }));
@@ -67,7 +68,7 @@ export function useFeedAnswers({ onDatesSent }: { onDatesSent: (planId: string) 
   const declineFlexible = useMutation({
     mutationFn: async ({ planId, optionIds }: { planId: string; optionIds: string[] }) => {
       const { error } = await supabase.from('rsvps').upsert(
-        { plan_id: planId, user_id: user?.id, response: 'no' },
+        { plan_id: planId, user_id: requireUserId(user?.id), response: 'no' },
         { onConflict: 'plan_id,user_id' }
       );
       if (error) throw error;

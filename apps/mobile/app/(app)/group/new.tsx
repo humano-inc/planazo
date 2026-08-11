@@ -57,9 +57,12 @@ export default function NewGroupScreen() {
       // PLA-35: the group row and the creator's admin membership are one
       // server-side write. The client can no longer insert either, and a
       // half-created group was an orphan nobody could see or delete.
+      // `undefined` rather than `null`: the argument is dropped from the JSON
+      // body and create_group's own `DEFAULT NULL` supplies it, which is the
+      // value an explicit null was sending anyway.
       const { data: group, error: groupError } = await supabase.rpc('create_group', {
         p_name: name.trim(),
-        p_description: desc.trim() || null,
+        p_description: desc.trim() || undefined,
         p_color: color,
       });
       if (groupError) throw groupError;

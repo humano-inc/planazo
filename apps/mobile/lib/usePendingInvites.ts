@@ -24,6 +24,20 @@ export interface PendingFriendRequest {
 }
 
 /**
+ * The two embeds the generated types call ambiguous: `group_invites` and
+ * `friendships` each hold more than one foreign key into `profiles`, so
+ * inference asks for a constraint hint. PostgREST resolves the
+ * `alias:column(...)` form the selects below use, so the queries themselves
+ * are fine; only the inference cannot follow them.
+ */
+interface InviterEnd {
+  inviter: { display_name: string };
+}
+interface RequesterEnd {
+  requester: { id: string; display_name: string; handle: string | null; avatar_url: string | null };
+}
+
+/**
  * Everything waiting on the user (18a row, 18b sheet, tab badge) reads this
  * one cache entry, so answering in the sheet drops the row and badge live.
  */
@@ -64,36 +78,37 @@ export function usePendingInvites() {
 
       // person id -> name of a group we share, for "both in X" on requests
       const sharedGroupOf: Record<string, string> = {};
-      myGroupsRes.data.forEach((row: any) => {
-        (row.groups?.group_members ?? []).forEach((m: any) => {
+      myGroupsRes.data.forEach((row) => {
+        row.groups.group_members.forEach((m) => {
           if (m.user_id !== user!.id && !sharedGroupOf[m.user_id]) {
             sharedGroupOf[m.user_id] = row.groups.name;
           }
         });
       });
 
-      const groupInvites: PendingGroupInvite[] = invitesRes.data.map((i: any) => ({
+      const groupInvites: PendingGroupInvite[] = invitesRes.data.map((i) => ({
         id: i.id,
-        createdAt: i.created_at,
+        createdAt: i.created_at ?? '',
         groupId: i.group_id,
-        groupName: i.groups?.name ?? 'Group',
-        groupColor: i.groups?.color ?? null,
-        groupImageUrl: i.groups?.image_url ?? null,
-        inviterName: i.inviter?.display_name ?? 'Someone',
-        memberNames: (i.groups?.group_members ?? [])
-          .map((m: any) => m.profile?.display_name)
-          .filter(Boolean),
+        groupName: i.groups.name,
+        groupColor: i.groups.color,
+        groupImageUrl: i.groups.image_url,
+        inviterName: (i as unknown as InviterEnd).inviter.display_name,
+        memberNames: i.groups.group_members.map((m) => m.profile.display_name),
       }));
 
-      const friendRequests: PendingFriendRequest[] = requestsRes.data.map((r: any) => ({
-        id: r.id,
-        createdAt: r.created_at,
-        personId: r.requester?.id,
-        personName: r.requester?.display_name ?? 'Someone',
-        personHandle: r.requester?.handle ?? null,
-        personAvatarUrl: r.requester?.avatar_url ?? null,
-        sharedGroup: r.requester?.id ? (sharedGroupOf[r.requester.id] ?? null) : null,
-      }));
+      const friendRequests: PendingFriendRequest[] = requestsRes.data.map((row) => {
+        const r = row as unknown as RequesterEnd;
+        return {
+          id: row.id,
+          createdAt: row.created_at ?? '',
+          personId: r.requester.id,
+          personName: r.requester.display_name,
+          personHandle: r.requester.handle,
+          personAvatarUrl: r.requester.avatar_url,
+          sharedGroup: sharedGroupOf[r.requester.id] ?? null,
+        };
+      });
 
       return { groupInvites, friendRequests };
     },

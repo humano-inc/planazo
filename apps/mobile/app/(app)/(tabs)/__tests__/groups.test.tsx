@@ -96,12 +96,12 @@ describe('GroupsScreen', () => {
       {
         group_id: 'g1',
         role: 'admin',
-        groups: { id: 'g1', name: 'Piso Gràcia', color: '#F7B0DC', created_at: '2026-01-01' },
+        groups: { id: 'g1', name: 'Piso Gràcia', color: '#F7B0DC', created_at: '2026-01-01', group_members: [] },
       },
       {
         group_id: 'g2',
         role: 'member',
-        groups: { id: 'g2', name: 'Cine i sopar', color: '#B7E4C7', created_at: '2026-01-02' },
+        groups: { id: 'g2', name: 'Cine i sopar', color: '#B7E4C7', created_at: '2026-01-02', group_members: [] },
       },
     ];
     counts = [
@@ -146,7 +146,7 @@ describe('GroupsScreen', () => {
       {
         group_id: 'g1',
         role: 'member',
-        groups: { id: 'g1', name: 'Piso Gràcia', color: null, created_at: '2026-01-01' },
+        groups: { id: 'g1', name: 'Piso Gràcia', color: null, created_at: '2026-01-01', group_members: [] },
       },
     ];
     counts = [{ group_id: 'g1' }];
@@ -184,7 +184,7 @@ describe('GroupsScreen', () => {
       {
         group_id: 'g1',
         role: 'member',
-        groups: { id: 'g1', name: 'Piso Gràcia', color: null, created_at: '2026-01-01' },
+        groups: { id: 'g1', name: 'Piso Gràcia', color: null, created_at: '2026-01-01', group_members: [] },
       },
     ];
     counts = [{ group_id: 'g1' }];
@@ -219,7 +219,7 @@ describe('GroupsScreen', () => {
       {
         group_id: 'g1',
         role: 'member',
-        groups: { id: 'g1', name: 'Piso Gràcia', color: null, created_at: '2026-01-01' },
+        groups: { id: 'g1', name: 'Piso Gràcia', color: null, created_at: '2026-01-01', group_members: [] },
       },
     ];
     counts = [{ group_id: 'g1' }];

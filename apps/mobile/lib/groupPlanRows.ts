@@ -6,6 +6,7 @@ import {
   planGoingCount,
   planLastDate,
   type NestedDateOption,
+  type PlanType,
   type RsvpLike,
 } from '@planazo/shared';
 import { planWhenLabel } from './planWhen';
@@ -14,7 +15,7 @@ import { planWhenLabel } from './planWhen';
 export interface GroupPlan {
   id: string;
   title: string;
-  plan_type: 'fixed' | 'flexible';
+  plan_type: PlanType;
   status?: string | null;
   event_date?: string | null;
   locked_date?: string | null;

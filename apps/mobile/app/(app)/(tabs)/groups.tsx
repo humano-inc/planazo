@@ -9,7 +9,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { flattenNestedOptions, needsUserResponse } from '@planazo/shared';
+import { flattenNestedOptions, needsUserResponse, type PlanType } from '@planazo/shared';
 import { supabase } from '../../../lib/supabase';
 import { useAuthStore } from '../../../stores/authStore';
 import { useFriends } from '../../../lib/useFriends';
@@ -78,11 +78,11 @@ export default function GroupsScreen() {
       });
 
       const needsCount: Record<string, number> = {};
-      plansRes.data.forEach((plan: any) => {
+      plansRes.data.forEach((plan) => {
         const { availabilities } = flattenNestedOptions(plan.plan_date_options);
         const needs = needsUserResponse(
           {
-            plan_type: plan.plan_type,
+            plan_type: plan.plan_type as PlanType,
             status: plan.status,
             rsvps: plan.rsvps,
             availabilities,
@@ -93,13 +93,13 @@ export default function GroupsScreen() {
       });
 
       return memberships
-        .map((m: any) => ({
+        .map((m) => ({
           id: m.group_id,
           role: m.role,
-          name: m.groups?.name ?? 'Group',
-          color: m.groups?.color ?? null,
-          imageUrl: m.groups?.image_url ?? null,
-          createdAt: m.groups?.created_at ?? '',
+          name: m.groups.name,
+          color: m.groups.color,
+          imageUrl: m.groups.image_url,
+          createdAt: m.groups.created_at ?? '',
           members: memberCount[m.group_id] ?? 0,
           needsYou: needsCount[m.group_id] ?? 0,
         }))
