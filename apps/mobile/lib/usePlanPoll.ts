@@ -148,24 +148,24 @@ export function useVotePlanPoll() {
         queryClient.cancelQueries({ queryKey: ['home-plans'] }),
       ]);
 
-      const prevPolls = queryClient.getQueryData<PlanPollRow[]>(planPollKey(vars.planId));
-      // The feed key carries the user id, so snapshot and patch by prefix.
-      const prevHome = queryClient.getQueriesData({ queryKey: ['home-plans'] });
+      // One snapshot list restores both caches on error; the feed key
+      // carries the user id, so everything goes by prefix.
+      const prev = [
+        ...queryClient.getQueriesData({ queryKey: planPollKey(vars.planId) }),
+        ...queryClient.getQueriesData({ queryKey: ['home-plans'] }),
+      ];
 
-      if (prevPolls) {
-        queryClient.setQueryData(planPollKey(vars.planId), applyVoteToPolls(prevPolls, vars));
-      }
+      queryClient.setQueryData(planPollKey(vars.planId), (old: PlanPollRow[] | undefined) =>
+        old ? applyVoteToPolls(old, vars) : old
+      );
       queryClient.setQueriesData({ queryKey: ['home-plans'] }, (old: unknown) =>
         Array.isArray(old) ? applyVoteToHomePlans(old, vars) : old
       );
 
-      return { prevPolls, prevHome };
+      return { prev };
     },
-    onError: (error: unknown, vars, context) => {
-      if (context?.prevPolls) {
-        queryClient.setQueryData(planPollKey(vars.planId), context.prevPolls);
-      }
-      for (const [key, data] of context?.prevHome ?? []) {
+    onError: (error: unknown, _vars, context) => {
+      for (const [key, data] of context?.prev ?? []) {
         queryClient.setQueryData(key, data);
       }
       const { title, body } = voteErrorCopy(error);

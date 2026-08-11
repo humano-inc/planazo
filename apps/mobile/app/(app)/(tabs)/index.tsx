@@ -66,6 +66,9 @@ export default function FeedScreen() {
       const { data, error } = await supabase
         .from('plans')
         .select(
+          // lib/pollVoteCache.ts patches the plan_polls embed optimistically
+          // on a vote — reshaping it here silently no-ops that patch, so
+          // keep the two in step.
           `*,
           groups(id, name, color),
           rsvps(user_id, response, waitlist_seq, profile:profiles(display_name)),

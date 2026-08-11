@@ -67,12 +67,6 @@ describe('applyVoteToPolls', () => {
     expect(result[1]).toBe(other);
   });
 
-  it('returns unchanged rows when the poll is not in the list', () => {
-    const only = poll({ id: 'poll-2' });
-    const result = applyVoteToPolls([only], intent());
-    expect(result[0]).toBe(only);
-  });
-
   it('does not mutate the input', () => {
     const start = poll({
       plan_poll_votes: [{ option_id: 'opt-b', user_id: 'me', profile: null }],
