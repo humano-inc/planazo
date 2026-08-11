@@ -138,6 +138,13 @@ environment over it.
 - Never start a second jest run while one is in flight. Don't pipe gate output
   through `tail`/`grep`. A sudden jump from ~40s to minutes is starvation, not
   a broken suite. Keep `--maxWorkers=3`.
+- Mobile jest runs two projects (PLA-106), split on directory so new files sort
+  themselves. `apps/mobile/lib/__tests__/` is the **lib** project: a node
+  environment and no RN setup file, which `pnpm test:fast` runs alone in about
+  a second. Everything else (screens, components, stores) is the **ui**
+  project, with the full `jest-expo` environment. `pnpm test` runs both and is
+  still what CI runs. `renderHook` works in either, so a hook test under `lib/`
+  is fine where it is; a test that *renders* belongs beside its component.
 
 ## 11. Verification matches the change
 
