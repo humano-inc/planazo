@@ -1,5 +1,5 @@
 import { View, StyleSheet, Pressable } from 'react-native';
-import { goingLabel, type RsvpResponse } from '@planazo/shared';
+import { goingLabel, type PlanStatus, type PlanType, type RsvpResponse } from '@planazo/shared';
 import {
   ThemedText,
   Card,
@@ -14,9 +14,29 @@ import { fmtDay } from '../../lib/dates';
 import { waitingLabel } from '../../lib/rsvp';
 import { colors, spacing } from '../../theme/tokens';
 
+/**
+ * The plan fields this card renders, not the whole `plans` row. The feed's
+ * query selects far more than the card touches, and a local shape says which
+ * columns removing would actually break it.
+ */
+interface FeedPlanRow {
+  id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  status: PlanStatus;
+  plan_type: PlanType;
+  min_people: number;
+  /**
+   * Never null: `plans.group_id` is NOT NULL, and a plan is only readable by
+   * members of its group, so the embed cannot be the row RLS hides.
+   */
+  groups: { name: string; color: string | null };
+}
+
 /** One feed card's slice of the decorated plan the feed screen computes. */
 interface FeedPlan {
-  plan: any;
+  plan: FeedPlanRow;
   needs: boolean;
   confirmed: boolean;
   userRsvp?: { response: RsvpResponse | null };
@@ -56,8 +76,8 @@ export function FeedPlanCard({
   onDecline,
 }: FeedPlanCardProps) {
   const { plan } = item;
-  const groupName = plan.groups?.name ?? 'Group';
-  const groupColor = plan.groups?.color ?? colorForName(groupName);
+  const groupName = plan.groups.name;
+  const groupColor = plan.groups.color ?? colorForName(groupName);
 
   const renderAnswer = () => {
     // A called-off plan is a record — the notice above the feed carries it.

@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { fmtDay, fmtTime } from '../../lib/dates';
-import type { PlanDerived } from '../../lib/planDerived';
+import type { PlanDerived, PlanDetailRow } from '../../lib/planDerived';
 import { ThemedText, Card, SlotBar } from '../ui';
 import { colors, spacing } from '../../theme/tokens';
 
@@ -13,7 +13,7 @@ const fmtStamp = (iso: string) => {
 };
 
 type Props = {
-  plan: any;
+  plan: PlanDetailRow;
   d: PlanDerived;
 };
 

@@ -179,7 +179,7 @@ export default function ManageGroupScreen() {
     );
   }
 
-  const members = [...((group.group_members ?? []) as GroupMemberRow[])].sort(byArrival);
+  const members = [...(group.group_members as GroupMemberRow[])].sort(byArrival);
   // Dropping the pending one is what usePendingRemoval's id is for.
   const others = members.filter(
     (m) => m.user_id !== user?.id && m.user_id !== pendingRemovalId

@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import type { GroupRole, PlanType } from '@planazo/shared';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../../lib/supabase';
 import { deriveGroupPlanRows, type GroupPlanRow } from '../../../../lib/groupPlanRows';
@@ -51,6 +52,7 @@ export default function GroupDetailScreen() {
   const { data: group, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['group', id],
     queryFn: async () => {
+      if (!id) throw new Error('the group screen needs a group id');
       const { data, error } = await supabase
         .from('groups')
         .select(
@@ -65,18 +67,25 @@ export default function GroupDetailScreen() {
         .eq('id', id)
         .single();
       if (error) throw error;
-      return data as any;
+      return data;
     },
     enabled: !!id,
   });
   const { refreshing, onRefresh } = usePullToRefresh(refetch);
 
   const members = group?.group_members ?? [];
-  const myRole = members.find((m: any) => m.user_id === user?.id)?.role;
-  const memberNames = members.map((m: any) => m.profile?.display_name ?? '?');
+  // `role` and `plan_type` are CHECK-constrained text columns, so the typed
+  // client can only call them `string`. Narrowing them here keeps the domain
+  // unions intact for canInvite() and the plan rows.
+  const myRole = members.find((m) => m.user_id === user?.id)?.role as GroupRole | undefined;
+  const memberNames = members.map((m) => m.profile.display_name);
 
   const { live, waiting, locked, past: pastRows } = useMemo(
-    () => deriveGroupPlanRows({ plans: group?.plans, userId: user?.id }),
+    () =>
+      deriveGroupPlanRows({
+        plans: group?.plans.map((p) => ({ ...p, plan_type: p.plan_type as PlanType })),
+        userId: user?.id,
+      }),
     [group?.plans, user?.id]
   );
 

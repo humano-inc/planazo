@@ -67,9 +67,10 @@ export default function CancelPlanScreen() {
 
   const cancelPlan = useMutation({
     mutationFn: async () => {
+      // Omitted rather than null, so cancel_plan's `DEFAULT NULL` supplies it.
       const { error } = await supabase.rpc('cancel_plan', {
         p_plan_id: id,
-        p_reason: reason.trim() || null,
+        p_reason: reason.trim() || undefined,
       });
       if (error) throw error;
     },
@@ -86,7 +87,7 @@ export default function CancelPlanScreen() {
   });
 
   // The cost, named out loud: who this lands on.
-  const openFlexible = plan?.plan_type === 'flexible' && plan?.status === 'open';
+  const openFlexible = plan?.plan_type === 'flexible' && plan.status === 'open';
   const affected = openFlexible
     ? new Set((availabilities ?? []).map((a) => a.user_id)).size
     : (rsvps ?? []).filter((r) => r.response === 'yes').length;

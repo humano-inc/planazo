@@ -50,13 +50,14 @@ export default function InviteToGroupSheet() {
       if (groupRes.error) throw groupRes.error;
       if (invitesRes.error) throw invitesRes.error;
       return {
-        ...(groupRes.data as any),
-        pendingInviteeIds: invitesRes.data.map((i: any) => i.invitee_id),
-        inviteCode: codeRes.data as string | null,
+        ...groupRes.data,
+        pendingInviteeIds: invitesRes.data.map((i) => i.invitee_id),
+        inviteCode: codeRes.data,
       };
     },
     enabled: !!id,
   });
+  type InviteSheetData = NonNullable<typeof group>;
 
   const members = (group?.group_members ?? []) as Array<{ user_id: string; role: GroupRole }>;
   const memberIds = new Set(members.map((m) => m.user_id));
@@ -75,14 +76,14 @@ export default function InviteToGroupSheet() {
     mutationFn: async () => {
       const { data, error } = await supabase.rpc('rotate_invite_code', { p_group_id: id });
       if (error) throw error;
-      return data as string;
+      return data;
     },
     // The RPC hands back the code it just minted, so the card can show it at
     // once. Invalidating instead would re-run all three calls in the queryFn,
     // and leave the link the admin is about to share blank until they land.
     onSuccess: (code) => {
       setCopied(false);
-      queryClient.setQueryData(['group-invite-sheet', id], (old: any) =>
+      queryClient.setQueryData(['group-invite-sheet', id], (old: InviteSheetData | undefined) =>
         old ? { ...old, inviteCode: code } : old
       );
     },

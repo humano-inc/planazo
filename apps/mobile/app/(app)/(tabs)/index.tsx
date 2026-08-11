@@ -32,6 +32,9 @@ import {
   planGoingPeople,
   pollPeopleIn,
   waitlistPosition,
+  type PlanStatus,
+  type PlanType,
+  type RsvpResponse,
 } from '@planazo/shared';
 import { supabase } from '../../../lib/supabase';
 import { planWhenLabel } from '../../../lib/planWhen';
@@ -64,10 +67,11 @@ export default function FeedScreen() {
   const { data: plans, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['home-plans', user?.id],
     queryFn: async () => {
+      if (!user?.id) throw new Error('the feed needs a signed-in user');
       const { data: memberships, error: memberError } = await supabase
         .from('group_members')
         .select('group_id')
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
       if (memberError) throw memberError;
       const groupIds = memberships.map((m) => m.group_id);
@@ -109,11 +113,15 @@ export default function FeedScreen() {
   });
 
   const decorated = useMemo(() => {
-    return (plans ?? []).map((plan: any) => {
+    return (plans ?? []).map((plan) => {
       const { dateOptions, availabilities } = flattenNestedOptions(plan.plan_date_options);
+      // `plan_type` and `status` are CHECK-constrained text in the schema, so
+      // the generated types can only call them `string`. Narrowing here is the
+      // one place the constraint has to be restated, and it keeps the domain
+      // unions intact everywhere downstream.
       const planData = {
-        plan_type: plan.plan_type,
-        status: plan.status,
+        plan_type: plan.plan_type as PlanType,
+        status: plan.status as PlanStatus,
         min_people: plan.min_people,
         rsvps: plan.rsvps,
         dateOptions,
@@ -121,7 +129,8 @@ export default function FeedScreen() {
       };
       const confirmed = isPlanConfirmed(planData);
       const needs = needsUserResponse(planData, user?.id);
-      const userRsvp = (plan.rsvps ?? []).find((r: any) => r.user_id === user?.id);
+      const found = plan.rsvps.find((r) => r.user_id === user?.id);
+      const userRsvp = found && { ...found, response: found.response as RsvpResponse | null };
       const myDates = availabilities.filter((a) => a.user_id === user?.id).length;
       const countByDate = countAvailabilityByDate(dateOptions, availabilities);
       // No live vote — either there never was one, or locking ended it. What
@@ -151,7 +160,9 @@ export default function FeedScreen() {
       const waitPosition = waitlistPosition(plan.rsvps, user?.id);
 
       return {
-        plan,
+        // Carries the narrowed unions forward so every card and helper reading
+        // this plan sees the domain types, not the raw text columns.
+        plan: { ...plan, plan_type: planData.plan_type, status: planData.status },
         isPast,
         confirmed,
         needs,
@@ -181,8 +192,8 @@ export default function FeedScreen() {
         decorated.map((item) => ({
           planId: item.plan.id,
           planTitle: item.plan.title,
-          groupName: item.plan.groups?.name ?? 'Group',
-          groupColor: item.plan.groups?.color,
+          groupName: item.plan.groups.name,
+          groupColor: item.plan.groups.color,
           isPast: item.isPast,
           canVote: item.canVoteOnPolls,
           peopleIn: item.pollPeopleIn,

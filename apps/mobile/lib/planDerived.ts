@@ -12,7 +12,13 @@ import {
   planGoingPeople,
   planLastDate,
   waitlistPosition,
+  type Availability,
   type DateCount,
+  type DateOption,
+  type PlanAlbumData,
+  type PlanStatus,
+  type PlanType,
+  type RsvpLike,
 } from '@planazo/shared';
 import { fmtDay } from './dates';
 import { spellCount } from './words';
@@ -24,11 +30,36 @@ const countWord = (n: number) => {
   return word.charAt(0).toUpperCase() + word.slice(1);
 };
 
+/**
+ * The plan columns the detail screen derives from, and the ones its cards
+ * render. Not the whole `plans` row: the query selects more, and naming only
+ * what is read keeps this shape honest about what a column removal would
+ * break. `PlanAlbumData` carries the dates, status, creator and rsvps that the
+ * shared album and confirmation logic already agree on.
+ */
+export interface PlanDetailRow extends PlanAlbumData {
+  status: PlanStatus;
+  plan_type: PlanType;
+  min_people: number;
+  max_people: number | null;
+  cancelled_at: string | null;
+  cancelled_by: string | null;
+  cancel_reason: string | null;
+  canceller?: { display_name?: string | null } | null;
+  creator?: { display_name?: string | null } | null;
+}
+
 type DeriveInput = {
-  plan: any;
-  rsvps?: any[];
-  dateOptions?: any[];
-  availabilities?: any[];
+  /** Undefined while the query is in flight, which is what `!plan` guards. */
+  plan: PlanDetailRow | undefined;
+  /**
+   * `user_id` is optional on the shared `RsvpLike` because the counting
+   * helpers never name people. This screen does, and its query selects it, so
+   * it is required here.
+   */
+  rsvps?: (RsvpLike & { user_id: string })[];
+  dateOptions?: DateOption[];
+  availabilities?: Availability[];
   membership?: { role: string } | null;
   memberIds?: string[];
   userId?: string;

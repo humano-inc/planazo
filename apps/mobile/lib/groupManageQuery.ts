@@ -12,6 +12,9 @@ export function groupManageQuery(id: string | undefined) {
   return {
     queryKey: ['group-manage', id],
     queryFn: async () => {
+      // `enabled` below keeps this from running without an id; the guard is
+      // what tells the typed client that.
+      if (!id) throw new Error('groupManageQuery needs a group id');
       const { data, error } = await supabase
         .from('groups')
         .select(
@@ -22,7 +25,7 @@ export function groupManageQuery(id: string | undefined) {
         .eq('id', id)
         .single();
       if (error) throw error;
-      return data as any;
+      return data;
     },
     enabled: !!id,
   };

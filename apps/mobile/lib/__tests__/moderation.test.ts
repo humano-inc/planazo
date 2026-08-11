@@ -101,12 +101,15 @@ describe('submitReport', () => {
     });
   });
 
-  it('passes a null block and an empty note when neither is given', async () => {
+  // Omitted rather than null: the key drops out of the JSON body and
+  // file_report's own `DEFAULT NULL` supplies it, which is the value an
+  // explicit null was sending anyway.
+  it('omits the block and passes an empty note when neither is given', async () => {
     await submitReport({ subjectType: 'group', subjectId: 'g1', reason: 'other' });
 
     expect(mockRpc).toHaveBeenCalledWith(
       'file_report',
-      expect.objectContaining({ p_note: '', p_block_user_id: null }),
+      expect.objectContaining({ p_note: '', p_block_user_id: undefined }),
     );
   });
 

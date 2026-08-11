@@ -9,6 +9,20 @@ export interface Friend {
   avatarUrl: string | null;
 }
 
+/**
+ * The person on each end of a friendship. Declared rather than inferred:
+ * `friendships` holds two foreign keys into `profiles`, so the generated
+ * types call the embed ambiguous and ask for a constraint hint. PostgREST
+ * resolves the `alias:column(...)` form the select below uses, which is why
+ * the query works; only the inference cannot follow it.
+ */
+interface FriendshipEnds {
+  requester_id: string;
+  addressee_id: string;
+  requester: { id: string; display_name: string; handle: string | null; avatar_url: string | null };
+  addressee: { id: string; display_name: string; handle: string | null; avatar_url: string | null };
+}
+
 /** Accepted friendships, either direction, as the people on the other end. */
 export function useFriends() {
   const { user } = useAuthStore();
@@ -27,10 +41,9 @@ export function useFriends() {
         .or(`requester_id.eq.${user?.id},addressee_id.eq.${user?.id}`);
       if (error) throw error;
 
-      return data
-        .map((f: any) => (f.requester_id === user?.id ? f.addressee : f.requester))
-        .filter(Boolean)
-        .map((p: any) => ({
+      return (data as unknown as FriendshipEnds[])
+        .map((f) => (f.requester_id === user?.id ? f.addressee : f.requester))
+        .map((p) => ({
           id: p.id,
           name: p.display_name,
           handle: p.handle,
