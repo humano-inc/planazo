@@ -1,9 +1,8 @@
-import { act, renderHook, waitFor } from '@testing-library/react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { ReactNode } from 'react';
+import { act, waitFor } from '@testing-library/react-native';
 import { groupInviteKey, useGroupInvite } from '../useGroupInvite';
 import { supabase } from '../supabase';
 import { chain } from '../testing/supabase';
+import { renderHookWithQuery } from '../testing/render';
 
 const mockBack = jest.fn();
 
@@ -26,20 +25,8 @@ const GROUP = {
 /** How many times the sheet's three-call queryFn has run. */
 const codeFetches = () => mockRpc.mock.calls.filter((c) => c[0] === 'get_group_invite_code').length;
 
-let client: QueryClient;
-let invalidated: unknown[][];
-
 async function renderInvite() {
-  client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
-  invalidated = [];
-  jest.spyOn(client, 'invalidateQueries').mockImplementation((filters?: { queryKey?: unknown }) => {
-    invalidated.push((filters?.queryKey ?? []) as unknown[]);
-    return Promise.resolve();
-  });
-  const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={client}>{children}</QueryClientProvider>
-  );
-  const view = await renderHook(() => useGroupInvite('g1'), { wrapper });
+  const view = await renderHookWithQuery(() => useGroupInvite('g1'));
   await waitFor(() => expect(view.result.current.group).toBeTruthy());
   return view;
 }
@@ -83,7 +70,7 @@ describe('useGroupInvite', () => {
   });
 
   it('puts a reset code straight into the cache instead of refetching', async () => {
-    const { result } = await renderInvite();
+    const { result, invalidated } = await renderInvite();
     const fetchesBefore = codeFetches();
     mockRpc.mockImplementation((name: string) =>
       Promise.resolve({ data: name === 'rotate_invite_code' ? 'NEWCODE' : null, error: null })
@@ -101,7 +88,7 @@ describe('useGroupInvite', () => {
   });
 
   it('sends one invite per pick, then refreshes the sheet and leaves', async () => {
-    const { result } = await renderInvite();
+    const { result, invalidated } = await renderInvite();
 
     await act(async () => {
       result.current.sendInvites.mutate(['u3', 'u4']);

@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render } from '@testing-library/react-native';
-import { cloneElement, type ReactElement } from 'react';
+import { render, renderHook } from '@testing-library/react-native';
+import { cloneElement, type ReactElement, type ReactNode } from 'react';
 
 /**
  * `render()` inside a fresh QueryClientProvider, which 25 test files each stood
@@ -16,6 +16,34 @@ import { cloneElement, type ReactElement } from 'react';
  * promise from `render`, `fireEvent` and `renderHook` alike, and a missing
  * await surfaces as a state update outside `act`.
  */
+/**
+ * The same client, for a hook rather than a screen: what a `lib/useX` test
+ * needs and used to hand-roll a provider for.
+ *
+ * `invalidated` is the other half. A data-layer hook's job is largely deciding
+ * which caches a write goes stale through, and that decision is invisible to a
+ * rendered screen: the assertion has to be on the keys themselves. The spy
+ * collects them in call order, so a test reads
+ * `expect(invalidated).toEqual(expect.arrayContaining([['groups']]))`.
+ */
+export async function renderHookWithQuery<T>(hook: () => T) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  const invalidated: unknown[][] = [];
+  jest
+    .spyOn(client, 'invalidateQueries')
+    .mockImplementation((filters?: { queryKey?: unknown }) => {
+      invalidated.push((filters?.queryKey ?? []) as unknown[]);
+      return Promise.resolve();
+    });
+
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+
+  const view = await renderHook(hook, { wrapper });
+  return { ...view, client, invalidated };
+}
+
 export async function renderWithQuery(ui: ReactElement) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
 

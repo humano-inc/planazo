@@ -12,43 +12,43 @@ import { useDismissTo } from './navigation';
  */
 export const groupInviteKey = (id: string) => ['group-invite-sheet', id];
 
-function groupInviteQuery(id: string) {
+/**
+ * The group, who already has an invite pending, and the link, in one round.
+ *
+ * The code is no longer a column this client may read (PLA-49), so it arrives
+ * from the RPC that checks membership and the who_can_invite dial. A refusal is
+ * not thrown: the rest of the sheet, naming friends you can invite, still works
+ * without a link to show. What it refused with is dropped on the floor — the
+ * sheet says why in its own words.
+ */
+async function fetchInviteSheet(id: string) {
+  const [groupRes, invitesRes, codeRes] = await Promise.all([
+    supabase
+      .from('groups')
+      .select('id, name, join_mode, who_can_invite, group_members(user_id, role)')
+      .eq('id', id)
+      .single(),
+    supabase.from('group_invites').select('invitee_id').eq('group_id', id).eq('status', 'pending'),
+    supabase.rpc('get_group_invite_code', { p_group_id: id }),
+  ]);
+  if (groupRes.error) throw groupRes.error;
+  if (invitesRes.error) throw invitesRes.error;
   return {
-    queryKey: groupInviteKey(id),
-    queryFn: async () => {
-      // The code is no longer a column this client may read (PLA-49), so it
-      // arrives from the RPC that checks membership and the who_can_invite
-      // dial. A refusal is not thrown: the rest of the sheet, naming friends
-      // you can invite, still works without a link to show. What it refused
-      // with is dropped on the floor — the sheet says why in its own words.
-      const [groupRes, invitesRes, codeRes] = await Promise.all([
-        supabase
-          .from('groups')
-          .select('id, name, join_mode, who_can_invite, group_members(user_id, role)')
-          .eq('id', id)
-          .single(),
-        supabase
-          .from('group_invites')
-          .select('invitee_id')
-          .eq('group_id', id)
-          .eq('status', 'pending'),
-        supabase.rpc('get_group_invite_code', { p_group_id: id }),
-      ]);
-      if (groupRes.error) throw groupRes.error;
-      if (invitesRes.error) throw invitesRes.error;
-      return {
-        ...groupRes.data,
-        pendingInviteeIds: invitesRes.data.map((i) => i.invitee_id),
-        inviteCode: codeRes.data,
-      };
-    },
-    enabled: !!id,
+    ...groupRes.data,
+    // `role` is CHECK-constrained text, which the generated types can only
+    // call `string`. Narrowing here rather than at the call site is what keeps
+    // the sheet from casting a shape this query already knows (usePlanDetail
+    // does the same with `status` and `plan_type`).
+    group_members: groupRes.data.group_members.map((m) => ({
+      ...m,
+      role: m.role as GroupRole,
+    })),
+    pendingInviteeIds: invitesRes.data.map((i) => i.invitee_id),
+    inviteCode: codeRes.data,
   };
 }
 
-type InviteSheetData = Awaited<ReturnType<ReturnType<typeof groupInviteQuery>['queryFn']>>;
-
-export type InviteSheetMember = { user_id: string; role: GroupRole };
+type InviteSheetData = Awaited<ReturnType<typeof fetchInviteSheet>>;
 
 /**
  * What the invite sheet reads and writes: the group with its pending invites
@@ -62,7 +62,11 @@ export function useGroupInvite(id: string) {
   const queryClient = useQueryClient();
   const leave = useDismissTo(`/(app)/group/${id}`);
 
-  const { data: group } = useQuery(groupInviteQuery(id));
+  const { data: group } = useQuery({
+    queryKey: groupInviteKey(id),
+    queryFn: () => fetchInviteSheet(id),
+    enabled: !!id,
+  });
 
   const rotate = useMutation({
     mutationFn: async () => {

@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { useAuthStore } from '../../../../stores/authStore';
 import { useFriends } from '../../../../lib/useFriends';
-import { useGroupInvite, type InviteSheetMember } from '../../../../lib/useGroupInvite';
+import { useGroupInvite } from '../../../../lib/useGroupInvite';
 import { inviteLinkFor } from '../../../../lib/shareLinks';
 import { linkBlurb, linkUnavailable } from '../../../../lib/groupDoor';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
@@ -24,7 +24,7 @@ export default function InviteToGroupSheet() {
   const { friends } = useFriends();
   const { group, rotate, sendInvites } = useGroupInvite(id);
 
-  const members = (group?.group_members ?? []) as InviteSheetMember[];
+  const members = group?.group_members ?? [];
   const memberIds = new Set(members.map((m) => m.user_id));
   const me = members.find((m) => m.user_id === user?.id);
   const isAdmin = me?.role === 'admin';

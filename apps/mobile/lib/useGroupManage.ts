@@ -26,7 +26,7 @@ export function useGroupManage(id: string) {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
-  const group = useQuery(groupManageQuery(id));
+  const { data: group, isLoading, isError, error, refetch } = useQuery(groupManageQuery(id));
 
   const invalidate = () => invalidateGroup(queryClient, id);
 
@@ -69,6 +69,9 @@ export function useGroupManage(id: string) {
       });
       if (error) throw error;
     },
+    // The invite sheet on top of `invalidate()`: this is the one write that
+    // reaches past the group's own caches, because the RPC also withdraws the
+    // invites the removed person sent.
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: groupInviteKey(id) });
       invalidate();
@@ -102,6 +105,10 @@ export function useGroupManage(id: string) {
       const { error } = await supabase.rpc('leave_group', { p_group_id: id });
       if (error) throw error;
     },
+    // Not `invalidate()`, and that is the difference between this write and
+    // the four above it: refetching `group-manage` for a group you have just
+    // left asks RLS a question it now answers with nothing, which would flip
+    // this screen to "This group isn't here" on its way out.
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
       queryClient.invalidateQueries({ queryKey: ['home-plans'] });
@@ -115,11 +122,11 @@ export function useGroupManage(id: string) {
   const { pendingRemovalId, startRemoval } = usePendingRemoval(removeMember.mutate);
 
   return {
-    group: group.data,
-    isLoading: group.isLoading,
-    isError: group.isError,
-    error: group.error,
-    refetch: group.refetch,
+    group,
+    isLoading,
+    isError,
+    error,
+    refetch,
     blocked: new Set(blockedIds ?? []),
     setBlocked,
     setAnyoneCanPost,
