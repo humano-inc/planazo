@@ -1,96 +1,42 @@
-/* eslint-disable max-lines -- PLA-110 */
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { GroupRole } from '@planazo/shared';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
-import { supabase } from '../../../../lib/supabase';
-import { alertActionError } from '../../../../lib/queryErrors';
 import { useAuthStore } from '../../../../stores/authStore';
 import { useFriends } from '../../../../lib/useFriends';
+import { useGroupInvite } from '../../../../lib/useGroupInvite';
 import { inviteLinkFor } from '../../../../lib/shareLinks';
 import { linkBlurb, linkUnavailable } from '../../../../lib/groupDoor';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
-import { useDismissTo } from '../../../../lib/navigation';
 import { ThemedText, Avatar, Button } from '../../../../components/ui';
 import { colors, fonts, radii, spacing } from '../../../../theme/tokens';
 import { shareInviteLink } from './index';
 
 export default function InviteToGroupSheet() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const queryClient = useQueryClient();
-  const leave = useDismissTo(`/(app)/group/${id}`);
   const { user } = useAuthStore();
   const [picks, setPicks] = useState<string[]>([]);
-  const [copied, setCopied] = useState(false);
+  // The link that was copied, rather than a flag: resetting mints a new one,
+  // and "Link copied ✓" over a link nobody has copied is a lie.
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
   const { friends } = useFriends();
+  const { group, rotate, sendInvites } = useGroupInvite(id);
 
-  const { data: group } = useQuery({
-    queryKey: ['group-invite-sheet', id],
-    queryFn: async () => {
-      // The code is no longer a column this client may read (PLA-49), so it
-      // arrives from the RPC that checks membership and the who_can_invite
-      // dial. A refusal is not thrown: the rest of the sheet, naming friends
-      // you can invite, still works without a link to show. What it refused
-      // with is dropped on the floor — the sheet says why in its own words.
-      const [groupRes, invitesRes, codeRes] = await Promise.all([
-        supabase
-          .from('groups')
-          .select('id, name, join_mode, who_can_invite, group_members(user_id, role)')
-          .eq('id', id)
-          .single(),
-        supabase
-          .from('group_invites')
-          .select('invitee_id')
-          .eq('group_id', id)
-          .eq('status', 'pending'),
-        supabase.rpc('get_group_invite_code', { p_group_id: id }),
-      ]);
-      if (groupRes.error) throw groupRes.error;
-      if (invitesRes.error) throw invitesRes.error;
-      return {
-        ...groupRes.data,
-        pendingInviteeIds: invitesRes.data.map((i) => i.invitee_id),
-        inviteCode: codeRes.data,
-      };
-    },
-    enabled: !!id,
-  });
-  type InviteSheetData = NonNullable<typeof group>;
-
-  const members = (group?.group_members ?? []) as Array<{ user_id: string; role: GroupRole }>;
+  const members = group?.group_members ?? [];
   const memberIds = new Set(members.map((m) => m.user_id));
   const me = members.find((m) => m.user_id === user?.id);
   const isAdmin = me?.role === 'admin';
   const invitedIds = new Set(group?.pendingInviteeIds ?? []);
   const invitable = friends.filter((f) => !memberIds.has(f.id));
   const link = group?.inviteCode ? inviteLinkFor(group.inviteCode) : '';
+  const copied = !!link && copiedLink === link;
 
   const copyLink = async () => {
     await Clipboard.setStringAsync(link);
-    setCopied(true);
+    setCopiedLink(link);
   };
-
-  const rotate = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.rpc('rotate_invite_code', { p_group_id: id });
-      if (error) throw error;
-      return data;
-    },
-    // The RPC hands back the code it just minted, so the card can show it at
-    // once. Invalidating instead would re-run all three calls in the queryFn,
-    // and leave the link the admin is about to share blank until they land.
-    onSuccess: (code) => {
-      setCopied(false);
-      queryClient.setQueryData(['group-invite-sheet', id], (old: InviteSheetData | undefined) =>
-        old ? { ...old, inviteCode: code } : old
-      );
-    },
-    onError: alertActionError,
-  });
 
   const confirmReset = () =>
     Alert.alert(
@@ -101,21 +47,6 @@ export default function InviteToGroupSheet() {
         { text: 'Reset link', style: 'destructive', onPress: () => rotate.mutate() },
       ]
     );
-
-  const sendInvites = useMutation({
-    mutationFn: async () => {
-      await Promise.all(
-        picks.map((invitee) =>
-          supabase.rpc('invite_to_group', { p_group_id: id, p_invitee: invitee })
-        )
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['group-invite-sheet', id] });
-      leave();
-    },
-    onError: alertActionError,
-  });
 
   const togglePick = (personId: string) =>
     setPicks((prev) =>
@@ -226,7 +157,7 @@ export default function InviteToGroupSheet() {
                 : `Send ${picks.length} invite${picks.length === 1 ? '' : 's'}`
             }
             disabled={sendInvites.isPending}
-            onPress={() => sendInvites.mutate()}
+            onPress={() => sendInvites.mutate(picks)}
             testID="send-invites"
           />
         ) : (
