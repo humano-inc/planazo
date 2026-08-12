@@ -72,16 +72,17 @@ export function deriveGroupRows({ memberships, memberRows, plans, userId }: Deri
     if (needs) needsCount[plan.group_id] = (needsCount[plan.group_id] ?? 0) + 1;
   });
 
-  return memberships
+  // Ordered before the map, so the sort key never rides along on a row the
+  // GroupRow type does not describe and nothing renders.
+  return [...memberships]
+    .sort((a, b) => (a.groups.created_at ?? '').localeCompare(b.groups.created_at ?? ''))
     .map((m) => ({
       id: m.group_id,
       role: m.role,
       name: m.groups.name,
       color: m.groups.color,
       imageUrl: m.groups.image_url,
-      createdAt: m.groups.created_at ?? '',
       members: memberCount[m.group_id] ?? 0,
       needsYou: needsCount[m.group_id] ?? 0,
-    }))
-    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    }));
 }
