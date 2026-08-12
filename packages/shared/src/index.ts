@@ -20,8 +20,15 @@ export type RsvpResponse = 'yes' | 'no' | 'pending';
 export type PlanType = 'fixed' | 'flexible';
 export type PlanStatus = 'open' | 'locked' | 'cancelled';
 
-// Plan domain logic (single source of truth for confirmation math)
-export * from './plan-logic';
+// Plan domain logic (single source of truth for confirmation math), by topic.
+// Screens and DB functions must not reimplement these rules. Importers name
+// the package, never a module below, so the split stays free to move.
+export * from './plan/types';
+export * from './plan/dates';
+export * from './plan/capacity';
+export * from './plan/confirmation';
+export * from './plan/album';
+export * from './plan/polls';
 
 /**
  * PLA-30 group photos. One folder per group, because that folder name is what
