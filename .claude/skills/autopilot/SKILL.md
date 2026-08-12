@@ -46,6 +46,13 @@ never at two issues in one PR.
   finding cannot be fixed inside the issue's scope, or the spec carries a
   `park` tag because the user wanted eyes on it. A parked issue blocks its
   dependents and nothing else; the drain moves on to independent work.
+- **Spend nothing on a reader who is not there.** A tick that merges itself is
+  read by nobody, so work whose only product is something for a human to look
+  at is time spent on an audience of zero. Proof that catches a regression
+  stays, always. Proof shaped for review happens where review actually
+  happens: a park, a refusal, the end-of-run summary. This outlives Phase 5 —
+  apply it to every capture, every published page, every recap a tick is about
+  to write for nobody.
 - **Narrate each phase in one line**, so an unattended run reads back cleanly:
   `[PLA-104 · class A · tick 3] 12 exact radii swaps in components/plan · diff-only proof`
 
@@ -88,7 +95,7 @@ proof, and the proof is the whole reason this work is safe to leave alone.
 | Class | The change | The proof (AGENTS.md §11) |
 | --- | --- | --- |
 | **A · swap** | a hardcoded literal replaced by the token that already holds *exactly* that value | the diff. Pixel-identical by construction |
-| **B · normalize** | a near-miss value moved to the nearest existing token | one simulator pass, before/after screenshots |
+| **B · normalize** | a near-miss value moved to the nearest existing token | one simulator pass, one screenshot of the result (the before/after pair only on a park) |
 | **C · extract** | logic lifted out of a component into `lib/` or `packages/shared`, with unit tests | the tests, named in the PR |
 | **D · slice** | a spec-gated feature or refactor slice: multiple files, may add UI or (Database section only) schema | the spec's own Proof section, sized per §11, plus the review pass at high |
 
@@ -145,8 +152,10 @@ have to already be on the issue.
 - **Every decision rule in the spec is a park that does not happen.** The spec
   is where the user's judgment gets spent; the tick executes it.
 - UI only where a deep link reaches it — class B's rule, for class B's reason.
-  Visual work proves itself per the spec's Proof section (screenshots or a
-  walkthrough, at §11 sizing).
+  Visual work proves itself per the spec's Proof section, at §11 sizing. A
+  Proof section that names a walkthrough is a spec asking for the user's eyes,
+  so it parks (Phase 5); everything else captures a result screenshot and
+  merges.
 - **Database work lives here and only here.** The spec's Database section
   names the migration, the RLS/RPC surface, and the integration tests; the
   worktree is created `--db`; the gate grows `pnpm test:integration`. No
@@ -240,30 +249,43 @@ real findings on run 1):
 
 ## Phase 5 — Prove it, by class
 
-**A and C**: nothing to capture. The diff and the tests are the proof.
+Capture what the tick needs to be safe and nothing past it. Two costs hide
+inside "visual proof" and they are not the same size: booting a simulator and
+driving it is the expensive one, and it earns its keep because it catches a
+screen that renders blank whether or not anyone reads the result. Assembling a
+page for someone to look at is the cheap one, and it is worth nothing at all
+when the tick then merges itself. Split them.
 
-**D**: whatever its spec's Proof section names — tests always, integration
-tests by name when schema moved, screenshots or a walkthrough when anything is
-visual, captured the way class B captures them.
+**A and C**: nothing to capture, and **no simulator** — which is why Phase 2
+built these worktrees `--no-sim`. The diff and the tests are the proof. A class
+C spec that asks for a simulator pass has described class B or D work under the
+wrong prefix: build what the spec says, then say so on the issue, so the next
+promotion classes it right.
 
 **B**: `pnpm wt:start --login` in the foreground, never piped through
 `tail`/`head`. Confirm readiness by probe (`lsof -ti :$PLANAZO_METRO_PORT`,
-`xcrun simctl list devices booted`), not by exit code. Then:
+`xcrun simctl list devices booted`), not by exit code. Then apply the change,
+wait for fast refresh, deep-link to the screen, and screenshot **the result**.
+One pass, one shot.
 
-1. Deep-link to the screen on the stashed build and screenshot it — **before**.
-2. Apply the change, wait for fast refresh, screenshot again — **after**.
-3. Build a before/after page from `scripts/walkthrough/template.html`, run
-   `pnpm walkthrough`, and publish the `.built.html` with the `Artifact` tool.
-   Artifacts start private.
+No stash, no before/after pair, no walkthrough on a tick that merges itself.
+The shot proves the screen still renders and the value landed where the issue
+said; the *comparison* is for a human eye, and a self-merging tick has none.
+Name the trade rather than hiding it: a merged class B change leaves no
+published picture of itself, and its rollback is the `git revert` that the
+squash guarantees. Parking is what turns the pair back on (Phase 7).
 
-The screenshot pair is the one thing the user will actually skim across ten
-merged PRs. It records source tree, simulator, and the deep link used.
+**D**: whatever its spec's Proof section names — tests always, integration
+tests by name when schema moved, a result screenshot when anything is visual,
+captured the way B captures it. **A Proof section that names a walkthrough is
+read as a `park` tag**: a change the user thought worth a walkthrough is a
+change worth their eyes, so build it, prove it in full, and leave the merge to
+them rather than publishing into an empty room.
 
 The `simulator-driving` skill owns the two blockers that trap an unattended tick
 (the Expo dev-menu sheet, the SpringBoard "Open in Planazo?" alert). If the
 simulator stops responding, invoke it rather than improvising taps. If it is
-still stuck after that, refuse — do not merge a class B PR without its
-screenshots.
+still stuck after that, refuse — do not merge a class B PR blind.
 
 ## Phase 6 — Refuse, when refusing is right
 
@@ -302,8 +324,8 @@ follow-ups, no "left alone", no future work. It ends with `## See it working`:
 
 - **A**: name the swap and that it is value-identical, listing each literal and
   the token that already held it.
-- **B**: the artifact link, the deep link, the simulator, and what changed by
-  how many pixels.
+- **B**: the deep link, the simulator, the source tree, and what changed by how
+  many pixels. The artifact link as well, but only on a park.
 - **C**: the test file and the cases, named.
 - **D**: the spec's Proof section, delivered item by item.
 
@@ -342,13 +364,19 @@ Four things it does that this loop depends on:
 
 If `/merge` stops at its gate, that is a refusal: Phase 6, with its reason.
 
-**To park instead of merging**: leave the PR open with its proof complete and a
-comment naming the confirmed finding or the spec's `park` tag; move the issue
-to **In Review** with the same comment; append to `parked` in the run file and
-reset `consecutiveRefusals` — a park found safe work, it just found a decision
-riding along with it. The worktree stays standing: the user lands the PR later
-with `/merge` from inside it, so the reap hook still fires. Dependents of a
-parked issue stay blocked until the user merges or cancels it.
+**To park instead of merging**: this is the one path that ends with a reader,
+so it is the one path that pays for a picture. When the change is visual, stash
+it and screenshot the same deep link to get the **before**, pair it with Phase
+5's result shot, build the page from `scripts/walkthrough/template.html`, run
+`pnpm walkthrough`, and publish the `.built.html` with the `Artifact` tool.
+Artifacts start private. (The worktree is still standing, which is what keeps
+that before shot reachable this late.) Then leave the PR open with its proof
+complete and a comment naming the confirmed finding or the spec's `park` tag;
+move the issue to **In Review** with the same comment; append to `parked` in
+the run file and reset `consecutiveRefusals` — a park found safe work, it just
+found a decision riding along with it. The worktree stays standing: the user
+lands the PR later with `/merge` from inside it, so the reap hook still fires.
+Dependents of a parked issue stay blocked until the user merges or cancels it.
 
 ## Phase 8 — Record and hand back
 
