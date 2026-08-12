@@ -32,8 +32,8 @@ export default function CancelPlanScreen() {
   // Warm from the detail screen's cache. These share query keys with the
   // detail screen, so the selects must match its shapes exactly — a slimmer
   // select here would clobber the detail's cached joins. The plan is one
-  // shared descriptor for that reason; the two below are the same duplication
-  // one table down, which PLA-132 lifts the same way.
+  // shared descriptor for that reason; the two below still spell out selects
+  // that have to match usePlanDetail's exactly.
   const { data: plan } = useQuery(planDetailQuery(id));
 
   const { data: rsvps } = useQuery({

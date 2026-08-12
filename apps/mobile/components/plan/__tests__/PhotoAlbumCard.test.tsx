@@ -8,9 +8,11 @@ import { pickPhotos, uploadPhotos, type UploadOutcome } from '../../../lib/photo
 // at import time. The card never touches it in these tests.
 jest.mock('../../../lib/supabase', () => ({ supabase: { from: jest.fn(), storage: {} } }));
 
+// Only the hook. `planPhotosKey` is deliberately not stubbed: it lives in
+// lib/planPhotosKey, which imports nothing but the key builder, so the
+// assertion below checks the key the card really invalidates.
 jest.mock('../../../lib/usePlanPhotos', () => ({
   usePlanAlbumCard: jest.fn(),
-  planPhotosKey: (planId: string) => ['plan-photos', planId],
 }));
 
 jest.mock('../../../lib/photos', () => ({
