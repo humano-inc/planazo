@@ -197,13 +197,15 @@ export default tseslint.config(
     rules: {
       'no-restricted-syntax': ['error', ...emDashWithText, ...noRawErrorAlert],
 
-      // Length is a proxy for "this file is doing too much". 400 counts real
+      // Length is a proxy for "this file is doing too much". 300 counts real
       // code only: this codebase comments heavily and that should never push a
-      // file over. Seven screens are over the cap today and each carries a
-      // file-level disable pointing at the issue that removes it.
+      // file over. A file that cannot come under it carries a file-level
+      // disable naming the issue that will, so the exception has an owner and
+      // an end. Styles stay co-located; moving them out to duck the cap moves
+      // lines without splitting the file that is doing too much.
       'max-lines': [
         'error',
-        { max: 400, skipBlankLines: true, skipComments: true },
+        { max: 300, skipBlankLines: true, skipComments: true },
       ],
     },
   },

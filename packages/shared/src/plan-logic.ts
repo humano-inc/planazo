@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- PLA-113 */
 // Pure domain logic for plan confirmation and date selection.
 // This is the single source of truth — screens and DB functions must not
 // reimplement these rules.
