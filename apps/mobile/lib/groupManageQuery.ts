@@ -1,26 +1,27 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { keyFactory } from './queryKey';
 import { groupsKey } from './useGroupRows';
 
 /**
  * The heavy group read behind Manage and Admins. Called with no id it is the
  * prefix a write to any group invalidates.
  */
-export const groupManageKey = (id?: string) => (id ? ['group-manage', id] : ['group-manage']);
+export const groupManageKey = keyFactory('group-manage');
 
 /**
  * The group detail screen's own read: a different shape from the one above,
  * with the group's plans embedded. It lives here rather than beside that
- * screen because a screen is not something `lib/` may import, and because
- * `invalidateGroup` below already has to name all three group caches in one
- * place.
+ * screen because the query is declared inline in the screen and `lib/` may
+ * not import a screen, and because `invalidateGroup` below already has to
+ * name all three group caches in one place.
  */
-export const groupDetailKey = (id?: string) => (id ? ['group', id] : ['group']);
+export const groupDetailKey = keyFactory('group');
 
 /**
  * The Manage screen's group query, shared with the Admins screen (PLA-50).
  *
- * One definition on purpose: both screens read `['group-manage', id]`, and the
+ * One definition on purpose: both screens read `groupManageKey(id)`, and the
  * cache is only actually shared while the key and the select stay identical.
  * Two hand-maintained copies of this select would drift apart silently.
  */

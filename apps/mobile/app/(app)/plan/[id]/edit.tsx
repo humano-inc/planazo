@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../../lib/supabase';
 import { alertActionError, UserFacingError } from '../../../../lib/queryErrors';
 import { useDismissTo } from '../../../../lib/navigation';
-import { planDetailKey, planDetailQuery } from '../../../../lib/planDetailQuery';
+import { planDetailKey, planDetailQuery } from '../../../../lib/usePlanDetail';
 import { feedKey } from '../../../../lib/useFeed';
 import { contentViolation } from '../../../../lib/moderation';
 import { FormScreen, HeaderAction, HeaderRow, ThemedText } from '../../../../components/ui';

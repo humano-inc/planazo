@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { keyFactory } from './queryKey';
 import { useAuthStore } from '../stores/authStore';
 
 export interface Friend {
@@ -27,7 +28,7 @@ interface FriendshipEnds {
  * Who you are friends with. Called with no id it is the prefix a write to any
  * friendship invalidates.
  */
-export const friendsKey = (userId?: string) => (userId ? ['friends', userId] : ['friends']);
+export const friendsKey = keyFactory('friends');
 
 /** Accepted friendships, either direction, as the people on the other end. */
 export function useFriends() {

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { keyFactory } from './queryKey';
 import { useAuthStore } from '../stores/authStore';
 
 export interface PendingGroupInvite {
@@ -41,7 +42,7 @@ interface RequesterEnd {
  * Everything waiting on the user. Called with no id it is the prefix a write
  * to any invite or join request invalidates.
  */
-export const invitesKey = (userId?: string) => (userId ? ['invites', userId] : ['invites']);
+export const invitesKey = keyFactory('invites');
 
 /**
  * Everything waiting on the user (18a row, 18b sheet, tab badge) reads this

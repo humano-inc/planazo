@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { keyFactory } from './queryKey';
 import { useAuthStore } from '../stores/authStore';
 import { deriveGroupRows } from './groupRows';
 
@@ -9,7 +10,7 @@ import { deriveGroupRows } from './groupRows';
  * tab's own row set. `myGroupsKey` hangs off the same prefix on purpose, and
  * builds itself from this factory so it cannot drift out from under it.
  */
-export const groupsKey = (userId?: string) => (userId ? ['groups', userId] : ['groups']);
+export const groupsKey = keyFactory('groups');
 
 /**
  * The Groups tab's fetch: memberships, per-group member counts, and the open

@@ -1,18 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { keyFactory } from './queryKey';
 import { useAuthStore } from '../stores/authStore';
 
 /**
- * The feed's cache key, and the pattern every key factory here follows:
- * `feedKey()` is the prefix covering every feed there is, which is what a
- * write to any plan invalidates, and `feedKey(userId)` is one person's.
- *
- * Thirteen files reached for the string `['home-plans']` before this existed.
- * A key is only shared while every one of them spells it identically, and a
- * typo in an invalidation is silent: the write lands, the feed keeps showing
- * what it showed before, and nothing fails.
+ * The feed's cache key. `feedKey()` is every feed there is, which is what a
+ * write to any plan invalidates; `feedKey(userId)` is one person's. Thirteen
+ * files reached for the string before this existed — see lib/queryKey.ts.
  */
-export const feedKey = (userId?: string) => (userId ? ['home-plans', userId] : ['home-plans']);
+export const feedKey = keyFactory('home-plans');
 
 /**
  * The feed's one fetch: every non-cancelled plan across the user's groups,

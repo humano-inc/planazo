@@ -1,35 +1,68 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { PlanStatus, PlanType } from '@planazo/shared';
 import { supabase } from './supabase';
 import { deleteOwnRsvp, offerWaitingList } from './rsvp';
+import { keyFactory } from './queryKey';
 import { feedKey } from './useFeed';
-import { planDetailKey, planDetailQuery } from './planDetailQuery';
 import { alertActionError } from './queryErrors';
 import { requireUserId } from './currentUser';
 import { useAuthStore } from '../stores/authStore';
 
 /**
- * The plan detail screen's own reads, keyed one per table. Each takes the id
- * it belongs to, or nothing for the prefix covering every plan — realtime
- * invalidates by prefix when its payload does not name a plan.
+ * Everything the plan screens read, keyed one per table. Each takes the id it
+ * belongs to, or nothing for the prefix covering every plan — realtime
+ * invalidates by prefix when its payload does not name one.
  */
-export const planRsvpsKey = (planId?: string) => (planId ? ['plan-rsvps', planId] : ['plan-rsvps']);
-export const planAvailabilitiesKey = (planId?: string) =>
-  planId ? ['plan-availabilities', planId] : ['plan-availabilities'];
-export const planGroupMemberIdsKey = (groupId?: string) =>
-  groupId ? ['plan-group-member-ids', groupId] : ['plan-group-member-ids'];
+export const planDetailKey = keyFactory('plan');
+export const planRsvpsKey = keyFactory('plan-rsvps');
+export const planAvailabilitiesKey = keyFactory('plan-availabilities');
+export const planGroupMemberIdsKey = keyFactory('plan-group-member-ids');
 
 /**
  * Keyed on the pair, because the answer is per person as well as per group.
- * The prefix is separate rather than an omitted argument: an invalidation
- * filter matches by position, so `['plan-membership', undefined, undefined]`
- * would match nothing at all.
+ * Spelled out rather than built from `keyFactory`: a filter matches
+ * positionally, so a key with a *hole* in it (one id known, the other not)
+ * would match nothing. Either both are known or this is the prefix.
  */
-export const PLAN_MEMBERSHIP_KEY = ['plan-membership'] as const;
-const planMembershipKey = (groupId: string | undefined, userId: string | undefined) => [
-  ...PLAN_MEMBERSHIP_KEY,
-  groupId,
-  userId,
-];
+export const planMembershipKey = (groupId?: string, userId?: string) =>
+  groupId && userId ? ['plan-membership', groupId, userId] : ['plan-membership'];
+
+/**
+ * The plan detail row, shared by the detail screen, Edit and Cancel (PLA-116).
+ *
+ * The same shape three times over, which is what the cache sharing depends on:
+ * Edit and Cancel warm themselves from the detail screen's entry, so a slimmer
+ * select in either would clobber the joins the detail screen renders from
+ * (creator, canceller, groups). Both files carried a comment warning about
+ * exactly that, which is a rule three copies had to remember; now there is one
+ * copy and nothing to remember.
+ *
+ * Spread it and override what differs. The detail screen below waits on the
+ * user as well as the id and says why; the other two do not.
+ */
+export function planDetailQuery(id: string | undefined) {
+  return {
+    queryKey: planDetailKey(id),
+    queryFn: async () => {
+      // `enabled` below keeps this from running without an id; the guard is
+      // what tells the typed client that.
+      if (!id) throw new Error('planDetailQuery needs a plan id');
+      const { data, error } = await supabase
+        .from('plans')
+        .select(
+          '*, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups(id, name, color)'
+        )
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      // `status` and `plan_type` are CHECK-constrained text, which the
+      // generated types can only call `string`. Narrowing at the query means
+      // the screens and their cards never see the widened columns.
+      return { ...data, status: data.status as PlanStatus, plan_type: data.plan_type as PlanType };
+    },
+    enabled: !!id,
+  };
+}
 
 /**
  * Every fetch and write on the plan detail screen. `onDatesCommitted` fires

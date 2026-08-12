@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Database } from '@planazo/shared';
 import { supabase } from './supabase';
+import { keyFactory } from './queryKey';
 import { alertActionError } from './queryErrors';
 import { useAuthStore } from '../stores/authStore';
 
@@ -27,8 +28,7 @@ export interface CancelNotice {
  * The notices waiting above someone's feed. Called with no id it is the
  * prefix a cancellation invalidates, wherever it happened.
  */
-export const cancelNoticesKey = (userId?: string) =>
-  userId ? ['cancel-notices', userId] : ['cancel-notices'];
+export const cancelNoticesKey = keyFactory('cancel-notices');
 
 /**
  * 19e: a cancellation of a plan you'd said yes to earns one dismissable

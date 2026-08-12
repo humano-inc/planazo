@@ -1,10 +1,8 @@
 import { useQuery, type QueryKey } from '@tanstack/react-query';
 import { supabase } from './supabase';
 import { PHOTO_SELECT, SIGNED_URL_REFRESH_MS, signPhotos, type PhotoRow } from './photos';
+import { planPhotosKey } from './planPhotosKey';
 
-/** One plan's album, or with no id the prefix covering every plan's. */
-export const planPhotosKey = (planId?: string) =>
-  planId ? ['plan-photos', planId] : ['plan-photos'];
 
 /**
  * The signed half of both album queries, dependent on rows the caller has

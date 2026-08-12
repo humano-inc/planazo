@@ -7,8 +7,12 @@ import { supabase } from '../../../../lib/supabase';
 import { alertActionError } from '../../../../lib/queryErrors';
 import { costLine } from '../../../../lib/cancelCost';
 import { useDismissTo } from '../../../../lib/navigation';
-import { planDetailKey, planDetailQuery } from '../../../../lib/planDetailQuery';
-import { planAvailabilitiesKey, planRsvpsKey } from '../../../../lib/usePlanDetail';
+import {
+  planAvailabilitiesKey,
+  planDetailKey,
+  planDetailQuery,
+  planRsvpsKey,
+} from '../../../../lib/usePlanDetail';
 import { feedKey } from '../../../../lib/useFeed';
 import { ThemedText, Button, FormScreen } from '../../../../components/ui';
 import { colors, fonts, radii, spacing } from '../../../../theme/tokens';
@@ -27,9 +31,9 @@ export default function CancelPlanScreen() {
 
   // Warm from the detail screen's cache. These share query keys with the
   // detail screen, so the selects must match its shapes exactly — a slimmer
-  // select here would clobber the detail's cached joins. The plan itself is
-  // one shared descriptor for that reason (lib/planDetailQuery.ts); the two
-  // below still spell their own.
+  // select here would clobber the detail's cached joins. The plan is one
+  // shared descriptor for that reason; the two below are the same duplication
+  // one table down, which PLA-132 lifts the same way.
   const { data: plan } = useQuery(planDetailQuery(id));
 
   const { data: rsvps } = useQuery({

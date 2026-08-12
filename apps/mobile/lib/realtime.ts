@@ -7,13 +7,13 @@ import { cancelNoticesKey } from './useCancelNotices';
 import { feedKey } from './useFeed';
 import { groupDetailKey } from './groupManageQuery';
 import { groupsKey } from './useGroupRows';
-import { planDetailKey } from './planDetailQuery';
-import { planPhotosKey } from './usePlanPhotos';
+import { planPhotosKey } from './planPhotosKey';
 import { planPollKey } from './usePlanPoll';
 import {
-  PLAN_MEMBERSHIP_KEY,
   planAvailabilitiesKey,
+  planDetailKey,
   planGroupMemberIdsKey,
+  planMembershipKey,
   planRsvpsKey,
 } from './usePlanDetail';
 import { useAuthStore } from '../stores/authStore';
@@ -78,7 +78,7 @@ export function keysForChange(
     case 'plan_poll_options':
     case 'plan_poll_votes':
       // One case for all three: the detail screen reads the poll, its options
-      // and its votes as a single nested ['plan-poll', id] query, and all
+      // and its votes as a single nested planPollKey(id) query, and all
       // three tables denormalise plan_id so every insert/update names its
       // plan. Votes moving under you while you look at the tally is the most
       // valuable live update the poll has (PLA-47). The feed re-renders the
@@ -98,11 +98,11 @@ export function keysForChange(
     case 'group_members':
       return [
         groupDetailKey(groupId),
-        // Covers useMyGroups too: it keys on ['groups', 'mine', userId], a
-        // child of this one on purpose (PLA-78).
+        // Covers useMyGroups too: it keys on [...groupsKey(), 'mine', userId],
+        // a child of this one on purpose (PLA-78).
         groupsKey(),
         feedKey(),
-        PLAN_MEMBERSHIP_KEY,
+        planMembershipKey(),
         planGroupMemberIdsKey(groupId),
       ];
   }

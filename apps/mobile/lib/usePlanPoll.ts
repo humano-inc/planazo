@@ -1,6 +1,7 @@
 import { Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { keyFactory } from './queryKey';
 import { contentViolation } from './moderation';
 import { cleanPollDraft, type PollDraft } from './pollDraft';
 import { applyVoteToHomePlans, applyVoteToPolls, type VoteIntent } from './pollVoteCache';
@@ -13,7 +14,7 @@ import { actionErrorCopy, isForbiddenError, UserFacingError } from './queryError
  * With no id it is the prefix covering every plan's poll, which is what a
  * realtime delete falls back to.
  */
-export const planPollKey = (planId?: string) => (planId ? ['plan-poll', planId] : ['plan-poll']);
+export const planPollKey = keyFactory('plan-poll');
 
 interface PollOptionRow {
   id: string;
