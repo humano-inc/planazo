@@ -36,10 +36,18 @@ const countWord = (n: number) => {
  * what is read keeps this shape honest about what a column removal would
  * break. `PlanAlbumData` carries the dates, status, creator and rsvps that the
  * shared album and confirmation logic already agree on.
+ *
+ * Several members are render-only — `title`, `description`, `location`,
+ * `groups`, `cancel_reason`, `canceller`, `creator` — because the cards take
+ * this same shape rather than a prop each.
  */
 export interface PlanDetailRow extends PlanAlbumData {
   status: PlanStatus;
   plan_type: PlanType;
+  title: string;
+  description: string | null;
+  location: string | null;
+  groups: { name: string; color: string | null };
   min_people: number;
   max_people: number | null;
   cancelled_at: string | null;
@@ -127,6 +135,19 @@ export function derivePlanDetail({
   else if (isOpenFlexible && lead && leadCount > 0)
     headline = `${gap} more on ${fmtDay(lead[1].date)}`;
   else headline = `${gap} more and it's on`;
+
+  // The chip above the title, on the same precedence as the headline: an
+  // ending beats a confirmation, and being called off beats not happening.
+  // `ended` rather than a tone, because both endings render in the flat grey
+  // the palette keeps for them, and neither is a state anyone is waiting on.
+  const statusBadge: { label: string; ended: true } | { label: string; tone: 'confirmed' | 'open' } =
+    isCancelled
+      ? { label: 'Called off', ended: true }
+      : isExpired
+        ? { label: "Didn't happen", ended: true }
+        : confirmed
+          ? { label: 'Confirmed', tone: 'confirmed' }
+          : { label: 'Open', tone: 'open' };
 
   // Room is counted off `going`, the very number rendered beside it — NOT
   // off the yes-RSVPs the cap is actually enforced on. On an open flexible
@@ -223,6 +244,7 @@ export function derivePlanDetail({
     isOpenFlexible,
     confirmed,
     headline,
+    statusBadge,
     capLine,
     isFull,
     going,

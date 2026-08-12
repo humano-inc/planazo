@@ -5,7 +5,7 @@ import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { useCreatePlan } from '../../../lib/useCreatePlan';
 import { useMyGroups } from '../../../lib/useMyGroups';
 import { emptyPollDraft, pollDraftTouched, pollDraftValid } from '../../../lib/pollDraft';
-import { PollComposer } from '../../../components/PollComposer';
+import { PollComposer } from '../../../components/plan/PollComposer';
 import { WhenField } from '../../../components/plan/WhenField';
 import { HowManyField } from '../../../components/plan/HowManyField';
 import { NEEDS_GROUP_COPY, NeedsGroupState } from '../../../components/group/NeedsGroupState';

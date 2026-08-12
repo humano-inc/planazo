@@ -1,9 +1,8 @@
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { ThemedText } from './ui/ThemedText';
-import { CloseGlyph } from './ui/NavigationGlyphs';
-import { MIN_TOUCH_TARGET } from '../lib/a11y';
-import { MAX_POLL_OPTIONS, type PollDraft } from '../lib/pollDraft';
-import { colors, radii, spacing, type } from '../theme/tokens';
+import { CloseGlyph, ThemedText } from '../ui';
+import { MIN_TOUCH_TARGET } from '../../lib/a11y';
+import { MAX_POLL_OPTIONS, type PollDraft } from '../../lib/pollDraft';
+import { colors, radii, spacing, type } from '../../theme/tokens';
 
 /**
  * The option list the host writes: one bordered row per option with a ✕ to

@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- PLA-112 */
 import { useEffect, useMemo, useState } from 'react';
 import {
   View,
@@ -12,16 +11,17 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
 import { canVoteOnPolls, pollPeopleIn } from '@planazo/shared';
-import { PhotoAlbumCard } from '../../../../components/PhotoAlbumCard';
-import { PlanPolls } from '../../../../components/PlanPolls';
+import { PhotoAlbumCard } from '../../../../components/plan/PhotoAlbumCard';
+import { PlanPolls } from '../../../../components/plan/PlanPolls';
 import { PlanTopBar } from '../../../../components/plan/PlanTopBar';
+import { PlanTitleBlock } from '../../../../components/plan/PlanTitleBlock';
 import { PlanStatusCard } from '../../../../components/plan/PlanStatusCard';
+import { PlanFactsCard } from '../../../../components/plan/PlanFactsCard';
 import { DateVoteList } from '../../../../components/plan/DateVoteList';
 import { PlanPeopleSections } from '../../../../components/plan/PlanPeopleSections';
 import { PlanDetailFooter } from '../../../../components/plan/PlanDetailFooter';
-import { fmtDay, fmtTime } from '../../../../lib/dates';
+import { fmtDay } from '../../../../lib/dates';
 import { useDismissTo } from '../../../../lib/navigation';
 import { errorCopy, isNotFoundError } from '../../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../../lib/usePullToRefresh';
@@ -30,15 +30,7 @@ import { derivePlanDetail } from '../../../../lib/planDerived';
 import { stashPendingPlan } from '../../../../lib/pendingPlan';
 import { planLinkFor } from '../../../../lib/shareLinks';
 import { useAuthStore } from '../../../../stores/authStore';
-import {
-  ThemedText,
-  Card,
-  Badge,
-  Button,
-  ListRow,
-  ErrorState,
-  colorForName,
-} from '../../../../components/ui';
+import { ThemedText, Button, ErrorState } from '../../../../components/ui';
 import { colors, spacing } from '../../../../theme/tokens';
 
 export default function PlanDetailScreen() {
@@ -154,7 +146,6 @@ export default function PlanDetailScreen() {
 
   const d = derived;
   const groupName = plan.groups.name;
-  const groupColor = plan.groups.color ?? colorForName(groupName);
   // The date rows are always tappable, so the footer must follow them: you're
   // editing the moment you start picking, even over a standing "no". Gating
   // this on !userRsvp let a declined plan's rows toggle while the footer stayed
@@ -187,14 +178,6 @@ export default function PlanDetailScreen() {
       },
     });
 
-  const statusBadge = d.isCancelled
-    ? { label: 'Called off', ended: true }
-    : d.isExpired
-      ? { label: "Didn't happen", ended: true }
-      : d.confirmed
-        ? { label: 'Confirmed', tone: 'confirmed' as const }
-        : { label: 'Open', tone: 'open' as const };
-
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <PlanTopBar planId={plan.id} groupId={plan.group_id} d={d} groupName={groupName} onNudge={nudge} />
@@ -204,34 +187,7 @@ export default function PlanDetailScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: footerHeight + spacing.xxl }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        <View style={styles.titleBlock}>
-          <View style={styles.chipRow}>
-            {'ended' in statusBadge ? (
-              <Badge
-                label={statusBadge.label}
-                tone="custom"
-                bg={colors.endedBadge}
-                fg={colors.textSecondary}
-                uppercase
-              />
-            ) : (
-              <Badge label={statusBadge.label} tone={statusBadge.tone} uppercase />
-            )}
-            <View style={[styles.swatch, { backgroundColor: groupColor }]} />
-            <ThemedText variant="caption">{groupName}</ThemedText>
-          </View>
-          <ThemedText
-            variant="screenTitle"
-            color={d.isEnded ? colors.textSecondary : colors.textPrimary}
-          >
-            {plan.title}
-          </ThemedText>
-          {plan.description ? (
-            <ThemedText variant="sub" color={d.isEnded ? colors.textMuted : colors.textSecondary}>
-              {plan.description}
-            </ThemedText>
-          ) : null}
-        </View>
+        <PlanTitleBlock plan={plan} d={d} />
 
         <PlanStatusCard plan={plan} d={d} />
 
@@ -266,49 +222,7 @@ export default function PlanDetailScreen() {
           />
         ) : null}
 
-        <Animated.View layout={LinearTransition}>
-          <Card padded={false} style={d.isEnded ? styles.endedDetails : null}>
-            {d.isLocked && plan.locked_date ? (
-              <Animated.View entering={FadeInDown}>
-                <ListRow
-                  title={fmtDay(plan.locked_date)}
-                  value={fmtTime(plan.locked_date)}
-                  struck={d.isCancelled}
-                />
-              </Animated.View>
-            ) : null}
-            {plan.event_date ? (
-              <ListRow
-                title={fmtDay(plan.event_date)}
-                value={fmtTime(plan.event_date)}
-                struck={d.isCancelled}
-              />
-            ) : null}
-            {plan.location ? (
-              <ListRow
-                title={plan.location}
-                divider={!!plan.event_date || (d.isLocked && !!plan.locked_date)}
-                right={
-                  d.isEnded ? undefined : (
-                    <ThemedText variant="bodyStrong" color={colors.accent}>
-                      Map
-                    </ThemedText>
-                  )
-                }
-              />
-            ) : null}
-            <ListRow
-              title={
-                // created_by goes null when the person who posted it deleted
-                // their account — the plan outlives them, the name does not.
-                d.isEnded
-                  ? `${d.youCreated ? 'You' : plan.creator?.display_name ?? 'Someone who left'} set this up`
-                  : `Hosted by ${d.youCreated ? 'you' : plan.creator?.display_name ?? 'someone who left'}`
-              }
-              divider={!!plan.location || !!plan.event_date || (d.isLocked && !!plan.locked_date)}
-            />
-          </Card>
-        </Animated.View>
+        <PlanFactsCard plan={plan} d={d} />
 
         <PlanPeopleSections d={d} />
 
@@ -427,22 +341,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     // paddingBottom is measured from the footer at runtime — see footerHeight.
     gap: spacing.xl,
-  },
-  titleBlock: {
-    gap: spacing.sm,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  swatch: {
-    width: 14,
-    height: 14,
-    borderRadius: 5,
-    marginLeft: spacing.xs,
-  },
-  endedDetails: {
-    opacity: 0.7,
   },
 });

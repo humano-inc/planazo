@@ -7,7 +7,7 @@ import { submitPollDraft, planPollKey } from '../../../../lib/usePlanPoll';
 import { emptyPollDraft, pollDraftValid } from '../../../../lib/pollDraft';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 import { alertActionError } from '../../../../lib/queryErrors';
-import { PollOptionsEditor } from '../../../../components/PollComposer';
+import { PollOptionsEditor } from '../../../../components/plan/PollComposer';
 import {
   ThemedText,
   Button,

@@ -932,9 +932,13 @@ describe('PlanDetailScreen — who said no', () => {
     });
     await renderDetail();
 
-    await waitFor(() => expect(screen.getByText('Going')).toBeTruthy());
+    // The names are behind the rsvps query, the heading behind the plan one:
+    // same reason as the flexible case below, wait for both.
+    await waitFor(() => {
+      expect(screen.getByText('Going')).toBeTruthy();
+      expect(screen.getByText('Pau')).toBeTruthy();
+    });
     expect(screen.getByTestId('declined-section')).toBeTruthy();
-    expect(screen.getByText('Pau')).toBeTruthy();
     expect(screen.getByText('Sam')).toBeTruthy();
     // The bare count it replaces is gone, not merely supplemented
     expect(screen.queryByText("2 can't make it")).toBeNull();
@@ -985,8 +989,14 @@ describe('PlanDetailScreen — who said no', () => {
     });
     await renderDetail();
 
-    await waitFor(() => expect(screen.getByText('In the mix')).toBeTruthy());
-    expect(screen.getByText('Marta')).toBeTruthy();
+    // Both, in one wait: the heading comes off the plan query and the names
+    // off the availabilities one, so waiting only for the heading leaves the
+    // people a tick behind on a slow machine (this failed on CI while passing
+    // locally three ways).
+    await waitFor(() => {
+      expect(screen.getByText('In the mix')).toBeTruthy();
+      expect(screen.getByText('Marta')).toBeTruthy();
+    });
     expect(screen.getByTestId('declined-section')).toBeTruthy();
     expect(screen.getByText('Pau')).toBeTruthy();
   });
