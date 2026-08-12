@@ -27,6 +27,7 @@ const avail = (option: DateOption, user_id: string, name: string | null = null):
 const plan = (over: Partial<PlanDetailRow> = {}): PlanDetailRow => ({
   status: 'open',
   plan_type: 'fixed',
+  location: null,
   min_people: 3,
   max_people: null,
   cancelled_at: null,

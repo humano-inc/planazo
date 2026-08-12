@@ -1,20 +1,20 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PhotoAlbumCard } from '../PhotoAlbumCard';
-import { usePlanAlbumCard } from '../../lib/usePlanPhotos';
-import { pickPhotos, uploadPhotos, type UploadOutcome } from '../../lib/photos';
+import { usePlanAlbumCard } from '../../../lib/usePlanPhotos';
+import { pickPhotos, uploadPhotos, type UploadOutcome } from '../../../lib/photos';
 
 // photos.ts reaches the supabase client through lib/images, which reads env
 // at import time. The card never touches it in these tests.
-jest.mock('../../lib/supabase', () => ({ supabase: { from: jest.fn(), storage: {} } }));
+jest.mock('../../../lib/supabase', () => ({ supabase: { from: jest.fn(), storage: {} } }));
 
-jest.mock('../../lib/usePlanPhotos', () => ({
+jest.mock('../../../lib/usePlanPhotos', () => ({
   usePlanAlbumCard: jest.fn(),
   planPhotosKey: (planId: string) => ['plan-photos', planId],
 }));
 
-jest.mock('../../lib/photos', () => ({
-  ...jest.requireActual('../../lib/photos'),
+jest.mock('../../../lib/photos', () => ({
+  ...jest.requireActual('../../../lib/photos'),
   pickPhotos: jest.fn(),
   uploadPhotos: jest.fn(),
 }));

@@ -2,11 +2,10 @@ import { useCallback, useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ThemedText } from './ui/ThemedText';
-import { Button } from './ui/Button';
-import { PhotoTile } from './ui/PhotoTile';
-import { ForwardGlyph } from './ui/NavigationGlyphs';
-import { usePlanAlbumCard, planPhotosKey } from '../lib/usePlanPhotos';
+import { Button, ForwardGlyph, ThemedText } from '../ui';
+// Deep, because the barrel does not carry PhotoTile (PLA-117 owns adding it).
+import { PhotoTile } from '../ui/PhotoTile';
+import { usePlanAlbumCard, planPhotosKey } from '../../lib/usePlanPhotos';
 import {
   MAX_PHOTOS_PER_PERSON,
   MAX_PHOTOS_PER_PLAN,
@@ -14,9 +13,9 @@ import {
   pickPhotos,
   uploadPhotos,
   type UploadOutcome,
-} from '../lib/photos';
-import { errorCopy } from '../lib/queryErrors';
-import { colors, radii, spacing } from '../theme/tokens';
+} from '../../lib/photos';
+import { errorCopy } from '../../lib/queryErrors';
+import { colors, radii, spacing } from '../../theme/tokens';
 
 /** Tiles the strip shows before it stops and lets the count do the talking.
  *  `plan_album_card` returns exactly this many, so changing one means

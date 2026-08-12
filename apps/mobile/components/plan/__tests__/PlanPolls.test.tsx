@@ -1,17 +1,17 @@
 import { Alert } from 'react-native';
 import { screen, fireEvent, waitFor } from '@testing-library/react-native';
 import { PlanPolls } from '../PlanPolls';
-import { supabase } from '../../lib/supabase';
-import { chain } from '../../lib/testing/supabase';
-import { renderWithQuery } from '../../lib/testing/render';
+import { supabase } from '../../../lib/supabase';
+import { chain } from '../../../lib/testing/supabase';
+import { renderWithQuery } from '../../../lib/testing/render';
 
-jest.mock('../../lib/supabase', () => ({
+jest.mock('../../../lib/supabase', () => ({
   supabase: { from: jest.fn() },
 }));
 
 const mockPush = jest.fn();
 jest.mock('expo-router', () =>
-  require('../../lib/testing/router').expoRouterMock(() => ({ push: mockPush }))
+  require('../../../lib/testing/router').expoRouterMock(() => ({ push: mockPush }))
 );
 
 const mockFrom = supabase.from as jest.Mock;

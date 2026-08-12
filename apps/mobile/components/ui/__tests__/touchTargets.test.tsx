@@ -1,7 +1,11 @@
 import { StyleSheet, type ViewStyle } from 'react-native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
-import { PollOptionsEditor } from '../../PollComposer';
+import { PollOptionsEditor } from '../../plan/PollComposer';
+// PollComposer reaches the ui barrel, which reaches GroupPhotoField and so
+// lib/images and the real client, which refuses to load without env. Nothing
+// here touches the network; the stub is only to keep that import legal.
+jest.mock('../../../lib/supabase', () => ({ supabase: {} }));
 import { AnswerFooter } from '../AnswerFooter';
 import { BackButton } from '../BackButton';
 import { Button } from '../Button';

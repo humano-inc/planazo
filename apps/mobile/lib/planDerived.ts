@@ -40,6 +40,8 @@ const countWord = (n: number) => {
 export interface PlanDetailRow extends PlanAlbumData {
   status: PlanStatus;
   plan_type: PlanType;
+  /** Rendered by PlanFactsCard rather than derived from. */
+  location: string | null;
   min_people: number;
   max_people: number | null;
   cancelled_at: string | null;
