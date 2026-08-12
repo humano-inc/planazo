@@ -4,7 +4,7 @@ import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { filterByName, candidatesEmptyLine, memberName } from '../../lib/groupAdmins';
 import { ThemedText, Card, Avatar, SearchField } from '../ui';
 import { colors, radii, spacing } from '../../theme/tokens';
-import { settingsStyles } from './PrefSwitchRow';
+import { settingsStyles } from './settingsStyles';
 import { adminRowStyles } from './AdminsCard';
 import type { GroupMemberRow } from './MemberList';
 

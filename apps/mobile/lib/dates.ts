@@ -14,3 +14,21 @@ export const isoDate = (year: number, monthIndex: number, day: number) =>
 
 /** A local Date as YYYY-MM-DD. */
 export const isoOfDate = (d: Date) => isoDate(d.getFullYear(), d.getMonth(), d.getDate());
+
+/**
+ * How long ago something arrived, for a row where the exact time is noise:
+ * "just now", "5m ago", "3h ago", "yesterday", "3 days ago", "2w ago".
+ *
+ * Coarsens as it goes, on purpose. A minute matters on an invite that landed
+ * while you were looking; a week-old one only has to read as old.
+ */
+export function timeAgo(iso: string): string {
+  const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 60) return mins <= 1 ? 'just now' : `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days} days ago`;
+  return `${Math.floor(days / 7)}w ago`;
+}

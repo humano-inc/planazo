@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, TextInput } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../../lib/supabase';
@@ -9,21 +9,19 @@ import { contentViolation } from '../../../../lib/moderation';
 import { groupDetailKey, groupManageKey } from '../../../../lib/groupManageQuery';
 import { groupsKey } from '../../../../lib/useGroupRows';
 import { feedKey } from '../../../../lib/useFeed';
-import { removeGroupPhoto, uploadGroupPhoto } from '../../../../lib/images';
+import { removeGroupPhoto, uploadGroupPhoto, type PhotoDraft } from '../../../../lib/images';
 import { captureError } from '../../../../lib/sentry';
+import { GroupNameRow } from '../../../../components/group/GroupNameRow';
 import {
   ThemedText,
   FormScreen,
-  GroupTile,
   GroupColourField,
   GroupPhotoField,
   HeaderAction,
   HeaderRow,
   colorForName,
 } from '../../../../components/ui';
-import { colors, fonts, spacing } from '../../../../theme/tokens';
-
-type PhotoDraft = { kind: 'keep' } | { kind: 'remove' } | { kind: 'new'; uri: string };
+import { spacing } from '../../../../theme/tokens';
 
 /** 6e "Group profile" — the photo, the name and the colour, nothing else. */
 export default function EditGroupScreen() {
@@ -123,25 +121,12 @@ export default function EditGroupScreen() {
 
   return (
     <FormScreen header={header} contentContainerStyle={styles.content} testID="group-edit">
-      <View style={styles.nameRow}>
-        <GroupTile
-          name={valid ? draftName : '?'}
-          color={draftColor}
-          imageUrl={draftImage}
-          size={52}
-        />
-        <View style={styles.nameBlock}>
-          <TextInput
-            style={styles.nameInput}
-            placeholder="Name the group"
-            placeholderTextColor={colors.textFaint}
-            value={draftName}
-            onChangeText={setName}
-            testID="name-input"
-          />
-          <View style={styles.rule} />
-        </View>
-      </View>
+      <GroupNameRow
+        name={draftName}
+        color={draftColor}
+        imageUrl={draftImage}
+        onChangeName={setName}
+      />
 
       <GroupPhotoField
         uri={draftImage}
@@ -169,25 +154,5 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: spacing.lg,
     gap: spacing.xxl,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  nameBlock: {
-    flex: 1,
-    gap: spacing.sm,
-  },
-  nameInput: {
-    fontFamily: fonts.displayHeavy,
-    fontSize: 26,
-    letterSpacing: -0.52,
-    color: colors.textPrimary,
-    padding: 0,
-  },
-  rule: {
-    height: 2,
-    backgroundColor: colors.borderStrong,
   },
 });

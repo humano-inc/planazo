@@ -10,18 +10,18 @@ import { groupsKey } from '../../../lib/useGroupRows';
 import { uploadGroupPhoto } from '../../../lib/images';
 import { captureError } from '../../../lib/sentry';
 import { FriendPicker } from '../../../components/group/FriendPicker';
+import { GroupNameRow } from '../../../components/group/GroupNameRow';
 import {
   ThemedText,
   Button,
   FormScreen,
-  GroupTile,
   GroupColourField,
   GroupPhotoField,
   HeaderAction,
   HeaderRow,
   showToast,
 } from '../../../components/ui';
-import { colors, fonts, groupColors, spacing, type } from '../../../theme/tokens';
+import { colors, groupColors, spacing, type } from '../../../theme/tokens';
 
 export default function NewGroupScreen() {
   const leaveFor = useLeaveFor();
@@ -137,25 +137,7 @@ export default function NewGroupScreen() {
         />
       }
     >
-      <View style={styles.nameRow}>
-        <GroupTile
-          name={named ? name : '?'}
-          color={color}
-          imageUrl={photoUri}
-          size={52}
-        />
-        <View style={styles.nameBlock}>
-          <TextInput
-            style={styles.nameInput}
-            placeholder="Name the group"
-            placeholderTextColor={colors.textFaint}
-            value={name}
-            onChangeText={setName}
-            testID="name-input"
-          />
-          <View style={styles.rule} />
-        </View>
-      </View>
+      <GroupNameRow name={name} color={color} imageUrl={photoUri} onChangeName={setName} />
 
       <GroupPhotoField
         uri={photoUri}
@@ -197,26 +179,6 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: spacing.sm,
     gap: spacing.xxl,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  nameBlock: {
-    flex: 1,
-    gap: spacing.sm,
-  },
-  nameInput: {
-    fontFamily: fonts.displayHeavy,
-    fontSize: 26,
-    letterSpacing: -0.52,
-    color: colors.textPrimary,
-    padding: 0,
-  },
-  rule: {
-    height: 2,
-    backgroundColor: colors.borderStrong,
   },
   section: {
     gap: 10,

@@ -27,6 +27,14 @@ export async function pickFromLibrary(opts: { square?: boolean } = {}): Promise<
   return result.canceled ? null : (result.assets[0]?.uri ?? null);
 }
 
+/**
+ * What an edit screen holds while a photo decision is pending: leave the
+ * stored one alone, drop it, or upload this local pick on save. Three states
+ * rather than a nullable uri, because "unchanged" and "removed" are different
+ * saves and only the second one writes null.
+ */
+export type PhotoDraft = { kind: 'keep' } | { kind: 'remove' } | { kind: 'new'; uri: string };
+
 export interface PickedImage {
   uri: string;
   width: number;

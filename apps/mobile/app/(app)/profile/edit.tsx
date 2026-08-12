@@ -1,20 +1,13 @@
 import { useState } from 'react';
-import {
-  ActionSheetIOS,
-  Alert,
-  Platform,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
 import { alertActionError, UserFacingError } from '../../../lib/queryErrors';
 import { useDismissTo } from '../../../lib/navigation';
 import { contentViolation } from '../../../lib/moderation';
 import { useAuthStore } from '../../../stores/authStore';
-import { pickFromLibrary, takePhoto, uploadAvatar } from '../../../lib/images';
+import { openActionSheet } from '../../../lib/actionSheet';
+import { pickFromLibrary, takePhoto, uploadAvatar, type PhotoDraft } from '../../../lib/images';
 import {
   Avatar,
   FormScreen,
@@ -24,8 +17,6 @@ import {
   ThemedText,
 } from '../../../components/ui';
 import { colors, fonts, spacing } from '../../../theme/tokens';
-
-type PhotoDraft = { kind: 'keep' } | { kind: 'remove' } | { kind: 'new'; uri: string };
 
 const PHOTO_SHEET_TITLE = 'Your photo is what friends see next to your yes';
 
@@ -74,40 +65,32 @@ export default function ProfileEdit() {
     onError: alertActionError,
   });
 
-  const applyChoice = async (index: number) => {
-    if (index === 0) {
-      const uri = await takePhoto();
-      if (uri) setPhoto({ kind: 'new', uri });
-    } else if (index === 1) {
-      const uri = await pickFromLibrary({ square: true });
-      if (uri) setPhoto({ kind: 'new', uri });
-    } else if (index === 2) {
-      setPhoto({ kind: 'remove' });
-    }
-  };
-
-  const openPhotoOptions = () => {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
+  const openPhotoOptions = () =>
+    openActionSheet({
+      message: PHOTO_SHEET_TITLE,
+      androidTitle: 'Change photo',
+      rows: [
         {
-          title: PHOTO_SHEET_TITLE,
-          options: ['Take a photo', 'Choose from library', 'Use my initial instead', 'Cancel'],
-          cancelButtonIndex: 3,
-          destructiveButtonIndex: 2,
+          label: 'Take a photo',
+          run: async () => {
+            const uri = await takePhoto();
+            if (uri) setPhoto({ kind: 'new', uri });
+          },
         },
-        (index) => {
-          if (index !== 3) void applyChoice(index);
-        }
-      );
-    } else {
-      Alert.alert('Change photo', PHOTO_SHEET_TITLE, [
-        { text: 'Take a photo', onPress: () => void applyChoice(0) },
-        { text: 'Choose from library', onPress: () => void applyChoice(1) },
-        { text: 'Use my initial instead', onPress: () => void applyChoice(2) },
-        { text: 'Cancel', style: 'cancel' },
-      ]);
-    }
-  };
+        {
+          label: 'Choose from library',
+          run: async () => {
+            const uri = await pickFromLibrary({ square: true });
+            if (uri) setPhoto({ kind: 'new', uri });
+          },
+        },
+        {
+          label: 'Use my initial instead',
+          run: () => setPhoto({ kind: 'remove' }),
+          destructive: true,
+        },
+      ],
+    });
 
   const shownUri =
     photo.kind === 'new' ? photo.uri : photo.kind === 'keep' ? profile?.avatar_url : null;

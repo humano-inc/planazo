@@ -12,10 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ThemedText } from '../../../../components/ui/ThemedText';
-import { PhotoTile } from '../../../../components/ui/PhotoTile';
-import { ErrorState } from '../../../../components/ui/ErrorState';
-import { BackButton } from '../../../../components/ui/BackButton';
+import { BackButton, ErrorState, PhotoTile, ThemedText } from '../../../../components/ui';
 import { useDismissTo } from '../../../../lib/navigation';
 import { LINK_HIT_SLOP } from '../../../../lib/a11y';
 import { usePlanPhotos } from '../../../../lib/usePlanPhotos';

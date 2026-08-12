@@ -1,19 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  ActionSheetIOS,
-  Alert,
-  Animated,
-  Easing,
-  Image,
-  Platform,
-  Pressable,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Animated, Easing, Image, Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from './ThemedText';
 import { TextAction } from './TextAction';
 import { PlusGlyph } from './NavigationGlyphs';
 import { tileRadius } from './GroupTile';
+import { openActionSheet } from '../../lib/actionSheet';
 import { pickFromLibrary, takePhoto } from '../../lib/images';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { colors, fonts, radii, spacing } from '../../theme/tokens';
@@ -44,47 +35,31 @@ export function GroupPhotoField({
   onPick,
   onRemove,
 }: GroupPhotoFieldProps) {
-  // One list, so the labels and what they do cannot drift apart, and so the
-  // indices the two platform branches dispatch on are derived rather than
-  // written out twice. "Use the letter instead" only exists once there is a
-  // photo to undo, which is exactly why nothing here may hardcode a position.
-  const choices = [
-    {
-      label: 'Take a photo',
-      run: async () => {
-        const picked = await takePhoto();
-        if (picked) onPick(picked);
-      },
-    },
-    {
-      label: 'Choose from library',
-      run: async () => {
-        const picked = await pickFromLibrary({ square: true });
-        if (picked) onPick(picked);
-      },
-    },
-    ...(uri ? [{ label: 'Use the letter instead', run: () => onRemove() }] : []),
-  ];
-
-  const openPhotoOptions = () => {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
+  // "Use the letter instead" only exists once there is a photo to undo, which
+  // is why nothing here may hardcode a position: openActionSheet derives every
+  // index from this list.
+  const openPhotoOptions = () =>
+    openActionSheet({
+      message: SHEET_TITLE,
+      androidTitle: 'Group photo',
+      rows: [
         {
-          title: SHEET_TITLE,
-          options: [...choices.map((c) => c.label), 'Cancel'],
-          cancelButtonIndex: choices.length,
-          ...(uri ? { destructiveButtonIndex: choices.length - 1 } : {}),
+          label: 'Take a photo',
+          run: async () => {
+            const picked = await takePhoto();
+            if (picked) onPick(picked);
+          },
         },
-        // Cancel indexes past the end, so it resolves to undefined and no-ops.
-        (index) => void choices[index]?.run()
-      );
-    } else {
-      Alert.alert('Group photo', SHEET_TITLE, [
-        ...choices.map((c) => ({ text: c.label, onPress: () => void c.run() })),
-        { text: 'Cancel', style: 'cancel' as const },
-      ]);
-    }
-  };
+        {
+          label: 'Choose from library',
+          run: async () => {
+            const picked = await pickFromLibrary({ square: true });
+            if (picked) onPick(picked);
+          },
+        },
+        ...(uri ? [{ label: 'Use the letter instead', run: onRemove, destructive: true }] : []),
+      ],
+    });
 
   return (
     <View style={styles.section}>

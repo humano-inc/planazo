@@ -1,6 +1,7 @@
 import { View, StyleSheet, Pressable } from 'react-native';
 import { ForwardGlyph, ThemedText, Card } from '../ui';
-import { PrefSwitchRow, settingsStyles } from './PrefSwitchRow';
+import { PrefSwitchRow } from './PrefSwitchRow';
+import { settingsStyles } from './settingsStyles';
 import { memberLimits } from '../../lib/groupDoor';
 import { colors } from '../../theme/tokens';
 

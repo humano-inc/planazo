@@ -1,6 +1,7 @@
 import { View } from 'react-native';
 import { ThemedText, Card } from '../ui';
-import { PrefSwitchRow, settingsStyles } from './PrefSwitchRow';
+import { PrefSwitchRow } from './PrefSwitchRow';
+import { settingsStyles } from './settingsStyles';
 import { joinModeOf, whoCanInviteOf, type JoinMode, type WhoCanInvite } from '../../lib/groupDoor';
 
 interface Props {
