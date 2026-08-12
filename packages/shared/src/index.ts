@@ -21,8 +21,9 @@ export type PlanType = 'fixed' | 'flexible';
 export type PlanStatus = 'open' | 'locked' | 'cancelled';
 
 // Plan domain logic (single source of truth for confirmation math), by topic.
-// Screens and DB functions must not reimplement these rules. Importers name
-// the package, never a module below, so the split stays free to move.
+// Screens and DB functions must not reimplement these rules. Every consumer
+// imports `@planazo/shared` rather than a module below, which is what leaves
+// the topics free to move; nothing enforces that yet.
 export * from './plan/types';
 export * from './plan/dates';
 export * from './plan/capacity';

@@ -1,6 +1,5 @@
 // How many places a plan has, who holds one, and who is queued for the next
-// one to free up (PLA-20, PLA-37). Only a yes takes a seat; the vote hands out
-// none until it locks.
+// one to free up (PLA-20, PLA-37).
 
 import type { RsvpLike } from './types';
 

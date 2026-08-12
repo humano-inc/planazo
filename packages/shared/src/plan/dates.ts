@@ -1,7 +1,17 @@
-// Which dates a plan could happen on, and when it has stopped being able to:
-// counting availability, picking the viable option, and the endings rule.
+// Which dates a plan could happen on, and when it has stopped being able to.
 
-import type { Availability, DateCount, DateOption, NestedDateOption, PlanDates } from './types';
+import type { Availability, DateOption, PlanDates, ProfileLike } from './types';
+
+export interface DateCount {
+  count: number;
+  date: string;
+}
+
+/** The nested shape returned by Supabase selects like
+ *  `plan_date_options(id, date, date_availability(user_id))` */
+export interface NestedDateOption extends DateOption {
+  date_availability?: { user_id: string; profile?: ProfileLike | null }[] | null;
+}
 
 /**
  * Counts availability per date option

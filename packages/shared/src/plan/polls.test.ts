@@ -6,8 +6,6 @@ import {
   pollPeopleIn,
   pollVotedPhrase,
 } from './polls';
-// The last case here asserts what confirmation must never read, so it needs
-// both modules on purpose.
 import { isPlanConfirmed } from './confirmation';
 
 describe('polls (PLA-47)', () => {

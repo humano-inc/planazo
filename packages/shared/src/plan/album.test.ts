@@ -1,7 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { isAlbumOpen, canAddPhotos } from './album';
-// The album opens at the start of the night and isPlanPast closes it at the
-// end, so the cases that pin those two ends against each other need both.
 import { isPlanPast } from './dates';
 
 describe('album (PLA-32, PLA-55)', () => {

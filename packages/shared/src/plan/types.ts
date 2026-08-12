@@ -1,7 +1,6 @@
-// The row shapes every plan topic reads. They live together because they are
-// what the modules beside this one have in common: a date option, an
-// availability row, an RSVP row. Shapes assembled for one topic (capacity,
-// confirmation, album) live with that topic instead.
+// The row shapes more than one plan topic reads: a date option, an
+// availability row, an RSVP row. A shape only one module names lives with that
+// module instead, which is why this file is short and stays short.
 
 export interface DateOption {
   id: string;
@@ -20,17 +19,6 @@ export interface Availability {
   date_option_id: string;
   user_id: string;
   profile?: ProfileLike | null;
-}
-
-export interface DateCount {
-  count: number;
-  date: string;
-}
-
-/** The nested shape returned by Supabase selects like
- *  `plan_date_options(id, date, date_availability(user_id))` */
-export interface NestedDateOption extends DateOption {
-  date_availability?: { user_id: string; profile?: ProfileLike | null }[] | null;
 }
 
 export interface RsvpLike {

@@ -1,6 +1,7 @@
 // Whether a plan is on, who counts toward it, and whether it is still waiting
-// on you. Every "who is going" question turns on isVoteRunning: while the date
-// vote runs availability answers, once it is over yes-RSVPs do.
+// on you. lock_plan() in 20260728000000_plan_lock_cancel_rpcs.sql decides the
+// same thing server-side and says it must stay in step with this math, so a
+// change here is a change there.
 
 import { getYesCount } from './capacity';
 import { countAvailabilityByDate } from './dates';
