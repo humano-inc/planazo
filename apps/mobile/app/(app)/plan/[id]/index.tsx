@@ -101,18 +101,21 @@ export default function PlanDetailScreen() {
   // — RLS filters it to zero rows either way, so `.single()` throws PGRST116.
   // Say so instead of spinning forever (PLA-19).
   //
-  // `failed` is gated on `session`, because signed out the queries are disabled
-  // and resolve to nothing: without it the error would win the frame before the
-  // redirect above lands, and flash "This plan isn't here" at someone on their
-  // way to the login screen. QueryScreen holds the spinner for that frame.
-  const failed = isError || !plan;
+  // Two names on purpose. `noRow` is why this screen cannot draw itself;
+  // `failed` is whether to say so, and it is gated on `session` because signed
+  // out the queries are disabled and resolve to nothing. Without that gate the
+  // error would win the frame before the redirect above lands, and flash "This
+  // plan isn't here" at someone on their way to the login screen. QueryScreen
+  // holds the spinner for that frame instead.
+  const noRow = isError || !plan;
+  const failed = !!session && noRow;
   // `derived` is null only when `plan` is, but TypeScript cannot know that, and
   // the render below reads it.
-  if (isLoading || failed || !derived) {
+  if (isLoading || noRow || !derived) {
     return (
       <QueryScreen
         isLoading={isLoading}
-        failed={!!session && failed}
+        failed={failed}
         id={id}
         error={error}
         goneCopy={planGoneCopy}

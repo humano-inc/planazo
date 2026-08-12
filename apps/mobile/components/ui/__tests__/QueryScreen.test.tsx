@@ -91,8 +91,11 @@ describe('QueryScreen', () => {
   });
 
   /**
-   * Pins PLA-129 rather than fixing it: `retryQuery` counts a forbidden error
-   * as permanent, so this button re-runs a query configured never to retry it.
+   * Pins PLA-129 rather than fixing it. The button works — it calls `refetch`,
+   * which does issue a fresh request — but RLS will refuse that request for
+   * the same reason it refused the last one, so "Try again" under "You can't
+   * see this" offers a way out that cannot succeed. `retryQuery` already
+   * treats a forbidden error as permanent; only this branch disagrees.
    * Carried across from the four screens verbatim, because a class C
    * extraction does not change behaviour. Flip this when PLA-129 lands.
    */
