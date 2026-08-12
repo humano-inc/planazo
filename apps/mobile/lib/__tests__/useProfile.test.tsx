@@ -33,12 +33,18 @@ let alerts: string[][] = [];
 let profiles: ChainMock;
 let groupMembers: ChainMock;
 
-function wrapper({ children }: { children: ReactNode }) {
+/**
+ * One client per rendered hook, built outside the wrapper. A `new QueryClient`
+ * in the wrapper body survives only because react-query keeps the first one it
+ * saw, which is an internal, not a promise.
+ */
+const renderProfile = () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-}
-
-const renderProfile = () => renderHook(() => useProfile(), { wrapper });
+  const wrapper = ({ children }: { children: ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
+  return renderHook(() => useProfile(), { wrapper });
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -102,10 +108,15 @@ describe('useProfile', () => {
       result.current.signOut.mutate();
     });
 
+    // The mutation says the credentials survived, rather than settling as a
+    // success nobody had. Waited on rather than read straight after the alert:
+    // onError raises the alert before react-query flushes the state.
+    await waitFor(() => expect(result.current.signOut.isError).toBe(true));
     // A login screen over a session still on disk signs them back in on the
     // next launch (PLA-36), so the screen has to stay where it is.
-    await waitFor(() => expect(alerts).toHaveLength(1));
+    expect(alerts).toHaveLength(1);
     expect(alerts[0]![0]).toBe("Couldn't sign out");
+    expect(alerts[0]![1]).toContain('still signed in on this device');
     expect(mockReplace).not.toHaveBeenCalled();
   });
 

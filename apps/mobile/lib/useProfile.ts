@@ -23,17 +23,17 @@ export function useProfile() {
   const { user, profile, setProfile } = useAuthStore();
 
   /**
-   * The exit both ways out of an account share. Leaving is conditional on the
-   * credentials actually being gone from the device: a login screen shown over
-   * a session still on disk signs them straight back in on the next launch
-   * (PLA-36), so a refusal stays put and says which of the two happened.
+   * The exit both ways out of an account share, and whether it happened.
+   *
+   * Leaving is conditional on the credentials actually being gone from the
+   * device: a login screen shown over a session still on disk signs them
+   * straight back in on the next launch (PLA-36). The two callers stay put on
+   * a false, and say different things about it.
    */
-  const leaveOrExplain = async (stuckTitle: string, stuckBody: string) => {
-    if (await signOutOfAccount(user?.id, queryClient)) {
-      router.replace('/(auth)/login');
-      return;
-    }
-    Alert.alert(stuckTitle, stuckBody);
+  const leaveIfSignedOut = async (): Promise<boolean> => {
+    if (!(await signOutOfAccount(user?.id, queryClient))) return false;
+    router.replace('/(auth)/login');
+    return true;
   };
 
   const { data: groupCount } = useQuery({
@@ -90,11 +90,19 @@ export function useProfile() {
   });
 
   const signOut = useMutation({
-    mutationFn: () =>
-      leaveOrExplain(
-        "Couldn't sign out",
-        'Your account is still signed in on this device. Check your connection and try again.'
-      ),
+    mutationFn: async () => {
+      // A refusal is the mutation failing, not succeeding quietly: a caller
+      // reading `isSuccess` would otherwise be told the opposite of what the
+      // device did.
+      if (!(await leaveIfSignedOut())) {
+        throw new UserFacingError(
+          'Your account is still signed in on this device. Check your connection and try again.'
+        );
+      }
+    },
+    // The title names the action rather than the diagnosis, the way
+    // deleteAccount's does; the body is the sentence above, unclassified.
+    onError: (error: unknown) => Alert.alert("Couldn't sign out", actionErrorCopy(error).body),
   });
 
   const deleteAccount = useMutation({
@@ -123,11 +131,13 @@ export function useProfile() {
     // its own /logout call succeeds, and here that call is answered by a server
     // with no such user — so without this the next launch would restore a
     // session for a deleted account (PLA-36).
-    onSuccess: () =>
-      leaveOrExplain(
+    onSuccess: async () => {
+      if (await leaveIfSignedOut()) return;
+      Alert.alert(
         'Your account is deleted',
         "It couldn't be signed out on this device. Check your connection and sign out from this screen."
-      ),
+      );
+    },
     // Same shape as report.tsx: the title names this irreversible action, the
     // body comes classified rather than raw.
     onError: (error: unknown) =>
