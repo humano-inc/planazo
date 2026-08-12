@@ -78,12 +78,17 @@ app can already do.
 
 ### The data layer
 
-A screen does not open a Supabase query. It calls a `lib/` hook that owns the
-key, the select and the options, and the screen renders what comes back.
+A screen should not open its own Supabase query. It calls a `lib/` hook that
+owns the key, the select and the options, and renders what comes back.
 `usePlanDetail` + `planDerived`, and `useFeed` + `feedDerived`, are the pair to
 copy: the hook fetches, a pure function derives, the screen wraps that in a
 `useMemo` and draws it. The derivation is where the tests go, which is the whole
 reason for the split.
+
+This one is the direction, not yet the state. Plenty of screens still declare a
+query or a mutation inline, and the decomposition issues are what move them; a
+screen you are already editing for another reason is not an invitation to
+convert it. What the rule binds is new code: a new fetch goes in a hook.
 
 - **A key or select read by two files becomes one exported factory** beside its
   hook. `groupManageQuery` is the model: a shared cache entry is only shared
@@ -91,7 +96,10 @@ reason for the split.
   hand-maintained copies drift in silence.
 - **A failed write surfaces through `alertActionError`**, never a raw
   `error.message`. A postgres trigger message titled "Error" is not something a
-  user can act on. Lint enforces this (PLA-105).
+  user can act on. Lint catches the shape that existed when PLA-105 swept them
+  up, `Alert.alert(title, err.message)`, and says in its own comment that it
+  cannot catch a raw message routed any other way. Green lint is not proof you
+  followed this.
 - **A hook wrapping one query spreads it** and adds its own names on top
   (`{ ...query, friends }`), so `isLoading`, `isError` and `refetch` reach the
   screen with react-query's own names. A hook merging several queries returns a
