@@ -65,9 +65,56 @@ overrides any "never commit to main" habit.
 A function does one thing. If the name needs an "and", split it.
 
 Every function with logic gets thorough unit tests (happy path, edges, failure
-modes). Pure logic lives in `packages/shared` or a screen's `lib/` (vitest/jest,
-no database). Glue with no branches does not earn a test; the moment it grows
-one, it does.
+modes). A rule the database also enforces, or that a second app would need,
+lives in `packages/shared`; everything else lives in `apps/mobile/lib/`, which
+is flat. There are no screen-local `lib/` directories, and adding one is not the
+fix for a crowded screen. Glue with no branches does not earn a test; the moment
+it grows one, it does.
+
+A hook that has a file lives in `lib/useX.ts`, named for the hook. Hooks do not
+live in component files: the import then drags a component into anything that
+wants the behaviour, and it hides from anyone reading `lib/` to learn what the
+app can already do.
+
+### The data layer
+
+A screen should not open its own Supabase query. It calls a `lib/` hook that
+owns the key, the select and the options, and renders what comes back.
+`usePlanDetail` + `planDerived`, and `useFeed` + `feedDerived`, are the pair to
+copy: the hook fetches, a pure function derives, the screen wraps that in a
+`useMemo` and draws it. The derivation is where the tests go, which is the whole
+reason for the split.
+
+This one is the direction, not yet the state. Plenty of screens still declare a
+query or a mutation inline, and the decomposition issues are what move them; a
+screen you are already editing for another reason is not an invitation to
+convert it. What the rule binds is new code: a new fetch goes in a hook.
+
+- **A key or select read by two files becomes one exported factory** beside its
+  hook. `groupManageQuery` is the model: a shared cache entry is only shared
+  while both call sites spell the key and the select identically, and two
+  hand-maintained copies drift in silence.
+- **A failed write surfaces through `alertActionError`**, never a raw
+  `error.message`. A postgres trigger message titled "Error" is not something a
+  user can act on. Lint catches the shape that existed when PLA-105 swept them
+  up, `Alert.alert(title, err.message)`, and says in its own comment that it
+  cannot catch a raw message routed any other way. Green lint is not proof you
+  followed this.
+- **A hook wrapping one query spreads it** and adds its own names on top
+  (`{ ...query, friends }`), so `isLoading`, `isError` and `refetch` reach the
+  screen with react-query's own names. A hook merging several queries returns a
+  named object instead. Never alias a react-query field under a new name: a
+  caller reading `loading` on one hook and `isLoading` on the next has to learn
+  each hook twice. A hook that computes a *different* answer may of course name
+  it: `useMyGroups` returns `loading` because `!!user && isPending` is not
+  `isPending`, and it says why on the line above.
+
+A comment that states a count, or any census of the repo, is wrong the moment
+someone changes the thing it counted, and it fails silently because nothing
+tests a comment. State the rule and the reason instead. Two of these have
+already had to be corrected: the eslint config claimed seven screens carried a
+`max-lines` disable when none did, and CI claimed jest ran at "50%" of the cores
+long after the script settled on a literal 3.
 
 ## 7. Forms take the keyboard from `FormScreen`
 

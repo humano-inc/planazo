@@ -44,7 +44,7 @@ grounds, in rough order of yield:
 - **Logic living where it can't be tested**: branches inside components, math
   inline in RPC call sites, anything a jest test can only reach by standing up
   the world. The repo's own rule (one function, one purpose; logic extracts to
-  `packages/shared` or a screen's `lib/`) is the cleanup template.
+  `packages/shared` or the flat `apps/mobile/lib/`) is the cleanup template.
 - **Edges the tests skip**: a suite that covers one happy path around code
   with real branching (empty, zero, boundary, unexpected order).
 - **Seams**: places where two features meet (blocks × plans, invites ×
