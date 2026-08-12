@@ -13,11 +13,9 @@
  * The site every link in the app points at, shared with `lib/links.ts` so the
  * two cannot drift.
  *
- * `apps/web/lib/links.ts` keeps its own copy: it reads
- * `NEXT_PUBLIC_SITE_URL` first so a preview deployment can link to itself,
- * which is a different rule rather than the same string twice. Adding a
- * dependency on `@planazo/shared` to the web app for one constant would buy
- * nothing, so the pointer is this comment.
+ * `apps/web/lib/links.ts` keeps its own copy rather than sharing this one: it
+ * reads `NEXT_PUBLIC_SITE_URL` first so a preview deployment can link to
+ * itself, which is a different rule rather than the same string twice.
  */
 export const SITE_URL = 'https://planazo.me';
 

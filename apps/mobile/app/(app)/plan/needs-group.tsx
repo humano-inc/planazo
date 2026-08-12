@@ -1,8 +1,7 @@
 import { View, StyleSheet } from 'react-native';
 import { NEEDS_GROUP_COPY } from '../../../components/group/NeedsGroupState';
-import { useGoToGroups } from '../../../lib/navigation';
+import { useDismissTo, useGoToGroups } from '../../../lib/navigation';
 import { GroupTiles } from '../../../components/group/GroupTiles';
-import { useDismissTo } from '../../../lib/navigation';
 import { ThemedText, Button } from '../../../components/ui';
 import { colors, groupColors, spacing } from '../../../theme/tokens';
 

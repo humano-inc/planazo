@@ -7,10 +7,17 @@ export interface SheetRow {
   destructive?: boolean;
 }
 
-interface SheetOptions {
-  /** The line above the choices. Shown on both platforms; omit for a bare menu. */
+export interface SheetOptions {
+  /**
+   * The sentence above the choices. iOS shows it as the sheet's title, Android
+   * as the dialog's message under `androidTitle`. Omit for a bare menu.
+   */
   message?: string;
-  /** Android's dialog needs a title of its own; the iOS sheet has no room for one. */
+  /**
+   * The short line Android's dialog wants above the message. iOS gets no
+   * equivalent: a sheet here carries one line of context, and on iOS that line
+   * is `message`.
+   */
   androidTitle: string;
   /** "Cancel" unless the sheet already contains something a user could read as cancelling. */
   cancelLabel?: string;
@@ -38,6 +45,8 @@ export function openActionSheet({
   rows,
 }: SheetOptions): void {
   if (Platform.OS === 'ios') {
+    // iOS reddens one row, Android every row that asks. No sheet has two, so
+    // the platforms agree; a second destructive row is what would part them.
     const destructive = rows.findIndex((r) => r.destructive);
     ActionSheetIOS.showActionSheetWithOptions(
       {

@@ -2,13 +2,13 @@ import { StyleSheet } from 'react-native';
 import { colors, spacing } from '../../theme/tokens';
 
 /**
- * Shared by every settings card on Manage, switch rows and pressable rows
- * alike: the cards stack directly on top of each other, so a card that styled
- * its own rows would have to be corrected in five files to keep looking like
- * its neighbours.
+ * Every settings card on Manage draws its rows from here, switch rows and
+ * pressable rows alike. The cards stack directly on top of each other, so a
+ * card that styles its own rows drifts from the one above it.
  *
  * Its own file rather than an export from `PrefSwitchRow`, where it used to
- * live: five siblings import it, and only one of them wants the row component.
+ * live: a card that wants the styles usually does not want the row component,
+ * and importing a component to reach a stylesheet reads as a mistake.
  */
 export const settingsStyles = StyleSheet.create({
   section: {

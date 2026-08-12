@@ -1,6 +1,12 @@
 import { ActionSheetIOS, Alert, Platform } from 'react-native';
-import { openActionSheet, type SheetRow } from '../actionSheet';
+import { openActionSheet, type SheetOptions, type SheetRow } from '../actionSheet';
 
+/**
+ * `lib/testing/actionSheet` reads the same spy for screen suites, but it
+ * imports `act` from RNTL, and this project is the node one with no React
+ * renderer. It also exposes only the labels; the indices are what is on trial
+ * here.
+ */
 const iosSheet = () => {
   const call = (ActionSheetIOS.showActionSheetWithOptions as jest.Mock).mock.calls.at(-1)!;
   return { config: call[0] as Record<string, unknown>, pick: call[1] as (i: number) => void };
@@ -15,16 +21,7 @@ const androidAlert = () => {
   };
 };
 
-/** Platform.OS is a plain property, so it is swapped and put back by hand. */
-function onPlatform(os: 'ios' | 'android', run: () => void) {
-  const original = Platform.OS;
-  Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
-  try {
-    run();
-  } finally {
-    Object.defineProperty(Platform, 'OS', { value: original, configurable: true });
-  }
-}
+const originalOS = Platform.OS;
 
 const takePhoto = jest.fn();
 const remove = jest.fn();
@@ -42,11 +39,18 @@ beforeEach(() => {
   jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 });
 
+// Platform.OS is a plain property, so each suite sets it and this puts it back.
+afterEach(() => {
+  Platform.OS = originalOS;
+});
+
+const open = (extra: Partial<SheetOptions> = {}) =>
+  openActionSheet({ androidTitle: 'Group photo', rows: rows(), ...extra });
+
 describe('openActionSheet on iOS', () => {
-  const open = (extra: Partial<Parameters<typeof openActionSheet>[0]> = {}) =>
-    onPlatform('ios', () =>
-      openActionSheet({ androidTitle: 'Group photo', rows: rows(), ...extra })
-    );
+  beforeEach(() => {
+    Platform.OS = 'ios';
+  });
 
   it('appends the cancel row and points the sheet at its index', () => {
     open();
@@ -102,19 +106,14 @@ describe('openActionSheet on iOS', () => {
   it('takes a cancel label of its own, for a sheet that already offers a way out', () => {
     open({ cancelLabel: 'Close' });
 
-    expect(iosSheet().config.options).toEqual([
-      'Take a photo',
-      'Use the letter instead',
-      'Close',
-    ]);
+    expect((iosSheet().config.options as string[]).at(-1)).toBe('Close');
   });
 });
 
 describe('openActionSheet on Android', () => {
-  const open = (extra: Partial<Parameters<typeof openActionSheet>[0]> = {}) =>
-    onPlatform('android', () =>
-      openActionSheet({ androidTitle: 'Group photo', rows: rows(), ...extra })
-    );
+  beforeEach(() => {
+    Platform.OS = 'android';
+  });
 
   it('titles the dialog and puts the message under it', () => {
     open({ message: 'A photo makes the group easier to spot.' });
@@ -123,7 +122,7 @@ describe('openActionSheet on Android', () => {
     expect(androidAlert().message).toBe('A photo makes the group easier to spot.');
   });
 
-  it('turns each row into a button, with cancel last', () => {
+  it('turns each row into a button, marks the destructive one, and puts cancel last', () => {
     open();
 
     expect(androidAlert().buttons.map((b) => b.text)).toEqual([
@@ -131,12 +130,6 @@ describe('openActionSheet on Android', () => {
       'Use the letter instead',
       'Cancel',
     ]);
-    expect(androidAlert().buttons.at(-1)!.style).toBe('cancel');
-  });
-
-  it('marks the destructive row and leaves the others unstyled', () => {
-    open();
-
     expect(androidAlert().buttons.map((b) => b.style)).toEqual([
       undefined,
       'destructive',

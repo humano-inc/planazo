@@ -10,7 +10,6 @@ import { SITE_URL } from './shareLinks';
  * policy reachable *from inside the app*, not only from the store listing, so
  * `PRIVACY_URL` has to resolve before submission.
  */
-
 export const PRIVACY_URL = `${SITE_URL}/privacy`;
 export const TERMS_URL = `${SITE_URL}/terms`;
 export const SUPPORT_URL = `${SITE_URL}/support`;
