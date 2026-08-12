@@ -122,6 +122,8 @@ describe('openActionSheet on Android', () => {
     expect(androidAlert().message).toBe('A photo makes the group easier to spot.');
   });
 
+  // The styles reach the button objects and no further: RN's Android Alert
+  // forwards only each button's text to the native dialog.
   it('turns each row into a button, marks the destructive one, and puts cancel last', () => {
     open();
 

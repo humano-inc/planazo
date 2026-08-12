@@ -32,11 +32,18 @@ export interface SheetOptions {
  * 3` and dispatched on `index === 2`, so adding a choice meant editing four
  * numbers in two branches and the Android branch could silently keep the old
  * order. Deriving every index from the list is what makes a choice you add
- * later land in the same place on both platforms.
+ * later reach the handler it was written for.
  *
  * Rows are built by the caller, so a choice that only exists sometimes (a
  * "remove" with nothing to remove) is a filtered array rather than a position
  * anybody has to remember.
+ *
+ * The platforms are not equivalent past that, and this does not pretend they
+ * are. RN's Android `Alert` keeps `buttons.slice(0, 3)` and forwards only
+ * their text to the native dialog, so a fourth row takes the cancel behind it
+ * off the screen, and `style` reaches nothing. Both were already true of the
+ * three sheets this replaced, and the plan menu is the one that can build
+ * five.
  */
 export function openActionSheet({
   message,
