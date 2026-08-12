@@ -1,11 +1,6 @@
 import { deriveGroupPlanRows, type GroupPlan, type GroupPlanRow } from '../groupPlanRows';
 import { iso } from '../testing/dates';
-
-const yes = (user_id: string, display_name: string) => ({
-  user_id,
-  response: 'yes',
-  profile: { display_name },
-});
+import { yes } from '../testing/rsvps';
 
 /** One person free on each of the given days, so no evening ever has two. */
 const spreadThin = (days: number[]) =>

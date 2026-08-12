@@ -15,29 +15,10 @@ import Animated, {
   ReduceMotion,
   useReducedMotion,
 } from 'react-native-reanimated';
-import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import {
-  canVoteOnPolls,
-  countAvailabilityByDate,
-  earliestViableDate,
-  flattenNestedOptions,
-  isPlanConfirmed,
-  isPlanFull,
-  isPlanPast,
-  isVoteRunning,
-  needsUserResponse,
-  planGoingCount,
-  planGoingPeople,
-  pollPeopleIn,
-  waitlistPosition,
-  type PlanStatus,
-  type PlanType,
-  type RsvpResponse,
-} from '@planazo/shared';
-import { supabase } from '../../../lib/supabase';
-import { planWhenLabel } from '../../../lib/planWhen';
+import { useFeed } from '../../../lib/useFeed';
+import { deriveFeedItems } from '../../../lib/feedDerived';
 import { useFeedAnswers } from '../../../lib/useFeedAnswers';
 import { useCancelNotices } from '../../../lib/useCancelNotices';
 import { useMyGroups } from '../../../lib/useMyGroups';
@@ -64,41 +45,7 @@ export default function FeedScreen() {
   const [pickedDates, setPickedDates] = useState<Record<string, string[]>>({});
   const reducedMotion = useReducedMotion();
 
-  const { data: plans, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['home-plans', user?.id],
-    queryFn: async () => {
-      if (!user?.id) throw new Error('the feed needs a signed-in user');
-      const { data: memberships, error: memberError } = await supabase
-        .from('group_members')
-        .select('group_id')
-        .eq('user_id', user.id);
-
-      if (memberError) throw memberError;
-      const groupIds = memberships.map((m) => m.group_id);
-      if (groupIds.length === 0) return [];
-
-      const { data, error } = await supabase
-        .from('plans')
-        .select(
-          // lib/pollVoteCache.ts patches the plan_polls embed optimistically
-          // on a vote. The current vote makes its poll item disappear before
-          // the receipt trigger and settle-time refetch arrive, so keep this
-          // nested shape in step with that cache edit.
-          `*,
-          groups(id, name, color),
-          rsvps(user_id, response, waitlist_seq, profile:profiles(display_name)),
-          plan_date_options(id, date, date_availability(user_id, profile:profiles(display_name))),
-          plan_polls(id, question, created_at, plan_poll_options!plan_poll_options_poll_id_plan_id_fkey(id, label, position), plan_poll_votes(option_id, user_id), plan_poll_vote_receipts(user_id))`
-        )
-        .in('group_id', groupIds)
-        .neq('status', 'cancelled')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
+  const { data: plans, isLoading, isError, error, refetch } = useFeed();
   const { refreshing, onRefresh } = usePullToRefresh(refetch);
 
   // An empty feed means two different things, and the plans query cannot tell
@@ -112,79 +59,7 @@ export default function FeedScreen() {
     onDatesSent: (planId) => setPickedDates((prev) => ({ ...prev, [planId]: [] })),
   });
 
-  const decorated = useMemo(() => {
-    return (plans ?? []).map((plan) => {
-      const { dateOptions, availabilities } = flattenNestedOptions(plan.plan_date_options);
-      // `plan_type` and `status` are CHECK-constrained text in the schema, so
-      // the generated types can only call them `string`. Narrowing here is the
-      // one place the constraint has to be restated, and it keeps the domain
-      // unions intact everywhere downstream.
-      const planData = {
-        plan_type: plan.plan_type as PlanType,
-        status: plan.status as PlanStatus,
-        min_people: plan.min_people,
-        rsvps: plan.rsvps,
-        dateOptions,
-        availabilities,
-      };
-      const confirmed = isPlanConfirmed(planData);
-      const needs = needsUserResponse(planData, user?.id);
-      const found = plan.rsvps.find((r) => r.user_id === user?.id);
-      const userRsvp = found && { ...found, response: found.response as RsvpResponse | null };
-      const myDates = availabilities.filter((a) => a.user_id === user?.id).length;
-      const countByDate = countAvailabilityByDate(dateOptions, availabilities);
-      // No live vote — either there never was one, or locking ended it. What
-      // you can answer follows the same line as who counts, so the card's
-      // footer and its numbers can never describe two different plans.
-      const rsvpDriven = !isVoteRunning(planData);
-
-      // Two different populations, on purpose. The faces are everyone who has
-      // engaged, so someone who withdraws actually leaves the stack. The number
-      // beside min_people is the best single date, because that is what decides
-      // whether the plan is on. Three faces beside "1 of 3 needed" is honest.
-      const goingCount = planGoingCount(planData);
-      const goingNames = planGoingPeople(planData).map((p) => p.name);
-
-      const sortDate =
-        plan.locked_date ?? plan.event_date ?? earliestViableDate(countByDate, plan.min_people);
-
-      // 19e: Plans only ever holds things that still need you — expired and
-      // past-confirmed plans leave silently at the end of their day.
-      const isPast = isPlanPast(plan, dateOptions.map((o) => o.date));
-
-      // Every place taken (PLA-20). Only asked while a yes is what the plan
-      // wants — a running vote hands out no seats until it locks.
-      const isFull = rsvpDriven && isPlanFull({ max_people: plan.max_people, rsvps: plan.rsvps });
-
-      // Only you see your own place in the queue (PLA-37).
-      const waitPosition = waitlistPosition(plan.rsvps, user?.id);
-
-      return {
-        // Carries the narrowed unions forward so every card and helper reading
-        // this plan sees the domain types, not the raw text columns.
-        plan: { ...plan, plan_type: planData.plan_type, status: planData.status },
-        isPast,
-        confirmed,
-        needs,
-        userRsvp,
-        rsvpDriven,
-        isFull,
-        waitPosition,
-        myDates,
-        when: planWhenLabel(plan, dateOptions),
-        goingNames,
-        goingCount,
-        dateOptions,
-        countByDate,
-        canVoteOnPolls: canVoteOnPolls(
-          { created_by: plan.created_by, rsvps: plan.rsvps, availabilities },
-          user?.id
-        ),
-        pollPeopleIn: pollPeopleIn(plan.rsvps, availabilities),
-        sortKey: sortDate ? new Date(sortDate).getTime() : Number.MAX_SAFE_INTEGER,
-      };
-    });
-  }, [plans, user?.id]);
+  const decorated = useMemo(() => deriveFeedItems(plans, user?.id), [plans, user?.id]);
 
   const pollItems = useMemo(
     () =>

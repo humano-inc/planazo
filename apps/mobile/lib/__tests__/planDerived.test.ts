@@ -1,7 +1,8 @@
-import type { Availability, DateOption, RsvpLike } from '@planazo/shared';
+import type { Availability, DateOption } from '@planazo/shared';
 import { fmtDay } from '../dates';
 import { derivePlanDetail, type PlanDetailRow } from '../planDerived';
 import { iso } from '../testing/dates';
+import { no, rsvp, waiting, yes } from '../testing/rsvps';
 
 /**
  * Every branch of the plan detail screen's derivation, reached by input rather
@@ -11,19 +12,6 @@ import { iso } from '../testing/dates';
 
 const ME = 'u-me';
 const HOST = 'u-host';
-
-type Rsvp = RsvpLike & { user_id: string };
-
-const rsvp = (
-  user_id: string,
-  response: string | null,
-  name: string | null = null,
-  waitlist_seq: number | null = null
-): Rsvp => ({ user_id, response, waitlist_seq, profile: { display_name: name } });
-
-const yes = (id: string, name: string | null = null) => rsvp(id, 'yes', name);
-const no = (id: string, name: string | null = null) => rsvp(id, 'no', name);
-const waiting = (id: string, seq: number) => rsvp(id, 'pending', null, seq);
 
 const opt = (id: string, daysFromNow: number): DateOption => ({
   id,
