@@ -9,10 +9,20 @@
  * site, and `apps/web` must serve an AASA file claiming every path built here.
  */
 
-const SITE = 'https://planazo.me';
+/**
+ * The site every link in the app points at, shared with `lib/links.ts` so the
+ * two cannot drift.
+ *
+ * `apps/web/lib/links.ts` keeps its own copy: it reads
+ * `NEXT_PUBLIC_SITE_URL` first so a preview deployment can link to itself,
+ * which is a different rule rather than the same string twice. Adding a
+ * dependency on `@planazo/shared` to the web app for one constant would buy
+ * nothing, so the pointer is this comment.
+ */
+export const SITE_URL = 'https://planazo.me';
 
 export function inviteLinkFor(inviteCode: string): string {
-  return `${SITE}/join/${inviteCode}`;
+  return `${SITE_URL}/join/${inviteCode}`;
 }
 
 /**
@@ -23,5 +33,5 @@ export function inviteLinkFor(inviteCode: string): string {
  * "This plan isn't here" (PLA-19).
  */
 export function planLinkFor(planId: string): string {
-  return `${SITE}/plan/${planId}`;
+  return `${SITE_URL}/plan/${planId}`;
 }

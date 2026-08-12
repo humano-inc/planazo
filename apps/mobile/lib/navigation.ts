@@ -76,3 +76,26 @@ export function useLeaveFor(arrive: 'push' | 'navigate' = 'push') {
     if (dismiss(href)) setTimeout(() => router[arrive](href), DISMISS_MS);
   };
 }
+
+const GROUPS_TAB = '/(app)/(tabs)/groups' as const;
+
+/**
+ * Leaving for the Groups tab, where every "plans need a group first" road
+ * ends (PLA-68).
+ *
+ * `dismissFirst` is for a modal or sheet, which has to be gone before the tab
+ * underneath changes.
+ */
+export function useGoToGroups(dismissFirst = false) {
+  const router = useRouter();
+  // A tab is navigated to, never pushed: pushing one stacks a second copy.
+  const leaveForGroups = useLeaveFor('navigate');
+
+  return () => {
+    if (!dismissFirst) {
+      router.navigate(GROUPS_TAB);
+      return;
+    }
+    leaveForGroups(GROUPS_TAB);
+  };
+}

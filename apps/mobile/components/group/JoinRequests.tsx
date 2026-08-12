@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
 import { ThemedText, Card, Avatar, Button } from '../ui';
-import { settingsStyles } from './PrefSwitchRow';
+import { settingsStyles } from './settingsStyles';
 import { radii, spacing } from '../../theme/tokens';
 import type { JoinRequest } from '../../lib/useGroupDoor';
 

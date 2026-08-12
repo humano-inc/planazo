@@ -30,6 +30,7 @@ export { Chip } from './Chip';
 export { Badge } from './Badge';
 export { Avatar, colorForName } from './Avatar';
 export { GroupTile } from './GroupTile';
+export { PhotoTile } from './PhotoTile';
 export { GroupColourField } from './GroupColourField';
 export { GroupPhotoField } from './GroupPhotoField';
 // ColorSwatchPicker is not here: GroupColourField is the field screens use, and

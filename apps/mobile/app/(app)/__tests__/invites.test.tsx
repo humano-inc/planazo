@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import InvitesSheet, { timeAgo } from '../invites';
+import InvitesSheet from '../invites';
 import { useAuthStore } from '../../../stores/authStore';
 import { supabase } from '../../../lib/supabase';
 
@@ -98,17 +98,6 @@ beforeEach(() => {
       requester: { id: 'p9', display_name: 'Aina Roig', handle: 'ainaroig', avatar_url: null },
     },
   ];
-});
-
-describe('timeAgo', () => {
-  it('buckets minutes, hours and days', () => {
-    const now = Date.now();
-    expect(timeAgo(new Date(now - 30 * 1000).toISOString())).toBe('just now');
-    expect(timeAgo(new Date(now - 5 * 60 * 1000).toISOString())).toBe('5m ago');
-    expect(timeAgo(new Date(now - 3 * 3600 * 1000).toISOString())).toBe('3h ago');
-    expect(timeAgo(new Date(now - 26 * 3600 * 1000).toISOString())).toBe('yesterday');
-    expect(timeAgo(new Date(now - 3 * 24 * 3600 * 1000).toISOString())).toBe('3 days ago');
-  });
 });
 
 describe('InvitesSheet', () => {

@@ -1,0 +1,63 @@
+import { ActionSheetIOS, Alert, Platform } from 'react-native';
+
+export interface SheetRow {
+  label: string;
+  run: () => void | Promise<void>;
+  /** The one that takes something away. Red on both platforms. */
+  destructive?: boolean;
+}
+
+interface SheetOptions {
+  /** The line above the choices. Shown on both platforms; omit for a bare menu. */
+  message?: string;
+  /** Android's dialog needs a title of its own; the iOS sheet has no room for one. */
+  androidTitle: string;
+  /** "Cancel" unless the sheet already contains something a user could read as cancelling. */
+  cancelLabel?: string;
+  rows: SheetRow[];
+}
+
+/**
+ * The platform's own menu of choices, from one list (PLA-117).
+ *
+ * Three screens each wrote this out, and the interesting part is what the
+ * copies disagreed about: the profile photo sheet hardcoded `cancelButtonIndex:
+ * 3` and dispatched on `index === 2`, so adding a choice meant editing four
+ * numbers in two branches and the Android branch could silently keep the old
+ * order. Deriving every index from the list is what makes a choice you add
+ * later land in the same place on both platforms.
+ *
+ * Rows are built by the caller, so a choice that only exists sometimes (a
+ * "remove" with nothing to remove) is a filtered array rather than a position
+ * anybody has to remember.
+ */
+export function openActionSheet({
+  message,
+  androidTitle,
+  cancelLabel = 'Cancel',
+  rows,
+}: SheetOptions): void {
+  if (Platform.OS === 'ios') {
+    const destructive = rows.findIndex((r) => r.destructive);
+    ActionSheetIOS.showActionSheetWithOptions(
+      {
+        ...(message ? { title: message } : {}),
+        options: [...rows.map((r) => r.label), cancelLabel],
+        cancelButtonIndex: rows.length,
+        ...(destructive >= 0 ? { destructiveButtonIndex: destructive } : {}),
+      },
+      // Cancel indexes past the end, so it resolves to undefined and no-ops.
+      (index) => void rows[index]?.run()
+    );
+    return;
+  }
+
+  Alert.alert(androidTitle, message, [
+    ...rows.map((r) => ({
+      text: r.label,
+      style: r.destructive ? ('destructive' as const) : undefined,
+      onPress: () => void r.run(),
+    })),
+    { text: cancelLabel, style: 'cancel' as const },
+  ]);
+}

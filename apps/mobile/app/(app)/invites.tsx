@@ -8,6 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeOutUp, LinearTransition } from 'react-native-reanimated';
 import { supabase } from '../../lib/supabase';
+import { timeAgo } from '../../lib/dates';
 import { alertActionError } from '../../lib/queryErrors';
 import {
   invitesKey,
@@ -29,17 +30,6 @@ import {
   HeaderRow,
 } from '../../components/ui';
 import { colors, fonts, sheetDetents, spacing } from '../../theme/tokens';
-
-export function timeAgo(iso: string): string {
-  const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
-  if (mins < 60) return mins <= 1 ? 'just now' : `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return 'yesterday';
-  if (days < 7) return `${days} days ago`;
-  return `${Math.floor(days / 7)}w ago`;
-}
 
 /** "Marta invited you · Jordi, Aina and 3 more" */
 function memberLine(invite: PendingGroupInvite): string {

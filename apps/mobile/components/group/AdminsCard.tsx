@@ -3,7 +3,7 @@ import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { adminSub, adminsNote, memberName } from '../../lib/groupAdmins';
 import { RemoveGlyph, ThemedText, Card, Avatar } from '../ui';
 import { colors, radii, spacing } from '../../theme/tokens';
-import { settingsStyles } from './PrefSwitchRow';
+import { settingsStyles } from './settingsStyles';
 import type { GroupMemberRow } from './MemberList';
 
 interface Props {

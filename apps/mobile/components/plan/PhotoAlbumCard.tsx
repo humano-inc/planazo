@@ -2,9 +2,7 @@ import { useCallback, useState } from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button, ForwardGlyph, ThemedText } from '../ui';
-// Deep, because the barrel does not carry PhotoTile (PLA-117 owns adding it).
-import { PhotoTile } from '../ui/PhotoTile';
+import { Button, ForwardGlyph, PhotoTile, ThemedText } from '../ui';
 import { usePlanAlbumCard } from '../../lib/usePlanPhotos';
 import { planPhotosKey } from '../../lib/planPhotosKey';
 import {

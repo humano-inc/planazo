@@ -1,8 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useLeaveFor } from '../../lib/navigation';
+import { useGoToGroups } from '../../lib/navigation';
 import { EmptyState } from '../ui';
-
-const GROUPS_TAB = '/(app)/(tabs)/groups' as const;
 
 /**
  * Said in one place so the feed, the sheet and the create screen cannot drift
@@ -17,26 +14,6 @@ export const NEEDS_GROUP_COPY = {
     'A plan goes to one group, not to everybody. Join one or start one, then come back and post this.',
   cta: 'Sort out a group',
 } as const;
-
-/**
- * Leaving for the Groups tab from wherever this is shown.
- *
- * `dismissFirst` is for a modal or sheet, which has to be gone before the tab
- * underneath changes.
- */
-export function useGoToGroups(dismissFirst = false) {
-  const router = useRouter();
-  // A tab is navigated to, never pushed: pushing one stacks a second copy.
-  const leaveForGroups = useLeaveFor('navigate');
-
-  return () => {
-    if (!dismissFirst) {
-      router.navigate(GROUPS_TAB);
-      return;
-    }
-    leaveForGroups(GROUPS_TAB);
-  };
-}
 
 /**
  * What a user in no groups is told, wherever they meet it (PLA-68).

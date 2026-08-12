@@ -1,3 +1,7 @@
+// Same host as the links people share, and it has to be: shareLinks.ts owns
+// the constant and says why it must match `applinks:` in app.json.
+import { SITE_URL } from './shareLinks';
+
 /**
  * Outbound destinations the app links to.
  *
@@ -6,7 +10,7 @@
  * policy reachable *from inside the app*, not only from the store listing, so
  * `PRIVACY_URL` has to resolve before submission.
  */
-const SITE_URL = 'https://planazo.me';
+
 export const PRIVACY_URL = `${SITE_URL}/privacy`;
 export const TERMS_URL = `${SITE_URL}/terms`;
 export const SUPPORT_URL = `${SITE_URL}/support`;

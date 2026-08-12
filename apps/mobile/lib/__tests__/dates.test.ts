@@ -1,4 +1,4 @@
-import { fmtDay, fmtTime, isoDate, isoOfDate } from '../dates';
+import { fmtDay, fmtTime, isoDate, isoOfDate, timeAgo } from '../dates';
 
 /**
  * fmtDay is "the one shape a date takes on cards, rows and notices", so this is
@@ -43,5 +43,45 @@ describe('isoDate', () => {
 describe('isoOfDate', () => {
   it('formats a local Date as YYYY-MM-DD', () => {
     expect(isoOfDate(new Date(2026, 0, 9))).toBe('2026-01-09');
+  });
+});
+
+describe('timeAgo', () => {
+  const ago = (ms: number) => timeAgo(new Date(Date.now() - ms).toISOString());
+  const MIN = 60 * 1000;
+  const HOUR = 60 * MIN;
+  const DAY = 24 * HOUR;
+
+  it('buckets minutes, hours, days and weeks', () => {
+    expect(ago(30 * 1000)).toBe('just now');
+    expect(ago(5 * MIN)).toBe('5m ago');
+    expect(ago(3 * HOUR)).toBe('3h ago');
+    expect(ago(26 * HOUR)).toBe('yesterday');
+    expect(ago(3 * DAY)).toBe('3 days ago');
+    expect(ago(20 * DAY)).toBe('2w ago');
+  });
+
+  it('says "just now" for the first minute, then counts', () => {
+    expect(ago(0)).toBe('just now');
+    expect(ago(MIN)).toBe('just now');
+    expect(ago(2 * MIN)).toBe('2m ago');
+  });
+
+  /** Each boundary reads as the coarser unit the moment it is reached. */
+  it('turns over at 60 minutes, 24 hours and 7 days', () => {
+    expect(ago(59 * MIN)).toBe('59m ago');
+    expect(ago(HOUR)).toBe('1h ago');
+    expect(ago(23 * HOUR)).toBe('23h ago');
+    expect(ago(DAY)).toBe('yesterday');
+    expect(ago(6 * DAY)).toBe('6 days ago');
+    expect(ago(7 * DAY)).toBe('1w ago');
+  });
+
+  /**
+   * A clock that is behind the server's, which is the ordinary case for a row
+   * that just arrived. Negative ages clamp rather than reading "-1m ago".
+   */
+  it('clamps a timestamp from the future to "just now"', () => {
+    expect(timeAgo(new Date(Date.now() + 5 * MIN).toISOString())).toBe('just now');
   });
 });

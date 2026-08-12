@@ -1,6 +1,7 @@
 import { View, StyleSheet, Switch } from 'react-native';
 import { ThemedText } from '../ui';
-import { colors, spacing } from '../../theme/tokens';
+import { settingsStyles } from './settingsStyles';
+import { colors } from '../../theme/tokens';
 
 interface Props {
   label: string;
@@ -47,27 +48,6 @@ export function PrefSwitchRow({
     </View>
   );
 }
-
-/** Shared by every settings card on Manage, switch rows and pressable rows alike. */
-export const settingsStyles = StyleSheet.create({
-  section: {
-    gap: 10,
-  },
-  prefRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 14,
-    padding: spacing.lg,
-  },
-  divider: {
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-  },
-  note: {
-    paddingHorizontal: spacing.xs,
-  },
-});
 
 const styles = StyleSheet.create({
   body: {

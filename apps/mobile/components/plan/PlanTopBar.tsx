@@ -1,7 +1,8 @@
-import { StyleSheet, ActionSheetIOS, Alert, Platform } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
 import type { PlanDerived } from '../../lib/planDerived';
+import { openActionSheet, type SheetRow } from '../../lib/actionSheet';
 import { useDismissTo } from '../../lib/navigation';
 import { planLinkFor } from '../../lib/shareLinks';
 import { BackButton, HeaderRow, MoreGlyph, showToast } from '../ui';
@@ -31,52 +32,35 @@ export function PlanTopBar({ planId, groupId, d, groupName, onNudge }: Props) {
   // calling it off share one guard, because both are meaningless on a plan
   // that has already ended or been called off (PLA-31).
   const showMenu = () => {
-    const rows: { label: string; action: () => void; destructive?: boolean }[] = [
+    const rows: SheetRow[] = [
       // Not "invite link": this one admits nobody. The group's invite code is
       // what lets someone in, and conflating the two is how a host ends up
       // sending a stranger a link that can only tell them it isn't theirs.
       //
       // Fire-and-forget: writing to the clipboard has no failure mode worth a
       // dialog, and the toast is the confirmation.
-      { label: 'Copy link to this plan', action: () => void copyLink() },
+      { label: 'Copy link to this plan', run: () => void copyLink() },
     ];
     if (d.isOpen && !d.isPast && d.unanswered > 0) {
       rows.push({
         label: `Nudge the ${d.unanswered} who ${d.unanswered === 1 ? "hasn't" : "haven't"} answered`,
-        action: onNudge,
+        run: onNudge,
       });
     }
     if (d.isHost && !d.isCancelled && !d.isPast) {
       rows.push({
         label: 'Edit the details',
-        action: () => router.push(`/plan/${planId}/edit`),
+        run: () => router.push(`/plan/${planId}/edit`),
       });
       rows.push({
         label: 'Call it off',
-        action: () => router.push(`/plan/${planId}/cancel`),
+        run: () => router.push(`/plan/${planId}/cancel`),
         destructive: true,
       });
     }
-    if (Platform.OS === 'ios') {
-      const destructive = rows.findIndex((r) => r.destructive);
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: [...rows.map((r) => r.label), 'Cancel'],
-          cancelButtonIndex: rows.length,
-          destructiveButtonIndex: destructive >= 0 ? destructive : undefined,
-        },
-        (i) => rows[i]?.action()
-      );
-    } else {
-      Alert.alert('Plan options', undefined, [
-        ...rows.map((r) => ({
-          text: r.label,
-          style: r.destructive ? ('destructive' as const) : undefined,
-          onPress: r.action,
-        })),
-        { text: 'Close', style: 'cancel' as const },
-      ]);
-    }
+    // "Close" rather than "Cancel", which would sit directly under "Call it
+    // off" and read as a second way to do it.
+    openActionSheet({ androidTitle: 'Plan options', cancelLabel: 'Close', rows });
   };
 
   return (

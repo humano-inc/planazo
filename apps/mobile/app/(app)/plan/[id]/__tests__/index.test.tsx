@@ -637,7 +637,11 @@ describe('PlanDetailScreen — the 20a menu', () => {
         "Nudge the 3 who haven't answered",
         'Edit the details',
         'Call it off',
-        'Cancel',
+        // "Close", not "Cancel": the Android branch of this menu has always
+        // said so, because a "Cancel" directly under "Call it off" reads as a
+        // second way to do it. Sharing one sheet helper carried that wording
+        // to iOS (PLA-117).
+        'Close',
       ])
     );
 
