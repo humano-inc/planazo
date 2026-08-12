@@ -1,12 +1,9 @@
-/* eslint-disable max-lines -- PLA-109 */
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system/legacy';
-import { decode } from 'base64-arraybuffer';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
+import { pickFromLibrary, uploadAvatar } from '../../lib/images';
 import { captureError } from '../../lib/sentry';
 import { contentViolation } from '../../lib/moderation';
 import { LINK_HIT_SLOP, useAnnounce } from '../../lib/a11y';
@@ -66,51 +63,8 @@ export default function SignupScreen() {
   const step = nextStep(displayName, email, password);
 
   async function pickImage() {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert(
-        'Photos are off',
-        'Planazo needs access to your photo library to set a profile photo. You can turn it on in Settings.',
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setAvatarUri(result.assets[0].uri);
-    }
-  }
-
-  async function uploadAvatar(userId: string): Promise<string | null> {
-    if (!avatarUri) return null;
-
-    try {
-      const base64 = await FileSystem.readAsStringAsync(avatarUri, { encoding: 'base64' });
-      const filePath = `${userId}/avatar.jpg`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, decode(base64), { upsert: true, contentType: 'image/jpeg' });
-
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('avatars').getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (uploadError) {
-      // A missing photo is not worth failing the signup over — the account is
-      // made either way and the photo can be added from the profile screen.
-      captureError(uploadError, 'Avatar upload failed during signup; account created without a photo.');
-      return null;
-    }
+    const uri = await pickFromLibrary({ square: true });
+    if (uri) setAvatarUri(uri);
   }
 
   /**
@@ -127,9 +81,16 @@ export default function SignupScreen() {
     setSession(session);
 
     if (avatarUri) {
-      const avatarUrl = await uploadAvatar(session.user.id);
-      if (avatarUrl) {
+      // A missing photo is not worth failing the signup over: the account is
+      // made either way and the photo can be added from the profile screen.
+      try {
+        const avatarUrl = await uploadAvatar(session.user.id, avatarUri);
         await supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', session.user.id);
+      } catch (uploadError) {
+        captureError(
+          uploadError,
+          'Avatar upload failed during signup; account created without a photo.',
+        );
       }
     }
 
