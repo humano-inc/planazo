@@ -66,7 +66,7 @@ A candidate becomes a finding only if it survives this:
   itself is the finding.
 - **A cleanup needs a payoff in this repo's terms.** Name it: logic becomes
   unit-testable by extraction, a function stops needing "and" in its honest
-  name, duplicated math gets one owner, a file heads back under the 400-line
+  name, duplicated math gets one owner, a file heads back under the 300-line
   cap. "Could be more elegant" is taste, not a finding.
 - **It must be new.** Search Linear (`list_issues`, team Planazo, including
   Backlog/Todo) for the file or feature before reporting. Check the file's

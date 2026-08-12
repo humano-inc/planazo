@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- PLA-112 */
 import { useEffect, useMemo, useState } from 'react';
 import {
   View,

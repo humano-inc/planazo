@@ -1,3 +1,4 @@
+/* eslint-disable max-lines -- PLA-110 */
 import { useState } from 'react';
 import { View, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
