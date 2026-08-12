@@ -20,8 +20,16 @@ export type RsvpResponse = 'yes' | 'no' | 'pending';
 export type PlanType = 'fixed' | 'flexible';
 export type PlanStatus = 'open' | 'locked' | 'cancelled';
 
-// Plan domain logic (single source of truth for confirmation math)
-export * from './plan-logic';
+// Plan domain logic (single source of truth for confirmation math), by topic.
+// Screens and DB functions must not reimplement these rules. Every consumer
+// imports `@planazo/shared` rather than a module below, which is what leaves
+// the topics free to move; nothing enforces that yet.
+export * from './plan/types';
+export * from './plan/dates';
+export * from './plan/capacity';
+export * from './plan/confirmation';
+export * from './plan/album';
+export * from './plan/polls';
 
 /**
  * PLA-30 group photos. One folder per group, because that folder name is what

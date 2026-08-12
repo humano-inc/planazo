@@ -201,7 +201,7 @@ export function derivePlanDetail({
   // already fetched, so it costs nothing.
   const waitPosition = waitlistPosition(rsvps, userId);
 
-  // PLA-32. Both rules live in plan-logic beside the SQL they mirror; they
+  // PLA-32. Both rules live in plan/album.ts beside the SQL they mirror; they
   // were written out by hand here and drifted from it (PLA-55). Note isHost is
   // not an input: it is right for editing, cancelling and locking, and wrong as
   // a proxy for having been at the plan.
