@@ -23,12 +23,18 @@ interface FriendshipEnds {
   addressee: { id: string; display_name: string; handle: string | null; avatar_url: string | null };
 }
 
+/**
+ * Who you are friends with. Called with no id it is the prefix a write to any
+ * friendship invalidates.
+ */
+export const friendsKey = (userId?: string) => (userId ? ['friends', userId] : ['friends']);
+
 /** Accepted friendships, either direction, as the people on the other end. */
 export function useFriends() {
   const { user } = useAuthStore();
 
   const query = useQuery({
-    queryKey: ['friends', user?.id],
+    queryKey: friendsKey(user?.id),
     queryFn: async (): Promise<Friend[]> => {
       const { data, error } = await supabase
         .from('friendships')

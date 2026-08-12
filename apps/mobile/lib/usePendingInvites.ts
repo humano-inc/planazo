@@ -38,6 +38,12 @@ interface RequesterEnd {
 }
 
 /**
+ * Everything waiting on the user. Called with no id it is the prefix a write
+ * to any invite or join request invalidates.
+ */
+export const invitesKey = (userId?: string) => (userId ? ['invites', userId] : ['invites']);
+
+/**
  * Everything waiting on the user (18a row, 18b sheet, tab badge) reads this
  * one cache entry, so answering in the sheet drops the row and badge live.
  */
@@ -45,7 +51,7 @@ export function usePendingInvites() {
   const { user } = useAuthStore();
 
   const query = useQuery({
-    queryKey: ['invites', user?.id],
+    queryKey: invitesKey(user?.id),
     queryFn: async () => {
       const [invitesRes, requestsRes, myGroupsRes] = await Promise.all([
         supabase

@@ -6,6 +6,7 @@ import { supabase } from '../../../lib/supabase';
 import { alertActionError, UserFacingError } from '../../../lib/queryErrors';
 import { useDismissTo, useLeaveFor } from '../../../lib/navigation';
 import { contentViolation } from '../../../lib/moderation';
+import { groupsKey } from '../../../lib/useGroupRows';
 import { uploadGroupPhoto } from '../../../lib/images';
 import { captureError } from '../../../lib/sentry';
 import { FriendPicker } from '../../../components/group/FriendPicker';
@@ -96,7 +97,7 @@ export default function NewGroupScreen() {
       return group;
     },
     onSuccess: (group) => {
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: groupsKey() });
       leaveFor(`/(app)/group/${group.id}`);
     },
     onError: alertActionError,

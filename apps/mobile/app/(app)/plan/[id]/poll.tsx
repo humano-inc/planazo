@@ -4,6 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useDismissTo } from '../../../../lib/navigation';
 import { submitPollDraft, planPollKey } from '../../../../lib/usePlanPoll';
+import { feedKey } from '../../../../lib/useFeed';
 import { emptyPollDraft, pollDraftValid } from '../../../../lib/pollDraft';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 import { alertActionError } from '../../../../lib/queryErrors';
@@ -44,7 +45,7 @@ export default function NewPollScreen() {
     mutationFn: () => submitPollDraft(String(id), draft),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planPollKey(String(id)) });
-      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+      queryClient.invalidateQueries({ queryKey: feedKey() });
       leave();
     },
     onError: alertActionError,

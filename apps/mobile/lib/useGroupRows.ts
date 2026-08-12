@@ -4,6 +4,14 @@ import { useAuthStore } from '../stores/authStore';
 import { deriveGroupRows } from './groupRows';
 
 /**
+ * Everything the Groups tab knows about your groups. `groupsKey()` is the
+ * prefix every group-shaped write invalidates; `groupsKey(userId)` is this
+ * tab's own row set. `myGroupsKey` hangs off the same prefix on purpose, and
+ * builds itself from this factory so it cannot drift out from under it.
+ */
+export const groupsKey = (userId?: string) => (userId ? ['groups', userId] : ['groups']);
+
+/**
  * The Groups tab's fetch: memberships, per-group member counts, and the open
  * plans still waiting on this user, derived into render-ready rows
  * (lib/groupRows.ts). Overlaps useMyGroups on purpose — see the note on
@@ -13,7 +21,7 @@ export function useGroupRows() {
   const { user } = useAuthStore();
 
   return useQuery({
-    queryKey: ['groups', user?.id],
+    queryKey: groupsKey(user?.id),
     queryFn: async () => {
       const { data: memberships, error } = await supabase
         .from('group_members')

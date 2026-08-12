@@ -4,13 +4,16 @@ import { supabase } from './supabase';
 import { contentViolation } from './moderation';
 import { cleanPollDraft, type PollDraft } from './pollDraft';
 import { applyVoteToHomePlans, applyVoteToPolls, type VoteIntent } from './pollVoteCache';
+import { feedKey } from './useFeed';
 import { actionErrorCopy, isForbiddenError, UserFacingError } from './queryErrors';
 
 /**
  * The invalidation contract for everything poll-shaped: realtime.ts, the
  * vote mutation below and the two composer paths all invalidate this key.
+ * With no id it is the prefix covering every plan's poll, which is what a
+ * realtime delete falls back to.
  */
-export const planPollKey = (planId: string) => ['plan-poll', planId] as const;
+export const planPollKey = (planId?: string) => (planId ? ['plan-poll', planId] : ['plan-poll']);
 
 interface PollOptionRow {
   id: string;
@@ -145,20 +148,20 @@ export function useVotePlanPoll() {
       // rows between now and the settle-time invalidation.
       await Promise.all([
         queryClient.cancelQueries({ queryKey: planPollKey(vars.planId) }),
-        queryClient.cancelQueries({ queryKey: ['home-plans'] }),
+        queryClient.cancelQueries({ queryKey: feedKey() }),
       ]);
 
       // One snapshot list restores both caches on error; the feed key
       // carries the user id, so everything goes by prefix.
       const prev = [
         ...queryClient.getQueriesData({ queryKey: planPollKey(vars.planId) }),
-        ...queryClient.getQueriesData({ queryKey: ['home-plans'] }),
+        ...queryClient.getQueriesData({ queryKey: feedKey() }),
       ];
 
       queryClient.setQueryData(planPollKey(vars.planId), (old: PlanPollRow[] | undefined) =>
         old ? applyVoteToPolls(old, vars) : old
       );
-      queryClient.setQueriesData({ queryKey: ['home-plans'] }, (old: unknown) =>
+      queryClient.setQueriesData({ queryKey: feedKey() }, (old: unknown) =>
         Array.isArray(old) ? applyVoteToHomePlans(old, vars) : old
       );
 
@@ -173,7 +176,7 @@ export function useVotePlanPoll() {
     },
     onSettled: (_data, _error, vars) => {
       queryClient.invalidateQueries({ queryKey: planPollKey(vars.planId) });
-      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+      queryClient.invalidateQueries({ queryKey: feedKey() });
     },
   });
 }

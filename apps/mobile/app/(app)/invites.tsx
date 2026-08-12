@@ -10,10 +10,14 @@ import Animated, { FadeOutUp, LinearTransition } from 'react-native-reanimated';
 import { supabase } from '../../lib/supabase';
 import { alertActionError } from '../../lib/queryErrors';
 import {
+  invitesKey,
   usePendingInvites,
   type PendingFriendRequest,
   type PendingGroupInvite,
 } from '../../lib/usePendingInvites';
+import { feedKey } from '../../lib/useFeed';
+import { friendsKey } from '../../lib/useFriends';
+import { groupsKey } from '../../lib/useGroupRows';
 import { useDismissTo } from '../../lib/navigation';
 import {
   ThemedText,
@@ -53,10 +57,10 @@ export default function InvitesSheet() {
   const { groupInvites, friendRequests, count } = usePendingInvites();
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['invites'] });
-    queryClient.invalidateQueries({ queryKey: ['groups'] });
-    queryClient.invalidateQueries({ queryKey: ['friends'] });
-    queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+    queryClient.invalidateQueries({ queryKey: invitesKey() });
+    queryClient.invalidateQueries({ queryKey: groupsKey() });
+    queryClient.invalidateQueries({ queryKey: friendsKey() });
+    queryClient.invalidateQueries({ queryKey: feedKey() });
   };
 
   const respondInvite = useMutation({

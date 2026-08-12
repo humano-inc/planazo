@@ -1,10 +1,35 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PlanStatus, PlanType } from '@planazo/shared';
 import { supabase } from './supabase';
 import { deleteOwnRsvp, offerWaitingList } from './rsvp';
+import { feedKey } from './useFeed';
+import { planDetailKey, planDetailQuery } from './planDetailQuery';
 import { alertActionError } from './queryErrors';
 import { requireUserId } from './currentUser';
 import { useAuthStore } from '../stores/authStore';
+
+/**
+ * The plan detail screen's own reads, keyed one per table. Each takes the id
+ * it belongs to, or nothing for the prefix covering every plan — realtime
+ * invalidates by prefix when its payload does not name a plan.
+ */
+export const planRsvpsKey = (planId?: string) => (planId ? ['plan-rsvps', planId] : ['plan-rsvps']);
+export const planAvailabilitiesKey = (planId?: string) =>
+  planId ? ['plan-availabilities', planId] : ['plan-availabilities'];
+export const planGroupMemberIdsKey = (groupId?: string) =>
+  groupId ? ['plan-group-member-ids', groupId] : ['plan-group-member-ids'];
+
+/**
+ * Keyed on the pair, because the answer is per person as well as per group.
+ * The prefix is separate rather than an omitted argument: an invalidation
+ * filter matches by position, so `['plan-membership', undefined, undefined]`
+ * would match nothing at all.
+ */
+export const PLAN_MEMBERSHIP_KEY = ['plan-membership'] as const;
+const planMembershipKey = (groupId: string | undefined, userId: string | undefined) => [
+  ...PLAN_MEMBERSHIP_KEY,
+  groupId,
+  userId,
+];
 
 /**
  * Every fetch and write on the plan detail screen. `onDatesCommitted` fires
@@ -16,21 +41,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   const queryClient = useQueryClient();
 
   const { data: plan, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['plan', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('plans')
-        .select(
-          '*, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups(id, name, color)'
-        )
-        .eq('id', id)
-        .single();
-      if (error) throw error;
-      // `status` and `plan_type` are CHECK-constrained text, which the
-      // generated types can only call `string`. Narrowing at the query means
-      // the screen and its cards never see the widened columns.
-      return { ...data, status: data.status as PlanStatus, plan_type: data.plan_type as PlanType };
-    },
+    ...planDetailQuery(id),
     // Waits on the user, not just the id: a shared link can mount this screen
     // with no session, and RLS answers an anonymous request with zero rows for
     // every plan there is. The only thing such a request can produce is a false
@@ -39,7 +50,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   });
 
   const { data: rsvps } = useQuery({
-    queryKey: ['plan-rsvps', id],
+    queryKey: planRsvpsKey(id),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('rsvps')
@@ -66,7 +77,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   });
 
   const { data: availabilities } = useQuery({
-    queryKey: ['plan-availabilities', id],
+    queryKey: planAvailabilitiesKey(id),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('date_availability')
@@ -79,7 +90,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   });
 
   const { data: membership } = useQuery({
-    queryKey: ['plan-membership', plan?.group_id, user?.id],
+    queryKey: planMembershipKey(plan?.group_id, user?.id),
     queryFn: async () => {
       const { data } = await supabase
         .from('group_members')
@@ -95,7 +106,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   // Everyone in the circle — the menu's nudge count and 19c's "never
   // answered" line are both "members minus anyone who responded".
   const { data: memberIds } = useQuery({
-    queryKey: ['plan-group-member-ids', plan?.group_id],
+    queryKey: planGroupMemberIdsKey(plan?.group_id),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('group_members')
@@ -108,10 +119,10 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   });
 
   const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ['plan', id] });
-    queryClient.invalidateQueries({ queryKey: ['plan-rsvps', id] });
-    queryClient.invalidateQueries({ queryKey: ['plan-availabilities', id] });
-    queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+    queryClient.invalidateQueries({ queryKey: planDetailKey(id) });
+    queryClient.invalidateQueries({ queryKey: planRsvpsKey(id) });
+    queryClient.invalidateQueries({ queryKey: planAvailabilitiesKey(id) });
+    queryClient.invalidateQueries({ queryKey: feedKey() });
     if (plan?.group_id) {
       queryClient.invalidateQueries({ queryKey: ['group-plans', plan.group_id] });
     }

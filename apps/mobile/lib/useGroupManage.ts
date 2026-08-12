@@ -4,6 +4,9 @@ import { supabase } from './supabase';
 import { alertActionError } from './queryErrors';
 import { groupManageQuery, invalidateGroup } from './groupManageQuery';
 import { groupInviteKey } from './useGroupInvite';
+import { feedKey } from './useFeed';
+import { friendsKey } from './useFriends';
+import { groupsKey } from './useGroupRows';
 import { usePendingRemoval } from './usePendingRemoval';
 import { BLOCKED_QUERY_KEY, blockUser, fetchBlockedIds, unblockUser } from './moderation';
 import { useAuthStore } from '../stores/authStore';
@@ -52,8 +55,8 @@ export function useGroupManage(id: string) {
       queryClient.invalidateQueries({ queryKey: BLOCKED_QUERY_KEY });
       // The block dissolves ties server-side (friendship, their place in this
       // user's upcoming plans), so anything derived from those refetches.
-      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['friends'] });
+      queryClient.invalidateQueries({ queryKey: feedKey() });
+      queryClient.invalidateQueries({ queryKey: friendsKey() });
       invalidate();
     },
     onError: alertActionError,
@@ -110,8 +113,8 @@ export function useGroupManage(id: string) {
     // left asks RLS a question it now answers with nothing, which would flip
     // this screen to "This group isn't here" on its way out.
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
-      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+      queryClient.invalidateQueries({ queryKey: groupsKey() });
+      queryClient.invalidateQueries({ queryKey: feedKey() });
       router.navigate('/(app)/(tabs)/groups');
     },
     onError: alertActionError,

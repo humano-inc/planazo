@@ -6,6 +6,9 @@ import { supabase } from '../../../../lib/supabase';
 import { alertActionError, UserFacingError } from '../../../../lib/queryErrors';
 import { useDismissTo } from '../../../../lib/navigation';
 import { contentViolation } from '../../../../lib/moderation';
+import { groupDetailKey, groupManageKey } from '../../../../lib/groupManageQuery';
+import { groupsKey } from '../../../../lib/useGroupRows';
+import { feedKey } from '../../../../lib/useFeed';
 import { removeGroupPhoto, uploadGroupPhoto } from '../../../../lib/images';
 import { captureError } from '../../../../lib/sentry';
 import {
@@ -92,11 +95,11 @@ export default function EditGroupScreen() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['group', id] });
-      queryClient.invalidateQueries({ queryKey: ['group-manage', id] });
+      queryClient.invalidateQueries({ queryKey: groupDetailKey(id) });
+      queryClient.invalidateQueries({ queryKey: groupManageKey(id) });
       queryClient.invalidateQueries({ queryKey: ['group-edit', id] });
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
-      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+      queryClient.invalidateQueries({ queryKey: groupsKey() });
+      queryClient.invalidateQueries({ queryKey: feedKey() });
       leave();
     },
     onError: alertActionError,

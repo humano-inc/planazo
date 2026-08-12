@@ -4,7 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { alertActionError } from '../../lib/queryErrors';
 import { useAuthStore } from '../../stores/authStore';
-import { useFriends } from '../../lib/useFriends';
+import { friendsKey, useFriends } from '../../lib/useFriends';
+import { invitesKey } from '../../lib/usePendingInvites';
 import {
   MIN_SEARCH_LENGTH,
   cleanPeopleQuery,
@@ -118,8 +119,8 @@ export default function FindPeopleScreen() {
       setSentTo((prev) => ({ ...prev, [personId]: true }));
       // A crossing request auto-accepts: refresh friends and the invites badge
       if (status === 'accepted') {
-        queryClient.invalidateQueries({ queryKey: ['friends'] });
-        queryClient.invalidateQueries({ queryKey: ['invites'] });
+        queryClient.invalidateQueries({ queryKey: friendsKey() });
+        queryClient.invalidateQueries({ queryKey: invitesKey() });
         queryClient.invalidateQueries({ queryKey: ['friendships-pending'] });
       }
     },

@@ -3,6 +3,19 @@ import { AppState, AppStateStatus } from 'react-native';
 import { useQueryClient, QueryKey } from '@tanstack/react-query';
 import { REALTIME_SUBSCRIBE_STATES, type RealtimeChannel } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import { cancelNoticesKey } from './useCancelNotices';
+import { feedKey } from './useFeed';
+import { groupDetailKey } from './groupManageQuery';
+import { groupsKey } from './useGroupRows';
+import { planDetailKey } from './planDetailQuery';
+import { planPhotosKey } from './usePlanPhotos';
+import { planPollKey } from './usePlanPoll';
+import {
+  PLAN_MEMBERSHIP_KEY,
+  planAvailabilitiesKey,
+  planGroupMemberIdsKey,
+  planRsvpsKey,
+} from './usePlanDetail';
 import { useAuthStore } from '../stores/authStore';
 
 /**
@@ -38,37 +51,29 @@ export const FLUSH_DELAY_MS = 250;
  * invalidates every plan's copy as a prefix. Only mounted screens refetch, so
  * the fan-out is at most the one or two screens actually open.
  *
- * The bare ['group'] on rsvp/availability changes is deliberate too: those
- * rows don't carry a group_id, and the group screen embeds rsvps and
- * availability inside its ['group', id] query.
+ * The bare `groupDetailKey()` on rsvp/availability changes is deliberate too:
+ * those rows don't carry a group_id, and the group screen embeds rsvps and
+ * availability inside its own per-group query.
  */
 export function keysForChange(
   table: SubscribedTable,
   record: Record<string, unknown>,
 ): QueryKey[] {
-  const planId = typeof record.plan_id === 'string' ? record.plan_id : null;
-  const groupId = typeof record.group_id === 'string' ? record.group_id : null;
+  // undefined rather than null, because that is what the key factories read as
+  // "every one of them" — see the note on the bare prefixes above.
+  const planId = typeof record.plan_id === 'string' ? record.plan_id : undefined;
+  const groupId = typeof record.group_id === 'string' ? record.group_id : undefined;
 
   switch (table) {
     case 'rsvps':
-      return [
-        planId ? ['plan-rsvps', planId] : ['plan-rsvps'],
-        ['home-plans'],
-        ['group'],
-        ['groups'],
-      ];
+      return [planRsvpsKey(planId), feedKey(), groupDetailKey(), groupsKey()];
     case 'date_availability':
-      return [
-        planId ? ['plan-availabilities', planId] : ['plan-availabilities'],
-        ['home-plans'],
-        ['group'],
-        ['groups'],
-      ];
+      return [planAvailabilitiesKey(planId), feedKey(), groupDetailKey(), groupsKey()];
     case 'plan_photos':
       // Somebody else's upload appearing under you while you are looking at
       // the album is the whole point of this table being here. A delete
       // carries only its id, so it falls back to the bare prefix.
-      return [planId ? ['plan-photos', planId] : ['plan-photos']];
+      return [planPhotosKey(planId)];
     case 'plan_polls':
     case 'plan_poll_options':
     case 'plan_poll_votes':
@@ -76,29 +81,29 @@ export function keysForChange(
       // and its votes as a single nested ['plan-poll', id] query, and all
       // three tables denormalise plan_id so every insert/update names its
       // plan. Votes moving under you while you look at the tally is the most
-      // valuable live update the poll has (PLA-47). home-plans re-renders the
-      // feed card's open-question / answer line.
-      return [planId ? ['plan-poll', planId] : ['plan-poll'], ['home-plans']];
+      // valuable live update the poll has (PLA-47). The feed re-renders the
+      // card's open-question / answer line.
+      return [planPollKey(planId), feedKey()];
     case 'plans': {
       // A plan's own id is its primary key, so even deletes can name it.
-      const id = typeof record.id === 'string' ? record.id : null;
+      const id = typeof record.id === 'string' ? record.id : undefined;
       return [
-        id ? ['plan', id] : ['plan'],
-        ['home-plans'],
-        groupId ? ['group', groupId] : ['group'],
-        ['groups'],
-        ['cancel-notices'],
+        planDetailKey(id),
+        feedKey(),
+        groupDetailKey(groupId),
+        groupsKey(),
+        cancelNoticesKey(),
       ];
     }
     case 'group_members':
       return [
-        groupId ? ['group', groupId] : ['group'],
+        groupDetailKey(groupId),
         // Covers useMyGroups too: it keys on ['groups', 'mine', userId], a
         // child of this one on purpose (PLA-78).
-        ['groups'],
-        ['home-plans'],
-        ['plan-membership'],
-        groupId ? ['plan-group-member-ids', groupId] : ['plan-group-member-ids'],
+        groupsKey(),
+        feedKey(),
+        PLAN_MEMBERSHIP_KEY,
+        planGroupMemberIdsKey(groupId),
       ];
   }
 }

@@ -3,6 +3,18 @@ import { supabase } from './supabase';
 import { useAuthStore } from '../stores/authStore';
 
 /**
+ * The feed's cache key, and the pattern every key factory here follows:
+ * `feedKey()` is the prefix covering every feed there is, which is what a
+ * write to any plan invalidates, and `feedKey(userId)` is one person's.
+ *
+ * Thirteen files reached for the string `['home-plans']` before this existed.
+ * A key is only shared while every one of them spells it identically, and a
+ * typo in an invalidation is silent: the write lands, the feed keeps showing
+ * what it showed before, and nothing fails.
+ */
+export const feedKey = (userId?: string) => (userId ? ['home-plans', userId] : ['home-plans']);
+
+/**
  * The feed's one fetch: every non-cancelled plan across the user's groups,
  * with the nested rows the cards derive from. The query lives here and the
  * screen derives from it (lib/feedDerived.ts), the same split as
@@ -12,7 +24,7 @@ export function useFeed() {
   const { user } = useAuthStore();
 
   return useQuery({
-    queryKey: ['home-plans', user?.id],
+    queryKey: feedKey(user?.id),
     queryFn: async () => {
       if (!user?.id) throw new Error('the feed needs a signed-in user');
       const { data: memberships, error: memberError } = await supabase

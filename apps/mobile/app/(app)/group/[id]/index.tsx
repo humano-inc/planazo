@@ -10,6 +10,7 @@ import { inviteLinkFor } from '../../../../lib/shareLinks';
 import { canInvite } from '../../../../lib/groupDoor';
 import { useAuthStore } from '../../../../stores/authStore';
 import { groupDetailGoneCopy } from '../../../../lib/queryErrors';
+import { groupDetailKey } from '../../../../lib/groupManageQuery';
 import { usePullToRefresh } from '../../../../lib/usePullToRefresh';
 import { useDismissTo } from '../../../../lib/navigation';
 import {
@@ -42,7 +43,7 @@ export default function GroupDetailScreen() {
   const { user } = useAuthStore();
 
   const { data: group, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['group', id],
+    queryKey: groupDetailKey(id),
     queryFn: async () => {
       if (!id) throw new Error('the group screen needs a group id');
       const { data, error } = await supabase
