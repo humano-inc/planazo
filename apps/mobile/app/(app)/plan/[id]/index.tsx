@@ -187,13 +187,7 @@ export default function PlanDetailScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: footerHeight + spacing.xxl }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
-        <PlanTitleBlock
-          title={plan.title}
-          description={plan.description}
-          groupName={groupName}
-          groupColor={plan.groups.color}
-          d={d}
-        />
+        <PlanTitleBlock plan={plan} d={d} />
 
         <PlanStatusCard plan={plan} d={d} />
 

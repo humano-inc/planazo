@@ -24,7 +24,7 @@ export function PollSection({
 }: {
   poll: PlanPollRow;
   userId: string;
-  /** The denominator of "3 of 5 voted" and of every option's bar. */
+  /** See PlanPolls: the denominator this section counts against. */
   peopleIn: number;
   /** The viewer holds a pick and the plan is still running. */
   live: boolean;

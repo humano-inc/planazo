@@ -11,19 +11,27 @@ import { colors } from '../../theme/tokens';
  * host ends the vote; everything else is already there on first paint.
  */
 export function PlanFactsCard({ plan, d }: { plan: PlanDetailRow; d: PlanDerived }) {
-  const hasLocked = d.isLocked && !!plan.locked_date;
+  // Narrowed rather than a boolean, so the row below tests it once instead of
+  // re-testing `plan.locked_date` to satisfy the compiler.
+  const lockedDate = d.isLocked ? plan.locked_date : null;
   // created_by goes null when the person who posted it deleted their account:
   // the plan outlives them, the name does not.
+  const ours = d.youCreated || !plan.creator?.display_name;
   const hostName = d.youCreated ? 'you' : plan.creator?.display_name ?? 'someone who left';
+  // Only our own words take the capital that opens the ended sentence. A
+  // display name is rendered exactly as its owner wrote it, lower case and all.
+  const hostSentence = d.isEnded
+    ? `${ours ? hostName.charAt(0).toUpperCase() + hostName.slice(1) : hostName} set this up`
+    : `Hosted by ${hostName}`;
 
   return (
     <Animated.View layout={LinearTransition}>
       <Card padded={false} style={d.isEnded ? styles.endedDetails : null}>
-        {hasLocked && plan.locked_date ? (
+        {lockedDate ? (
           <Animated.View entering={FadeInDown}>
             <ListRow
-              title={fmtDay(plan.locked_date)}
-              value={fmtTime(plan.locked_date)}
+              title={fmtDay(lockedDate)}
+              value={fmtTime(lockedDate)}
               struck={d.isCancelled}
             />
           </Animated.View>
@@ -38,7 +46,7 @@ export function PlanFactsCard({ plan, d }: { plan: PlanDetailRow; d: PlanDerived
         {plan.location ? (
           <ListRow
             title={plan.location}
-            divider={!!plan.event_date || hasLocked}
+            divider={!!plan.event_date || !!lockedDate}
             right={
               d.isEnded ? undefined : (
                 <ThemedText variant="bodyStrong" color={colors.accent}>
@@ -49,12 +57,8 @@ export function PlanFactsCard({ plan, d }: { plan: PlanDetailRow; d: PlanDerived
           />
         ) : null}
         <ListRow
-          title={
-            d.isEnded
-              ? `${d.youCreated ? 'You' : plan.creator?.display_name ?? 'Someone who left'} set this up`
-              : `Hosted by ${hostName}`
-          }
-          divider={!!plan.location || !!plan.event_date || hasLocked}
+          title={hostSentence}
+          divider={!!plan.location || !!plan.event_date || !!lockedDate}
         />
       </Card>
     </Animated.View>

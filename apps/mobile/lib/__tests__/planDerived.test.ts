@@ -27,7 +27,12 @@ const avail = (option: DateOption, user_id: string, name: string | null = null):
 const plan = (over: Partial<PlanDetailRow> = {}): PlanDetailRow => ({
   status: 'open',
   plan_type: 'fixed',
+  // Render-only fields the cards read off this same row; no derivation looks
+  // at them, so every case here leaves them at these defaults.
+  title: 'Padel',
+  description: null,
   location: null,
+  groups: { name: 'The Regulars', color: null },
   min_people: 3,
   max_people: null,
   cancelled_at: null,
@@ -127,6 +132,40 @@ describe('the leading date option', () => {
     };
     expect(derive(input).viableLead).toEqual({ id: soon.id, date: soon.date, count: 2 });
     expect(derive({ ...input, plan: flexible({ min_people: 3 }) }).viableLead).toBeNull();
+  });
+});
+
+describe('statusBadge', () => {
+  it('calls a cancelled plan off, even when it had reached its minimum', () => {
+    const d = derive({
+      plan: plan({ status: 'cancelled', min_people: 1 }),
+      rsvps: [yes('u1'), yes('u2')],
+    });
+    expect(d.statusBadge).toEqual({ label: 'Called off', ended: true });
+  });
+
+  it("says a plan that ran out of time didn't happen", () => {
+    const d = derive({ plan: plan({ min_people: 3, event_date: iso(-1) }), rsvps: [yes('u1')] });
+    expect(d.statusBadge).toEqual({ label: "Didn't happen", ended: true });
+  });
+
+  it('confirms a plan that reached its minimum', () => {
+    const d = derive({ plan: plan({ min_people: 2 }), rsvps: [yes('u1'), yes('u2')] });
+    expect(d.statusBadge).toEqual({ label: 'Confirmed', tone: 'confirmed' });
+  });
+
+  it('leaves a plan still short of its minimum open', () => {
+    const d = derive({ plan: plan({ min_people: 3 }), rsvps: [yes('u1')] });
+    expect(d.statusBadge).toEqual({ label: 'Open', tone: 'open' });
+  });
+
+  it('takes the same precedence as the headline: a past plan that filled up is not an ending', () => {
+    const d = derive({
+      plan: plan({ min_people: 2, event_date: iso(-1) }),
+      rsvps: [yes('u1'), yes('u2')],
+    });
+    expect(d.statusBadge).toEqual({ label: 'Confirmed', tone: 'confirmed' });
+    expect(d.headline).toBe("It's on");
   });
 });
 
