@@ -1,17 +1,10 @@
-/* eslint-disable max-lines -- PLA-109 */
 import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
-import { supabase } from '../../../lib/supabase';
-import { actionErrorCopy, alertActionError, UserFacingError } from '../../../lib/queryErrors';
-import { signOutOfAccount } from '../../../lib/signOut';
+import { useProfile } from '../../../lib/useProfile';
 import { PRIVACY_URL, SUPPORT_URL, TERMS_URL } from '../../../lib/links';
-import { clearPushToken, registerPushToken } from '../../../lib/push';
-import { purgeOwnedFiles } from '../../../lib/storage';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
-import { useAuthStore } from '../../../stores/authStore';
 import { Avatar, Card, ForwardGlyph, ListRow, ThemedText } from '../../../components/ui';
 import { colors, fonts, spacing } from '../../../theme/tokens';
 
@@ -22,125 +15,14 @@ import { colors, fonts, spacing } from '../../../theme/tokens';
  */
 export default function ProfileSheet() {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const { user, profile, setProfile } = useAuthStore();
-
-  const { data: groupCount } = useQuery({
-    queryKey: ['profile-group-count', user?.id],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from('group_members')
-        .select('group_id', { count: 'exact', head: true })
-        .eq('user_id', user!.id);
-      if (error) throw error;
-      return count ?? 0;
-    },
-    enabled: !!user,
-  });
-
-  const setCalendar = useMutation({
-    mutationFn: async (on: boolean) => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({ add_to_calendar: on })
-        .eq('id', profile!.id)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => setProfile(data),
-    onError: alertActionError,
-  });
-
-  const setPush = useMutation({
-    mutationFn: async (on: boolean) => {
-      // The privacy policy says turning notifications off clears the device
-      // token, so do that rather than only flipping a flag — otherwise the
-      // token sits on the profile and the policy is a lie. Token first, so
-      // the row we read back already reflects it.
-      if (on) {
-        await registerPushToken(profile!.id);
-      } else {
-        await clearPushToken(profile!.id);
-      }
-
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({ push_enabled: on })
-        .eq('id', profile!.id)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => setProfile(data),
-    onError: alertActionError,
-  });
-
-  const signOut = async () => {
-    if (await signOutOfAccount(user?.id, queryClient)) {
-      router.replace('/(auth)/login');
-      return;
-    }
-    // The credentials would not delete. Sending them to the login screen
-    // now would just sign them back in on the next launch (PLA-36).
-    Alert.alert(
-      "Couldn't sign out",
-      'Your account is still signed in on this device. Check your connection and try again.'
-    );
-  };
+  const { profile, groupCount, setCalendar, setPush, signOut, deleteAccount } = useProfile();
 
   const confirmSignOut = () => {
     Alert.alert('Sign out', 'You can sign back in any time.', [
       { text: 'Cancel', style: 'cancel' },
-      // Not fire-and-forget in spirit: signOut owns its own failure dialog,
-      // so there is nothing left for this press handler to await.
-      { text: 'Sign out', style: 'destructive', onPress: () => void signOut() },
+      { text: 'Sign out', style: 'destructive', onPress: () => signOut.mutate() },
     ]);
   };
-
-  const deleteAccount = useMutation({
-    mutationFn: async () => {
-      // Files first, while this session is still the owner RLS recognises.
-      // The database cannot reach Storage, so if this does not happen here it
-      // does not happen at all — and the avatars bucket is public.
-      if (user) {
-        const { failed } = await purgeOwnedFiles(user.id);
-        // Stop rather than delete around it. Once the account is gone nobody
-        // can sign in as this user again, so a file left behind is left for
-        // good — a public avatar URL that outlives the account it belonged to.
-        // Better to fail loudly and let them try again in a moment.
-        if (failed.length) {
-          throw new UserFacingError(
-            "Your photos couldn't be removed just now, and deleting the account would leave them online for good. Check your connection and try again.",
-          );
-        }
-      }
-
-      const { error } = await supabase.rpc('delete_my_account');
-      if (error) throw error;
-    },
-    onSuccess: async () => {
-      // The account is already gone, so the token this session holds is dead.
-      // It still has to leave the device: supabase-js only clears its storage
-      // when its own /logout call succeeds, and here that call is answered by a
-      // server with no such user — so without this the next launch would
-      // restore a session for a deleted account (PLA-36).
-      if (await signOutOfAccount(user?.id, queryClient)) {
-        router.replace('/(auth)/login');
-        return;
-      }
-      Alert.alert(
-        'Your account is deleted',
-        "It couldn't be signed out on this device. Check your connection and sign out from this screen."
-      );
-    },
-    // Same shape as report.tsx: the title names this irreversible action, the
-    // body comes classified rather than raw.
-    onError: (error: unknown) =>
-      Alert.alert("Couldn't delete your account", actionErrorCopy(error).body),
-  });
 
   // Two taps, because there is no undo and no support inbox that can put it
   // back. App Store Review 5.1.1(v) wants this reachable, not hidden.

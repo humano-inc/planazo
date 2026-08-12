@@ -1,8 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
-import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system/legacy';
 import SignupScreen from '../signup';
 import { supabase } from '../../../lib/supabase';
+import { pickFromLibrary, uploadAvatar } from '../../../lib/images';
+import { captureError } from '../../../lib/sentry';
 
 const mockReplace = jest.fn();
 
@@ -10,9 +10,21 @@ jest.mock('../../../lib/supabase', () => ({
   supabase: {
     auth: { signUp: jest.fn(), verifyOtp: jest.fn(), resend: jest.fn() },
     from: jest.fn(),
-    storage: { from: jest.fn() },
   },
 }));
+
+// The picker and the upload are lib/images' job, and its own test owns them
+// (including the `?t=` cache-buster on the URL this screen stores). Here they
+// are a seam: what this screen has to get right is that the photo picked
+// before confirmation survives until there is a session to upload it with.
+jest.mock('../../../lib/images', () => ({
+  pickFromLibrary: jest.fn(),
+  uploadAvatar: jest.fn(),
+}));
+
+// setSentryUser as well as captureError: the auth store calls it on every
+// session change, and this screen's whole job is producing one.
+jest.mock('../../../lib/sentry', () => ({ captureError: jest.fn(), setSentryUser: jest.fn() }));
 
 let mockParams: Record<string, string> = {};
 
@@ -22,14 +34,9 @@ jest.mock('expo-router', () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-jest.mock('expo-image-picker', () => ({
-  requestMediaLibraryPermissionsAsync: jest.fn().mockResolvedValue({ granted: false }),
-  launchImageLibraryAsync: jest.fn(),
-}));
-
-jest.mock('expo-file-system/legacy', () => ({ readAsStringAsync: jest.fn() }));
-jest.mock('base64-arraybuffer', () => ({ decode: jest.fn() }));
-
+const mockPick = pickFromLibrary as jest.Mock;
+const mockUploadAvatar = uploadAvatar as jest.Mock;
+const mockCaptureError = captureError as jest.Mock;
 const mockSignUp = supabase.auth.signUp as jest.Mock;
 const mockVerifyOtp = supabase.auth.verifyOtp as jest.Mock;
 const mockResend = supabase.auth.resend as jest.Mock;
@@ -148,27 +155,14 @@ describe('SignupScreen', () => {
    * The photo used to be lost here. It lives in this component's state and the
    * upload needs a session, so replacing the screen with a card threw it away.
    */
-  it('uploads the photo picked before confirmation, once the code lands', async () => {
+  /** Pick a photo, sign up, then enter the code that produces the session. */
+  const signUpWithPhoto = async () => {
     mockSignUp.mockResolvedValue({ data: { session: null }, error: null });
     mockVerifyOtp.mockResolvedValue({
       data: { session: { user: { id: 'user-1' } } },
       error: null,
     });
-    const profiles = profileReturning({ id: 'user-1', display_name: 'Nacho' });
-    mockFrom.mockReturnValue(profiles);
-    (ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock).mockResolvedValue({
-      granted: true,
-    });
-    (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValue({
-      canceled: false,
-      assets: [{ uri: 'file:///photo.jpg' }],
-    });
-    (FileSystem.readAsStringAsync as jest.Mock).mockResolvedValue('base64data');
-    const upload = jest.fn().mockResolvedValue({ error: null });
-    (supabase.storage.from as jest.Mock).mockReturnValue({
-      upload,
-      getPublicUrl: () => ({ data: { publicUrl: 'https://cdn/avatar.jpg' } }),
-    });
+    mockPick.mockResolvedValue('file:///photo.jpg');
 
     await render(<SignupScreen />);
     await fireEvent.press(screen.getByTestId('add-photo'));
@@ -178,15 +172,38 @@ describe('SignupScreen', () => {
     await waitFor(() => expect(screen.getByTestId('code-input')).toBeTruthy());
     await fireEvent.changeText(screen.getByTestId('code-input'), '604928');
     await fireEvent.press(screen.getByTestId('confirm-code'));
+  };
+
+  it('uploads the photo picked before confirmation, once the code lands', async () => {
+    const profiles = profileReturning({ id: 'user-1', display_name: 'Nacho' });
+    mockFrom.mockReturnValue(profiles);
+    mockUploadAvatar.mockResolvedValue('https://cdn/avatar.jpg?t=1754870400000');
+
+    await signUpWithPhoto();
 
     await waitFor(() => {
       expect(mockReplace).toHaveBeenCalledWith('/');
     });
-    expect(upload).toHaveBeenCalledWith('user-1/avatar.jpg', undefined, {
-      upsert: true,
-      contentType: 'image/jpeg',
+    expect(mockUploadAvatar).toHaveBeenCalledWith('user-1', 'file:///photo.jpg');
+    expect(profiles.update).toHaveBeenCalledWith({
+      avatar_url: 'https://cdn/avatar.jpg?t=1754870400000',
     });
-    expect(profiles.update).toHaveBeenCalledWith({ avatar_url: 'https://cdn/avatar.jpg' });
+  });
+
+  it('still makes the account when the photo upload fails', async () => {
+    const profiles = profileReturning({ id: 'user-1', display_name: 'Nacho' });
+    mockFrom.mockReturnValue(profiles);
+    mockUploadAvatar.mockRejectedValue(new Error('Storage unreachable'));
+
+    await signUpWithPhoto();
+
+    // The account exists by this point, so refusing to go in would strand them
+    // on the code step over a photo they can add from the profile screen.
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith('/');
+    });
+    expect(profiles.update).not.toHaveBeenCalled();
+    expect(mockCaptureError).toHaveBeenCalled();
   });
 
   it('opens straight into the code step when sign-in hands an address over', async () => {
