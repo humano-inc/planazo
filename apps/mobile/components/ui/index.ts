@@ -46,4 +46,5 @@ export { HeaderRow } from './HeaderRow';
 export { ListRow } from './ListRow';
 export { EmptyState } from './EmptyState';
 export { ErrorState } from './ErrorState';
+export { QueryScreen } from './QueryScreen';
 export { ToastHost, showToast } from './Toast';

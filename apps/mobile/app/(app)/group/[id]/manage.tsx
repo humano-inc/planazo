@@ -1,16 +1,9 @@
 import { useState } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  Pressable,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, Pressable, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../../../stores/authStore';
-import { errorCopy, groupGoneCopy, isNotFoundError } from '../../../../lib/queryErrors';
+import { groupGoneCopy } from '../../../../lib/queryErrors';
 import { useGroupManage } from '../../../../lib/useGroupManage';
 import { adminCount, adminSummary, byArrival, memberName } from '../../../../lib/groupAdmins';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
@@ -24,7 +17,7 @@ import { JoinRequests } from '../../../../components/group/JoinRequests';
 import {
   BackButton,
   ThemedText,
-  ErrorState,
+  QueryScreen,
   ConfirmSheet,
   HeaderRow,
 } from '../../../../components/ui';
@@ -72,30 +65,18 @@ export default function ManageGroupScreen() {
   const [openRowId, setOpenRowId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
 
-  if (!isLoading && (isError || !group)) {
-    const notFound = !id || isNotFoundError(error);
-    const copy = notFound ? groupGoneCopy : errorCopy(error);
-
+  if (isLoading || isError || !group) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <ErrorState
-          title={copy.title}
-          body={copy.body}
-          onRetry={notFound ? undefined : () => refetch()}
-          onBack={leaveGone}
-          testID="group-manage-error"
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (isLoading || !group) {
-    return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" color={colors.accent} />
-        </View>
-      </SafeAreaView>
+      <QueryScreen
+        isLoading={isLoading}
+        failed={isError || !group}
+        id={id}
+        error={error}
+        goneCopy={groupGoneCopy}
+        onRetry={() => refetch()}
+        onBack={leaveGone}
+        testID="group-manage-error"
+      />
     );
   }
 
@@ -262,11 +243,6 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   navBack: {
     maxWidth: '42%',

@@ -1,14 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  Pressable,
-  ActivityIndicator,
-  Alert,
-  RefreshControl,
-  Share,
-} from 'react-native';
+import { ScrollView, StyleSheet, Pressable, Alert, RefreshControl, Share } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { canVoteOnPolls, pollPeopleIn } from '@planazo/shared';
@@ -23,15 +14,19 @@ import { PlanPeopleSections } from '../../../../components/plan/PlanPeopleSectio
 import { PlanDetailFooter } from '../../../../components/plan/PlanDetailFooter';
 import { fmtDay } from '../../../../lib/dates';
 import { useDismissTo } from '../../../../lib/navigation';
-import { errorCopy, isNotFoundError } from '../../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../../lib/usePullToRefresh';
 import { usePlanDetail } from '../../../../lib/usePlanDetail';
 import { derivePlanDetail } from '../../../../lib/planDerived';
 import { stashPendingPlan } from '../../../../lib/pendingPlan';
 import { planLinkFor } from '../../../../lib/shareLinks';
 import { useAuthStore } from '../../../../stores/authStore';
-import { ThemedText, Button, ErrorState } from '../../../../components/ui';
+import { ThemedText, Button, QueryScreen } from '../../../../components/ui';
 import { colors, spacing } from '../../../../theme/tokens';
+
+const goneCopy = {
+  title: "This plan isn't here",
+  body: "It was called off and cleared, or it belongs to a group you're not in. Ask whoever shared it to add you.",
+};
 
 export default function PlanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -110,37 +105,22 @@ export default function PlanDetailScreen() {
   // — RLS filters it to zero rows either way, so `.single()` throws PGRST116.
   // Say so instead of spinning forever (PLA-19).
   //
-  // Gated on `session`, because signed out the queries are disabled and resolve
-  // to nothing: without it this branch would win the frame before the redirect
-  // above lands, and flash "This plan isn't here" at someone on their way to
-  // the login screen. The spinner below covers that frame instead.
-  if (session && !isLoading && (isError || !plan)) {
-    const notFound = !id || isNotFoundError(error);
-    const copy = notFound
-      ? {
-          title: "This plan isn't here",
-          body: "It was called off and cleared, or it belongs to a group you're not in. Ask whoever shared it to add you.",
-        }
-      : errorCopy(error);
-
+  // `failed` is gated on `session`, because signed out the queries are disabled
+  // and resolve to nothing: without it the error would win the frame before the
+  // redirect above lands, and flash "This plan isn't here" at someone on their
+  // way to the login screen. QueryScreen holds the spinner for that frame.
+  if (isLoading || isError || !plan || !derived) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <ErrorState
-          title={copy.title}
-          body={copy.body}
-          onRetry={notFound ? undefined : () => refetch()}
-          onBack={goBack}
-          testID="plan-error"
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (isLoading || !plan || !derived) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color={colors.accent} />
-      </View>
+      <QueryScreen
+        isLoading={isLoading}
+        failed={!!session && (isError || !plan)}
+        id={id}
+        error={error}
+        goneCopy={goneCopy}
+        onRetry={() => refetch()}
+        onBack={goBack}
+        testID="plan-error"
+      />
     );
   }
 
@@ -326,12 +306,6 @@ const styles = StyleSheet.create({
   },
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: colors.background,
   },
   scroll: {
