@@ -1,18 +1,11 @@
 import { useState } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { GroupRole } from '@planazo/shared';
 import { supabase } from '../../../../lib/supabase';
 import { useAuthStore } from '../../../../stores/authStore';
-import {
-  alertActionError,
-  errorCopy,
-  groupGoneCopy,
-  isLastAdminError,
-  isNotFoundError,
-} from '../../../../lib/queryErrors';
+import { alertActionError, groupGoneCopy, isLastAdminError } from '../../../../lib/queryErrors';
 import { groupManageQuery, invalidateGroup } from '../../../../lib/groupManageQuery';
 import { splitByRole, demoteConfirmCopy, memberName } from '../../../../lib/groupAdmins';
 import { useDismissTo } from '../../../../lib/navigation';
@@ -22,12 +15,12 @@ import { PromoteCard } from '../../../../components/group/PromoteCard';
 import {
   BackButton,
   ThemedText,
-  ErrorState,
+  QueryScreen,
   ConfirmSheet,
   FormScreen,
   HeaderRow,
 } from '../../../../components/ui';
-import { colors, spacing } from '../../../../theme/tokens';
+import { spacing } from '../../../../theme/tokens';
 
 /**
  * Who runs the group, and the one place a role changes ("Group Admins"
@@ -74,30 +67,21 @@ export default function GroupAdminsScreen() {
     },
   });
 
-  if (!isLoading && (isError || !group)) {
-    const notFound = !id || isNotFoundError(error);
-    const copy = notFound ? groupGoneCopy : errorCopy(error);
-
+  // One spelling of "there is nothing to draw", so the guard and what
+  // QueryScreen renders behind it can never disagree.
+  const failed = isError || !group;
+  if (isLoading || failed) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <ErrorState
-          title={copy.title}
-          body={copy.body}
-          onRetry={notFound ? undefined : () => refetch()}
-          onBack={leaveGone}
-          testID="group-admins-error"
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (isLoading || !group) {
-    return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" color={colors.accent} />
-        </View>
-      </SafeAreaView>
+      <QueryScreen
+        isLoading={isLoading}
+        failed={failed}
+        id={id}
+        error={error}
+        goneCopy={groupGoneCopy}
+        onRetry={() => refetch()}
+        onBack={leaveGone}
+        testID="group-admins-error"
+      />
     );
   }
 
@@ -165,17 +149,6 @@ export default function GroupAdminsScreen() {
 }
 
 const styles = StyleSheet.create({
-  // Still used by the loading and error states, which are not forms and keep
-  // their own SafeAreaView.
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   content: {
     paddingTop: 6,
     gap: spacing.xxl,

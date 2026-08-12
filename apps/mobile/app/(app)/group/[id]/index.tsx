@@ -1,13 +1,5 @@
 import { useMemo } from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  Pressable,
-  ActivityIndicator,
-  RefreshControl,
-  Share,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, Pressable, RefreshControl, Share } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import type { GroupRole, PlanType } from '@planazo/shared';
@@ -17,7 +9,7 @@ import { deriveGroupPlanRows, type GroupPlanRow } from '../../../../lib/groupPla
 import { inviteLinkFor } from '../../../../lib/shareLinks';
 import { canInvite } from '../../../../lib/groupDoor';
 import { useAuthStore } from '../../../../stores/authStore';
-import { errorCopy, isNotFoundError } from '../../../../lib/queryErrors';
+import { groupDetailGoneCopy } from '../../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../../lib/usePullToRefresh';
 import { useDismissTo } from '../../../../lib/navigation';
 import {
@@ -26,7 +18,7 @@ import {
   Button,
   AvatarStack,
   GroupTile,
-  ErrorState,
+  QueryScreen,
   BackButton,
   HeaderAction,
   HeaderRow,
@@ -89,35 +81,21 @@ export default function GroupDetailScreen() {
     [group?.plans, user?.id]
   );
 
-  if (!isLoading && (isError || !group)) {
-    const notFound = !id || isNotFoundError(error);
-    const copy = notFound
-      ? {
-          title: "This group isn't here",
-          body: "It was deleted, or you're not a member. Ask someone in it for an invite link.",
-        }
-      : errorCopy(error);
-
+  // One spelling of "there is nothing to draw", so the guard and what
+  // QueryScreen renders behind it can never disagree.
+  const failed = isError || !group;
+  if (isLoading || failed) {
     return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <ErrorState
-          title={copy.title}
-          body={copy.body}
-          onRetry={notFound ? undefined : () => refetch()}
-          onBack={goBack}
-          testID="group-error"
-        />
-      </SafeAreaView>
-    );
-  }
-
-  if (isLoading || !group) {
-    return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <View style={styles.loading}>
-          <ActivityIndicator size="large" color={colors.accent} />
-        </View>
-      </SafeAreaView>
+      <QueryScreen
+        isLoading={isLoading}
+        failed={failed}
+        id={id}
+        error={error}
+        goneCopy={groupDetailGoneCopy}
+        onRetry={() => refetch()}
+        onBack={goBack}
+        testID="group-error"
+      />
     );
   }
 
@@ -253,11 +231,6 @@ const styles = StyleSheet.create({
   },
   flex: {
     flex: 1,
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   content: {
     paddingHorizontal: spacing.xl,
