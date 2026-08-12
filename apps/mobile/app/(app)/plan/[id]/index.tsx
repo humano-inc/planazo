@@ -14,6 +14,7 @@ import { PlanPeopleSections } from '../../../../components/plan/PlanPeopleSectio
 import { PlanDetailFooter } from '../../../../components/plan/PlanDetailFooter';
 import { fmtDay } from '../../../../lib/dates';
 import { useDismissTo } from '../../../../lib/navigation';
+import { planGoneCopy } from '../../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../../lib/usePullToRefresh';
 import { usePlanDetail } from '../../../../lib/usePlanDetail';
 import { derivePlanDetail } from '../../../../lib/planDerived';
@@ -22,11 +23,6 @@ import { planLinkFor } from '../../../../lib/shareLinks';
 import { useAuthStore } from '../../../../stores/authStore';
 import { ThemedText, Button, QueryScreen } from '../../../../components/ui';
 import { colors, spacing } from '../../../../theme/tokens';
-
-const goneCopy = {
-  title: "This plan isn't here",
-  body: "It was called off and cleared, or it belongs to a group you're not in. Ask whoever shared it to add you.",
-};
 
 export default function PlanDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -109,14 +105,17 @@ export default function PlanDetailScreen() {
   // and resolve to nothing: without it the error would win the frame before the
   // redirect above lands, and flash "This plan isn't here" at someone on their
   // way to the login screen. QueryScreen holds the spinner for that frame.
-  if (isLoading || isError || !plan || !derived) {
+  const failed = isError || !plan;
+  // `derived` is null only when `plan` is, but TypeScript cannot know that, and
+  // the render below reads it.
+  if (isLoading || failed || !derived) {
     return (
       <QueryScreen
         isLoading={isLoading}
-        failed={!!session && (isError || !plan)}
+        failed={!!session && failed}
         id={id}
         error={error}
-        goneCopy={goneCopy}
+        goneCopy={planGoneCopy}
         onRetry={() => refetch()}
         onBack={goBack}
         testID="plan-error"

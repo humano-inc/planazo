@@ -9,6 +9,7 @@ import { deriveGroupPlanRows, type GroupPlanRow } from '../../../../lib/groupPla
 import { inviteLinkFor } from '../../../../lib/shareLinks';
 import { canInvite } from '../../../../lib/groupDoor';
 import { useAuthStore } from '../../../../stores/authStore';
+import { groupDetailGoneCopy } from '../../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../../lib/usePullToRefresh';
 import { useDismissTo } from '../../../../lib/navigation';
 import {
@@ -25,15 +26,6 @@ import {
 } from '../../../../components/ui';
 import { PastPlansSection } from '../../../../components/group/PastPlansSection';
 import { colors, spacing } from '../../../../theme/tokens';
-
-/**
- * Not `groupGoneCopy`: a deep link can land a stranger here without ever
- * having been in the group, so this one cannot say they were removed.
- */
-const goneCopy = {
-  title: "This group isn't here",
-  body: "It was deleted, or you're not a member. Ask someone in it for an invite link.",
-};
 
 export function shareInviteLink(groupName: string, inviteCode: string) {
   return Share.share({
@@ -89,14 +81,17 @@ export default function GroupDetailScreen() {
     [group?.plans, user?.id]
   );
 
-  if (isLoading || isError || !group) {
+  // One spelling of "there is nothing to draw", so the guard and what
+  // QueryScreen renders behind it can never disagree.
+  const failed = isError || !group;
+  if (isLoading || failed) {
     return (
       <QueryScreen
         isLoading={isLoading}
-        failed={isError || !group}
+        failed={failed}
         id={id}
         error={error}
-        goneCopy={goneCopy}
+        goneCopy={groupDetailGoneCopy}
         onRetry={() => refetch()}
         onBack={goBack}
         testID="group-error"

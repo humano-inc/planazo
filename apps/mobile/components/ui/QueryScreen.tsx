@@ -47,28 +47,26 @@ export function QueryScreen({
   onBack,
   testID,
 }: QueryScreenProps) {
-  if (isLoading || !failed) {
-    return (
-      <SafeAreaView style={styles.screen} edges={['top']}>
-        <View style={styles.loading} testID={`${testID}-loading`}>
-          <ActivityIndicator size="large" color={colors.accent} />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
+  // A settled failure, and nothing in flight to change it.
+  const showError = failed && !isLoading;
   const notFound = !id || isNotFoundError(error);
   const copy = notFound ? goneCopy : errorCopy(error);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <ErrorState
-        title={copy.title}
-        body={copy.body}
-        onRetry={notFound ? undefined : onRetry}
-        onBack={onBack}
-        testID={testID}
-      />
+      {showError ? (
+        <ErrorState
+          title={copy.title}
+          body={copy.body}
+          onRetry={notFound ? undefined : onRetry}
+          onBack={onBack}
+          testID={testID}
+        />
+      ) : (
+        <View style={styles.loading} testID={`${testID}-loading`}>
+          <ActivityIndicator size="large" color={colors.accent} />
+        </View>
+      )}
     </SafeAreaView>
   );
 }

@@ -65,11 +65,14 @@ export default function ManageGroupScreen() {
   const [openRowId, setOpenRowId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
 
-  if (isLoading || isError || !group) {
+  // One spelling of "there is nothing to draw", so the guard and what
+  // QueryScreen renders behind it can never disagree.
+  const failed = isError || !group;
+  if (isLoading || failed) {
     return (
       <QueryScreen
         isLoading={isLoading}
-        failed={isError || !group}
+        failed={failed}
         id={id}
         error={error}
         goneCopy={groupGoneCopy}

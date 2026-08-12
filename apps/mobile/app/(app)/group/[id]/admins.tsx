@@ -67,11 +67,14 @@ export default function GroupAdminsScreen() {
     },
   });
 
-  if (isLoading || isError || !group) {
+  // One spelling of "there is nothing to draw", so the guard and what
+  // QueryScreen renders behind it can never disagree.
+  const failed = isError || !group;
+  if (isLoading || failed) {
     return (
       <QueryScreen
         isLoading={isLoading}
-        failed={isError || !group}
+        failed={failed}
         id={id}
         error={error}
         goneCopy={groupGoneCopy}

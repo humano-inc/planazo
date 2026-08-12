@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react-native';
 import { QueryScreen } from '../QueryScreen';
+import { errorCopy } from '../../../lib/queryErrors';
 
 const goneCopy = { title: "This group isn't here", body: 'It was deleted, or you were removed.' };
 
@@ -65,21 +66,40 @@ describe('QueryScreen', () => {
     expect(screen.queryByTestId('group-error-retry')).toBeNull();
   });
 
-  it('reports a real failure with the generic copy and a retry', async () => {
+  it('reports a real failure through errorCopy, with a retry', async () => {
     const onRetry = jest.fn();
-    await show({ failed: true, error: new Error('boom'), onRetry });
+    const boom = new Error('boom');
+    await show({ failed: true, error: boom, onRetry });
 
-    expect(screen.getByText("That didn't load")).toBeTruthy();
+    // The assertion is the choice of copy, not its wording: the strings
+    // themselves are pinned in lib/__tests__/queryErrors.test.ts.
+    expect(screen.getByText(errorCopy(boom).title)).toBeTruthy();
+    expect(screen.queryByText(goneCopy.title)).toBeNull();
+
     await fireEvent.press(screen.getByTestId('group-error-retry'));
-
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
-  it('classifies the failure rather than showing its message', async () => {
-    await show({ failed: true, error: { code: '42501', message: 'permission denied for table groups' } });
+  it('never shows the raw message of a failure it classified', async () => {
+    await show({
+      failed: true,
+      error: { code: '42501', message: 'permission denied for table groups' },
+    });
 
-    expect(screen.getByText("You can't see this")).toBeTruthy();
+    expect(screen.getByText(errorCopy({ code: '42501' }).title)).toBeTruthy();
     expect(screen.queryByText('permission denied for table groups')).toBeNull();
+  });
+
+  /**
+   * Pins PLA-129 rather than fixing it: `retryQuery` counts a forbidden error
+   * as permanent, so this button re-runs a query configured never to retry it.
+   * Carried across from the four screens verbatim, because a class C
+   * extraction does not change behaviour. Flip this when PLA-129 lands.
+   */
+  it('still offers a retry on a forbidden error (PLA-129)', async () => {
+    await show({ failed: true, error: { code: '42501' } });
+
+    expect(screen.getByTestId('group-error-retry')).toBeTruthy();
   });
 
   it('always leaves a way out', async () => {

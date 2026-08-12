@@ -231,12 +231,27 @@ export function retryQuery(failureCount: number, error: unknown): boolean {
 /**
  * The not-found copy shared by the screens behind a membership (Manage,
  * Admins): being here at all meant being in the group, so a vanished row
- * means it was deleted or you were removed. The group detail screen keeps
- * its own wording — a deep link can land there without ever having joined.
+ * means it was deleted or you were removed.
  */
 export const groupGoneCopy = {
   title: "This group isn't here",
   body: "It was deleted, or you've been removed from it.",
+};
+
+/**
+ * The same row, missing on the group screen itself, which is reachable by a
+ * shared link: whoever followed it may never have been in the group, so this
+ * one cannot say they were removed and offers the way in instead.
+ */
+export const groupDetailGoneCopy = {
+  title: "This group isn't here",
+  body: "It was deleted, or you're not a member. Ask someone in it for an invite link.",
+};
+
+/** A plan that was cleared, or belongs to a group the reader is not in. */
+export const planGoneCopy = {
+  title: "This plan isn't here",
+  body: "It was called off and cleared, or it belongs to a group you're not in. Ask whoever shared it to add you.",
 };
 
 /** Screen-agnostic copy for a failed fetch. Screens override the not-found case. */
