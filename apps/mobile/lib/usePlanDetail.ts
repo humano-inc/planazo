@@ -2,9 +2,67 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { PlanStatus, PlanType } from '@planazo/shared';
 import { supabase } from './supabase';
 import { deleteOwnRsvp, offerWaitingList } from './rsvp';
+import { keyFactory } from './queryKey';
+import { feedKey } from './useFeed';
 import { alertActionError } from './queryErrors';
 import { requireUserId } from './currentUser';
 import { useAuthStore } from '../stores/authStore';
+
+/**
+ * Everything the plan screens read, keyed one per table. Each takes the id it
+ * belongs to, or nothing for the prefix covering every plan — realtime
+ * invalidates by prefix when its payload does not name one.
+ */
+export const planDetailKey = keyFactory('plan');
+export const planRsvpsKey = keyFactory('plan-rsvps');
+export const planAvailabilitiesKey = keyFactory('plan-availabilities');
+export const planGroupMemberIdsKey = keyFactory('plan-group-member-ids');
+
+/**
+ * Keyed on the pair, because the answer is per person as well as per group.
+ * Spelled out rather than built from `keyFactory`: a filter matches
+ * positionally, so a key with a *hole* in it (one id known, the other not)
+ * would match nothing. Either both are known or this is the prefix.
+ */
+export const planMembershipKey = (groupId?: string, userId?: string) =>
+  groupId && userId ? ['plan-membership', groupId, userId] : ['plan-membership'];
+
+/**
+ * The plan detail row, shared by the detail screen, Edit and Cancel (PLA-116).
+ *
+ * The same shape three times over, which is what the cache sharing depends on:
+ * Edit and Cancel warm themselves from the detail screen's entry, so a slimmer
+ * select in either would clobber the joins the detail screen renders from
+ * (creator, canceller, groups). Both files carried a comment warning about
+ * exactly that, which is a rule three copies had to remember; now there is one
+ * copy and nothing to remember.
+ *
+ * Spread it and override what differs. The detail screen below waits on the
+ * user as well as the id and says why; the other two do not.
+ */
+export function planDetailQuery(id: string | undefined) {
+  return {
+    queryKey: planDetailKey(id),
+    queryFn: async () => {
+      // `enabled` below keeps this from running without an id; the guard is
+      // what tells the typed client that.
+      if (!id) throw new Error('planDetailQuery needs a plan id');
+      const { data, error } = await supabase
+        .from('plans')
+        .select(
+          '*, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups(id, name, color)'
+        )
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      // `status` and `plan_type` are CHECK-constrained text, which the
+      // generated types can only call `string`. Narrowing at the query means
+      // the screens and their cards never see the widened columns.
+      return { ...data, status: data.status as PlanStatus, plan_type: data.plan_type as PlanType };
+    },
+    enabled: !!id,
+  };
+}
 
 /**
  * Every fetch and write on the plan detail screen. `onDatesCommitted` fires
@@ -16,21 +74,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   const queryClient = useQueryClient();
 
   const { data: plan, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['plan', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('plans')
-        .select(
-          '*, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups(id, name, color)'
-        )
-        .eq('id', id)
-        .single();
-      if (error) throw error;
-      // `status` and `plan_type` are CHECK-constrained text, which the
-      // generated types can only call `string`. Narrowing at the query means
-      // the screen and its cards never see the widened columns.
-      return { ...data, status: data.status as PlanStatus, plan_type: data.plan_type as PlanType };
-    },
+    ...planDetailQuery(id),
     // Waits on the user, not just the id: a shared link can mount this screen
     // with no session, and RLS answers an anonymous request with zero rows for
     // every plan there is. The only thing such a request can produce is a false
@@ -39,7 +83,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   });
 
   const { data: rsvps } = useQuery({
-    queryKey: ['plan-rsvps', id],
+    queryKey: planRsvpsKey(id),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('rsvps')
@@ -66,7 +110,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   });
 
   const { data: availabilities } = useQuery({
-    queryKey: ['plan-availabilities', id],
+    queryKey: planAvailabilitiesKey(id),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('date_availability')
@@ -79,7 +123,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   });
 
   const { data: membership } = useQuery({
-    queryKey: ['plan-membership', plan?.group_id, user?.id],
+    queryKey: planMembershipKey(plan?.group_id, user?.id),
     queryFn: async () => {
       const { data } = await supabase
         .from('group_members')
@@ -95,7 +139,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   // Everyone in the circle — the menu's nudge count and 19c's "never
   // answered" line are both "members minus anyone who responded".
   const { data: memberIds } = useQuery({
-    queryKey: ['plan-group-member-ids', plan?.group_id],
+    queryKey: planGroupMemberIdsKey(plan?.group_id),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('group_members')
@@ -108,10 +152,10 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   });
 
   const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ['plan', id] });
-    queryClient.invalidateQueries({ queryKey: ['plan-rsvps', id] });
-    queryClient.invalidateQueries({ queryKey: ['plan-availabilities', id] });
-    queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+    queryClient.invalidateQueries({ queryKey: planDetailKey(id) });
+    queryClient.invalidateQueries({ queryKey: planRsvpsKey(id) });
+    queryClient.invalidateQueries({ queryKey: planAvailabilitiesKey(id) });
+    queryClient.invalidateQueries({ queryKey: feedKey() });
     if (plan?.group_id) {
       queryClient.invalidateQueries({ queryKey: ['group-plans', plan.group_id] });
     }

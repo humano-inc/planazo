@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../../lib/supabase';
 import { stashPendingJoin } from '../../../lib/pendingJoin';
 import { useDismissTo } from '../../../lib/navigation';
+import { groupsKey } from '../../../lib/useGroupRows';
 import {
   joinBlurb,
   joinLabel,
@@ -90,7 +91,7 @@ export default function JoinByInviteScreen() {
       // 'already_member' lands in the same place as 'joined'. Being told you
       // were already in a group you just asked to join is a correction nobody
       // needs; the group appearing is the answer.
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
+      queryClient.invalidateQueries({ queryKey: groupsKey() });
       router.replace(`/(app)/group/${result.group_id}`);
     },
   });

@@ -1,16 +1,33 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { keyFactory } from './queryKey';
+import { groupsKey } from './useGroupRows';
+
+/**
+ * The heavy group read behind Manage and Admins. Called with no id it is the
+ * prefix a write to any group invalidates.
+ */
+export const groupManageKey = keyFactory('group-manage');
+
+/**
+ * The group detail screen's own read: a different shape from the one above,
+ * with the group's plans embedded. It lives here rather than beside that
+ * screen because the query is declared inline in the screen and `lib/` may
+ * not import a screen, and because `invalidateGroup` below already has to
+ * name all three group caches in one place.
+ */
+export const groupDetailKey = keyFactory('group');
 
 /**
  * The Manage screen's group query, shared with the Admins screen (PLA-50).
  *
- * One definition on purpose: both screens read `['group-manage', id]`, and the
+ * One definition on purpose: both screens read `groupManageKey(id)`, and the
  * cache is only actually shared while the key and the select stay identical.
  * Two hand-maintained copies of this select would drift apart silently.
  */
 export function groupManageQuery(id: string | undefined) {
   return {
-    queryKey: ['group-manage', id],
+    queryKey: groupManageKey(id),
     queryFn: async () => {
       // `enabled` below keeps this from running without an id; the guard is
       // what tells the typed client that.
@@ -37,7 +54,7 @@ export function groupManageQuery(id: string | undefined) {
  * group, and a fourth key added to one screen must reach the other.
  */
 export function invalidateGroup(queryClient: QueryClient, id: string | undefined): void {
-  queryClient.invalidateQueries({ queryKey: ['group-manage', id] });
-  queryClient.invalidateQueries({ queryKey: ['group', id] });
-  queryClient.invalidateQueries({ queryKey: ['groups'] });
+  queryClient.invalidateQueries({ queryKey: groupManageKey(id) });
+  queryClient.invalidateQueries({ queryKey: groupDetailKey(id) });
+  queryClient.invalidateQueries({ queryKey: groupsKey() });
 }

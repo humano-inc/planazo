@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../../lib/supabase';
 import { alertActionError, UserFacingError } from '../../../../lib/queryErrors';
 import { useDismissTo } from '../../../../lib/navigation';
+import { planDetailKey, planDetailQuery } from '../../../../lib/usePlanDetail';
+import { feedKey } from '../../../../lib/useFeed';
 import { contentViolation } from '../../../../lib/moderation';
 import { FormScreen, HeaderAction, HeaderRow, ThemedText } from '../../../../components/ui';
 import { colors, fonts, radii, spacing, type } from '../../../../theme/tokens';
@@ -33,24 +35,11 @@ export default function EditPlanScreen() {
   const [place, setPlace] = useState<string | null>(null);
   const [notes, setNotes] = useState<string | null>(null);
 
-  // Warm from the detail screen's cache. Same key, so the select must match
-  // its shape exactly — a slimmer one here would clobber the joins the detail
-  // screen renders from (creator, canceller, groups).
-  const { data: plan } = useQuery({
-    queryKey: ['plan', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('plans')
-        .select(
-          '*, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups(id, name, color)'
-        )
-        .eq('id', id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
+  // Warm from the detail screen's cache: one shared descriptor, because same
+  // key means the select has to match its shape exactly and a slimmer one here
+  // would clobber the joins the detail screen renders from (creator,
+  // canceller, groups).
+  const { data: plan } = useQuery(planDetailQuery(id));
 
   const draftTitle = title ?? plan?.title ?? '';
   const draftPlace = place ?? plan?.location ?? '';
@@ -100,8 +89,8 @@ export default function EditPlanScreen() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plan', id] });
-      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+      queryClient.invalidateQueries({ queryKey: planDetailKey(id) });
+      queryClient.invalidateQueries({ queryKey: feedKey() });
       if (plan?.group_id) {
         queryClient.invalidateQueries({ queryKey: ['group-plans', plan.group_id] });
       }

@@ -4,6 +4,7 @@ import { alertActionError, UserFacingError } from './queryErrors';
 import { useLeaveFor } from './navigation';
 import { contentViolation } from './moderation';
 import { submitPollDraft } from './usePlanPoll';
+import { feedKey } from './useFeed';
 import { pollDraftTouched, type PollDraft } from './pollDraft';
 import { useAuthStore } from '../stores/authStore';
 
@@ -108,7 +109,7 @@ export function useCreatePlan() {
       return plan;
     },
     onSuccess: (plan, input) => {
-      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+      queryClient.invalidateQueries({ queryKey: feedKey() });
       queryClient.invalidateQueries({ queryKey: ['group-plans', input.groupId] });
       leaveFor(`/(app)/plan/${plan.id}`);
     },

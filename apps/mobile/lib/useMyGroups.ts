@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { groupsKey } from './useGroupRows';
 import { useAuthStore } from '../stores/authStore';
 
 export interface MyGroup {
@@ -29,7 +30,7 @@ export interface MyGroup {
  * sibling under this prefix, `['groups', userId]` in the Groups tab, is heavier
  * and already pays exactly that.
  */
-const myGroupsKey = (userId: string | undefined) => ['groups', 'mine', userId];
+const myGroupsKey = (userId: string | undefined) => [...groupsKey(), 'mine', userId];
 
 /**
  * How long "which groups am I in" is trusted without asking again.

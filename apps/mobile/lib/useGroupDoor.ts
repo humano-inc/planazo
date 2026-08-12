@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
 import { alertActionError } from './queryErrors';
 import type { JoinMode, WhoCanInvite } from './groupDoor';
+import { groupDetailKey, groupManageKey } from './groupManageQuery';
 
 /** One person waiting at an approval-mode door. */
 export interface JoinRequest {
@@ -67,8 +68,8 @@ export function useJoinRequests(groupId: string, enabled: boolean) {
       // touches nothing else, so it refetches nothing else: the group detail
       // query carries every plan, RSVP and date option in the group.
       if (!approve) return;
-      queryClient.invalidateQueries({ queryKey: ['group-manage', groupId] });
-      queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+      queryClient.invalidateQueries({ queryKey: groupManageKey(groupId) });
+      queryClient.invalidateQueries({ queryKey: groupDetailKey(groupId) });
     },
     onError: alertActionError,
   });
@@ -103,8 +104,8 @@ export function useDoorSettings(groupId: string) {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['group-manage', groupId] });
-      queryClient.invalidateQueries({ queryKey: ['group', groupId] });
+      queryClient.invalidateQueries({ queryKey: groupManageKey(groupId) });
+      queryClient.invalidateQueries({ queryKey: groupDetailKey(groupId) });
     },
     onError: alertActionError,
   });

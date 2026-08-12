@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type RsvpResponse } from '@planazo/shared';
 import { supabase } from './supabase';
 import { deleteOwnRsvp, offerWaitingList } from './rsvp';
+import { feedKey } from './useFeed';
 import { alertActionError } from './queryErrors';
 import { requireUserId } from './currentUser';
 import { useAuthStore } from '../stores/authStore';
@@ -19,7 +20,7 @@ export function useFeedAnswers({ onDatesSent }: { onDatesSent: (planId: string) 
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+    queryClient.invalidateQueries({ queryKey: feedKey() });
   };
 
   const answerFixed = useMutation({

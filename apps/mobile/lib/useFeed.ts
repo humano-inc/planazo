@@ -1,6 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from './supabase';
+import { keyFactory } from './queryKey';
 import { useAuthStore } from '../stores/authStore';
+
+/**
+ * The feed's cache key. `feedKey()` is every feed there is, which is what a
+ * write to any plan invalidates; `feedKey(userId)` is one person's. Thirteen
+ * files reached for the string before this existed — see lib/queryKey.ts.
+ */
+export const feedKey = keyFactory('home-plans');
 
 /**
  * The feed's one fetch: every non-cancelled plan across the user's groups,
@@ -12,7 +20,7 @@ export function useFeed() {
   const { user } = useAuthStore();
 
   return useQuery({
-    queryKey: ['home-plans', user?.id],
+    queryKey: feedKey(user?.id),
     queryFn: async () => {
       if (!user?.id) throw new Error('the feed needs a signed-in user');
       const { data: memberships, error: memberError } = await supabase

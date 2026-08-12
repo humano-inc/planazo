@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Database } from '@planazo/shared';
 import { supabase } from './supabase';
+import { keyFactory } from './queryKey';
 import { alertActionError } from './queryErrors';
 import { useAuthStore } from '../stores/authStore';
 
@@ -24,6 +25,12 @@ export interface CancelNotice {
 }
 
 /**
+ * The notices waiting above someone's feed. Called with no id it is the
+ * prefix a cancellation invalidates, wherever it happened.
+ */
+export const cancelNoticesKey = keyFactory('cancel-notices');
+
+/**
  * 19e: a cancellation of a plan you'd said yes to earns one dismissable
  * notice above the feed. The unread plan_cancelled row *is* the pin — the
  * RPC only writes them for people who were in, and 24h clears it either way.
@@ -36,7 +43,7 @@ export function useCancelNotices() {
   const queryClient = useQueryClient();
 
   const { data } = useQuery({
-    queryKey: ['cancel-notices', user?.id],
+    queryKey: cancelNoticesKey(user?.id),
     queryFn: async (): Promise<CancelNotice[]> => {
       const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
       const { data: notes, error } = await supabase
@@ -79,7 +86,7 @@ export function useCancelNotices() {
       if (error) throw error;
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ['cancel-notices'] }),
+      queryClient.invalidateQueries({ queryKey: cancelNoticesKey() }),
     onError: alertActionError,
   });
 

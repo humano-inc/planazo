@@ -7,6 +7,13 @@ import { supabase } from '../../../../lib/supabase';
 import { alertActionError } from '../../../../lib/queryErrors';
 import { costLine } from '../../../../lib/cancelCost';
 import { useDismissTo } from '../../../../lib/navigation';
+import {
+  planAvailabilitiesKey,
+  planDetailKey,
+  planDetailQuery,
+  planRsvpsKey,
+} from '../../../../lib/usePlanDetail';
+import { feedKey } from '../../../../lib/useFeed';
 import { ThemedText, Button, FormScreen } from '../../../../components/ui';
 import { colors, fonts, radii, spacing } from '../../../../theme/tokens';
 
@@ -24,25 +31,13 @@ export default function CancelPlanScreen() {
 
   // Warm from the detail screen's cache. These share query keys with the
   // detail screen, so the selects must match its shapes exactly — a slimmer
-  // select here would clobber the detail's cached joins.
-  const { data: plan } = useQuery({
-    queryKey: ['plan', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('plans')
-        .select(
-          '*, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups(id, name, color)'
-        )
-        .eq('id', id)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
+  // select here would clobber the detail's cached joins. The plan is one
+  // shared descriptor for that reason; the two below still spell out selects
+  // that have to match usePlanDetail's exactly.
+  const { data: plan } = useQuery(planDetailQuery(id));
 
   const { data: rsvps } = useQuery({
-    queryKey: ['plan-rsvps', id],
+    queryKey: planRsvpsKey(id),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('rsvps')
@@ -55,7 +50,7 @@ export default function CancelPlanScreen() {
   });
 
   const { data: availabilities } = useQuery({
-    queryKey: ['plan-availabilities', id],
+    queryKey: planAvailabilitiesKey(id),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('date_availability')
@@ -77,8 +72,8 @@ export default function CancelPlanScreen() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plan', id] });
-      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
+      queryClient.invalidateQueries({ queryKey: planDetailKey(id) });
+      queryClient.invalidateQueries({ queryKey: feedKey() });
       if (plan?.group_id) {
         queryClient.invalidateQueries({ queryKey: ['group-plans', plan.group_id] });
       }

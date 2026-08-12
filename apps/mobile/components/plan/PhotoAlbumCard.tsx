@@ -5,7 +5,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button, ForwardGlyph, ThemedText } from '../ui';
 // Deep, because the barrel does not carry PhotoTile (PLA-117 owns adding it).
 import { PhotoTile } from '../ui/PhotoTile';
-import { usePlanAlbumCard, planPhotosKey } from '../../lib/usePlanPhotos';
+import { usePlanAlbumCard } from '../../lib/usePlanPhotos';
+import { planPhotosKey } from '../../lib/planPhotosKey';
 import {
   MAX_PHOTOS_PER_PERSON,
   MAX_PHOTOS_PER_PLAN,

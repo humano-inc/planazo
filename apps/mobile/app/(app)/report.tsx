@@ -13,6 +13,8 @@ import {
 import { useDismissTo } from '../../lib/navigation';
 import { actionErrorCopy } from '../../lib/queryErrors';
 import { reportTargets, reportValid } from '../../lib/reportTargets';
+import { groupDetailKey, groupManageKey } from '../../lib/groupManageQuery';
+import { feedKey } from '../../lib/useFeed';
 import { useAuthStore } from '../../stores/authStore';
 import {
   Card,
@@ -84,9 +86,9 @@ export default function ReportScreen() {
       if (alsoBlock && personId) {
         // Their plans vanish from every list the moment the policy re-runs.
         queryClient.invalidateQueries({ queryKey: BLOCKED_QUERY_KEY });
-        queryClient.invalidateQueries({ queryKey: ['home-plans'] });
-        queryClient.invalidateQueries({ queryKey: ['group'] });
-        queryClient.invalidateQueries({ queryKey: ['group-manage'] });
+        queryClient.invalidateQueries({ queryKey: feedKey() });
+        queryClient.invalidateQueries({ queryKey: groupDetailKey() });
+        queryClient.invalidateQueries({ queryKey: groupManageKey() });
       }
       leave();
       showToast(
