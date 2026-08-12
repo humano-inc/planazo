@@ -82,6 +82,23 @@ describe('initNotificationPresentation', () => {
     expect(Notifications.setNotificationHandler).toHaveBeenCalled();
     expect(Notifications.setNotificationChannelAsync).not.toHaveBeenCalled();
   });
+
+  it('warns instead of throwing when the channel cannot be created', async () => {
+    Platform.OS = 'android';
+    Notifications.setNotificationChannelAsync.mockRejectedValue(new Error('no channel'));
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+    // The call site is a sync effect that never awaits this, so an unhandled
+    // rejection here would surface as a crash far from its cause.
+    expect(() => initNotificationPresentation()).not.toThrow();
+    await Promise.resolve();
+
+    expect(warn).toHaveBeenCalledWith(
+      'Could not create the Android notification channel.',
+      expect.any(Error),
+    );
+    warn.mockRestore();
+  });
 });
 
 describe('registerPushToken', () => {
