@@ -1,4 +1,3 @@
-/* eslint-disable max-lines -- PLA-110 */
 import { useState } from 'react';
 import {
   View,
@@ -9,27 +8,13 @@ import {
   Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { supabase } from '../../../../lib/supabase';
 import { useAuthStore } from '../../../../stores/authStore';
-import {
-  alertActionError,
-  errorCopy,
-  groupGoneCopy,
-  isNotFoundError,
-} from '../../../../lib/queryErrors';
-import { usePendingRemoval } from '../../../../lib/usePendingRemoval';
-import { groupManageQuery, invalidateGroup } from '../../../../lib/groupManageQuery';
+import { errorCopy, groupGoneCopy, isNotFoundError } from '../../../../lib/queryErrors';
+import { useGroupManage } from '../../../../lib/useGroupManage';
 import { adminCount, adminSummary, byArrival, memberName } from '../../../../lib/groupAdmins';
 import { MIN_TOUCH_TARGET } from '../../../../lib/a11y';
 import { useDismissTo } from '../../../../lib/navigation';
-import {
-  BLOCKED_QUERY_KEY,
-  blockUser,
-  fetchBlockedIds,
-  unblockUser,
-} from '../../../../lib/moderation';
 import { canInvite } from '../../../../lib/groupDoor';
 import { useDoorSettings, useJoinRequests } from '../../../../lib/useGroupDoor';
 import { MemberList, type GroupMemberRow } from '../../../../components/group/MemberList';
@@ -54,12 +39,22 @@ export default function ManageGroupScreen() {
   // The error state is reached when the group is gone or unreadable, so the
   // group route is exactly where not to send someone.
   const leaveGone = useDismissTo('/(app)/(tabs)/groups');
-  const queryClient = useQueryClient();
   const { user } = useAuthStore();
 
-  const { data: group, isLoading, isError, error, refetch } = useQuery(groupManageQuery(id));
-
-  const invalidate = () => invalidateGroup(queryClient, id);
+  const {
+    group,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    blocked,
+    setBlocked,
+    setAnyoneCanPost,
+    setNotify,
+    leaveGroup,
+    pendingRemovalId,
+    startRemoval,
+  } = useGroupManage(id);
 
   // Read off the query rather than the sorted rows further down, because the
   // hooks that need it run before the loading guard those rows sit behind.
@@ -73,90 +68,9 @@ export default function ManageGroupScreen() {
   const { requests, respond, answeringId } = useJoinRequests(String(id), isAdmin);
   const setDoor = useDoorSettings(String(id));
 
-  // Who this user has shut out (the shield rule: those people no longer see
-  // this user's plans). Only ever their own list — RLS on blocked_users makes
-  // any other answer impossible.
-  const { data: blockedIds } = useQuery({
-    queryKey: BLOCKED_QUERY_KEY,
-    queryFn: fetchBlockedIds,
-    enabled: !!user,
-  });
-
-  const setBlocked = useMutation({
-    mutationFn: async ({ userId, blocked }: { userId: string; blocked: boolean }) => {
-      if (!user) throw new Error('Not signed in');
-      if (blocked) {
-        await blockUser(user.id, userId);
-      } else {
-        await unblockUser(user.id, userId);
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: BLOCKED_QUERY_KEY });
-      // The block dissolves ties server-side (friendship, their place in this
-      // user's upcoming plans), so anything derived from those refetches.
-      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['friends'] });
-      invalidate();
-    },
-    onError: alertActionError,
-  });
-
-  // The RPC, not a delete: removing somebody also withdraws the invites they
-  // sent and resets the link, so the way back in goes with them (PLA-49).
-  const removeMember = useMutation({
-    mutationFn: async (userId: string) => {
-      const { error } = await supabase.rpc('remove_group_member', {
-        p_group_id: id,
-        p_user_id: userId,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['group-invite-sheet', id] });
-      invalidate();
-    },
-    onError: alertActionError,
-  });
-
-  const setAnyoneCanPost = useMutation({
-    mutationFn: async (on: boolean) => {
-      const { error } = await supabase.from('groups').update({ anyone_can_post: on }).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidate,
-    onError: alertActionError,
-  });
-
-  const setNotify = useMutation({
-    mutationFn: async (on: boolean) => {
-      const { error } = await supabase.rpc('set_group_notify', {
-        p_group_id: id,
-        p_notify: on,
-      });
-      if (error) throw error;
-    },
-    onSuccess: invalidate,
-    onError: alertActionError,
-  });
-
-  const leaveGroup = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.rpc('leave_group', { p_group_id: id });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['groups'] });
-      queryClient.invalidateQueries({ queryKey: ['home-plans'] });
-      router.navigate('/(app)/(tabs)/groups');
-    },
-    onError: alertActionError,
-  });
-
   // Only one row is ever open.
   const [openRowId, setOpenRowId] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
-  const { pendingRemovalId, startRemoval } = usePendingRemoval(removeMember.mutate);
 
   if (!isLoading && (isError || !group)) {
     const notFound = !id || isNotFoundError(error);
@@ -190,7 +104,6 @@ export default function ManageGroupScreen() {
   const others = members.filter(
     (m) => m.user_id !== user?.id && m.user_id !== pendingRemovalId
   );
-  const blocked = new Set(blockedIds ?? []);
 
   const askRemove = (m: GroupMemberRow) =>
     setConfirm({ kind: 'remove', userId: m.user_id, name: memberName(m) });
