@@ -77,6 +77,11 @@ Deno.serve(async (req) => {
       body: row.body,
       data: row.data ?? {},
       sound: 'default',
+      // Ignored by iOS. On Android it picks the channel the app declares in
+      // lib/push.ts; leave it off and Expo files the message under a fallback
+      // channel that shows no heads-up banner. Renaming it here alone silences
+      // Android — the two names have to move together.
+      channelId: 'default',
     }),
   });
   const result = await res.json().catch(() => null);
