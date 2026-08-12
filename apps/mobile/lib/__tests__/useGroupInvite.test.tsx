@@ -100,4 +100,22 @@ describe('useGroupInvite', () => {
     expect(mockRpc).toHaveBeenCalledWith('invite_to_group', { p_group_id: 'g1', p_invitee: 'u4' });
     expect(invalidated).toEqual([groupInviteKey('g1')]);
   });
+
+  /**
+   * Pinned, not endorsed: PLA-127. `supabase.rpc()` resolves with `{ error }`
+   * rather than rejecting, and the `Promise.all` result is dropped, so a
+   * refused invite reads as a sent one. The extraction moved this behaviour
+   * across unchanged; the assertion is here so the fix has something to flip.
+   */
+  it('reports success even when every invite is refused (PLA-127)', async () => {
+    const { result } = await renderInvite();
+    mockRpc.mockResolvedValue({ data: null, error: { message: 'Only admins can invite' } });
+
+    await act(async () => {
+      result.current.sendInvites.mutate(['u3']);
+    });
+
+    await waitFor(() => expect(result.current.sendInvites.isSuccess).toBe(true));
+    expect(mockBack).toHaveBeenCalled();
+  });
 });

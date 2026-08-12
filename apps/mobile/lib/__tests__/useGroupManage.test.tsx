@@ -33,8 +33,14 @@ const mockFetchBlockedIds = fetchBlockedIds as jest.Mock;
 
 const GROUP = { id: 'g1', name: 'Padel', group_members: [] };
 
-/** The last builder handed to the hook, so a write can be asserted on it. */
-let groups: ChainMock;
+/**
+ * Every builder the hook asked for. Not just the last one: an invalidation
+ * refetches the group, so the builder that took the write is rarely the newest.
+ */
+let builders: ChainMock[] = [];
+
+/** Every `.update()` argument, across all of them. */
+const updates = () => builders.flatMap((b) => b.update.mock.calls);
 
 async function renderManage() {
   const view = await renderHookWithQuery(() => useGroupManage('g1'));
@@ -45,9 +51,11 @@ async function renderManage() {
 beforeEach(() => {
   jest.clearAllMocks();
   jest.spyOn(AppState, 'addEventListener').mockReturnValue({ remove: jest.fn() } as never);
+  builders = [];
   mockFrom.mockImplementation(() => {
-    groups = chain({ data: GROUP, error: null });
-    return groups;
+    const builder = chain({ data: GROUP, error: null });
+    builders.push(builder);
+    return builder;
   });
   mockRpc.mockResolvedValue({ data: null, error: null });
   mockFetchBlockedIds.mockResolvedValue(['u9']);
@@ -80,6 +88,11 @@ describe('useGroupManage', () => {
     await act(async () => {
       jest.advanceTimersByTime(UNDO_WINDOW_MS);
     });
+    // A second pass, because the timer only starts the mutation: its own
+    // promise chain and the state it settles land on later microtasks, and
+    // leaving them outside act is what prints the warning that hides the next
+    // real one.
+    await act(async () => {});
 
     // The RPC, not a delete: it also withdraws the invites that person sent,
     // which is why the invite sheet is refetched alongside the group.
@@ -87,15 +100,13 @@ describe('useGroupManage', () => {
       p_group_id: 'g1',
       p_user_id: 'u2',
     });
-    await waitFor(() =>
-      expect(invalidated).toEqual(
-        expect.arrayContaining([
-          groupInviteKey('g1'),
-          ['group-manage', 'g1'],
-          ['group', 'g1'],
-          ['groups'],
-        ])
-      )
+    expect(invalidated).toEqual(
+      expect.arrayContaining([
+        groupInviteKey('g1'),
+        ['group-manage', 'g1'],
+        ['group', 'g1'],
+        ['groups'],
+      ])
     );
   });
 
@@ -138,7 +149,7 @@ describe('useGroupManage', () => {
     });
 
     await waitFor(() => expect(result.current.setAnyoneCanPost.isSuccess).toBe(true));
-    expect(groups.update).toHaveBeenCalledWith({ anyone_can_post: true });
+    expect(updates()).toContainEqual([{ anyone_can_post: true }]);
     expect(invalidated).toEqual(expect.arrayContaining([['group-manage', 'g1']]));
   });
 
