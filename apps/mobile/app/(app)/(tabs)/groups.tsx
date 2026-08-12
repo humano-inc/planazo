@@ -7,11 +7,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { flattenNestedOptions, needsUserResponse, type PlanType } from '@planazo/shared';
-import { supabase } from '../../../lib/supabase';
-import { useAuthStore } from '../../../stores/authStore';
+import { useGroupRows } from '../../../lib/useGroupRows';
 import { useFriends } from '../../../lib/useFriends';
 import { errorCopy } from '../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../lib/usePullToRefresh';
@@ -30,83 +27,11 @@ import { GroupsEmptyState } from '../../../components/group/GroupsEmptyState';
 import { InvitesRow } from '../../../components/group/InvitesRow';
 import { colors, fonts, radii, spacing } from '../../../theme/tokens';
 
-interface GroupRow {
-  id: string;
-  role: string;
-  name: string;
-  color: string | null;
-  imageUrl: string | null;
-  members: number;
-  needsYou: number;
-}
-
 export default function GroupsScreen() {
   const router = useRouter();
-  const { user } = useAuthStore();
   const { friends } = useFriends();
 
-  const { data: rows, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['groups', user?.id],
-    queryFn: async (): Promise<GroupRow[]> => {
-      const { data: memberships, error } = await supabase
-        .from('group_members')
-        .select('group_id, role, groups:group_id(id, name, color, image_url, created_at)')
-        .eq('user_id', user!.id);
-      if (error) throw error;
-
-      const groupIds = memberships.map((m) => m.group_id);
-      if (groupIds.length === 0) return [];
-
-      const [countsRes, plansRes] = await Promise.all([
-        supabase.from('group_members').select('group_id').in('group_id', groupIds),
-        supabase
-          .from('plans')
-          .select(
-            `id, group_id, plan_type, status, min_people,
-            rsvps(user_id, response),
-            plan_date_options(id, date, date_availability(user_id))`
-          )
-          .in('group_id', groupIds)
-          .eq('status', 'open'),
-      ]);
-      if (countsRes.error) throw countsRes.error;
-      if (plansRes.error) throw plansRes.error;
-
-      const memberCount: Record<string, number> = {};
-      countsRes.data.forEach((c) => {
-        memberCount[c.group_id] = (memberCount[c.group_id] ?? 0) + 1;
-      });
-
-      const needsCount: Record<string, number> = {};
-      plansRes.data.forEach((plan) => {
-        const { availabilities } = flattenNestedOptions(plan.plan_date_options);
-        const needs = needsUserResponse(
-          {
-            plan_type: plan.plan_type as PlanType,
-            status: plan.status,
-            rsvps: plan.rsvps,
-            availabilities,
-          },
-          user?.id
-        );
-        if (needs) needsCount[plan.group_id] = (needsCount[plan.group_id] ?? 0) + 1;
-      });
-
-      return memberships
-        .map((m) => ({
-          id: m.group_id,
-          role: m.role,
-          name: m.groups.name,
-          color: m.groups.color,
-          imageUrl: m.groups.image_url,
-          createdAt: m.groups.created_at ?? '',
-          members: memberCount[m.group_id] ?? 0,
-          needsYou: needsCount[m.group_id] ?? 0,
-        }))
-        .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-    },
-    enabled: !!user,
-  });
+  const { data: rows, isLoading, isError, error, refetch } = useGroupRows();
   const { refreshing, onRefresh } = usePullToRefresh(refetch);
 
   const hasGroups = (rows ?? []).length > 0;
