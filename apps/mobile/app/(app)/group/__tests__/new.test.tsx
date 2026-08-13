@@ -45,16 +45,28 @@ const FRIENDSHIPS = [
   },
 ];
 
+const CITIES = [
+  { id: 'c-mendoza', slug: 'mendoza', name: 'Mendoza' },
+  { id: 'c-cordoba', slug: 'cordoba', name: 'Córdoba' },
+];
+
 function primeSupabase() {
-  mockFrom.mockImplementation(() => {
+  mockFrom.mockImplementation((table: string) => {
     const c: any = {};
     ['select', 'eq', 'or', 'single', 'insert'].forEach((m) => {
       c[m] = jest.fn(() => c);
     });
+    const data = table === 'cities' ? CITIES : FRIENDSHIPS;
     c.then = (resolve: (v: unknown) => void) =>
-      Promise.resolve({ data: FRIENDSHIPS, error: null }).then(resolve);
+      Promise.resolve({ data, error: null }).then(resolve);
     return c;
   });
+}
+
+/** Open the city step, choose one, and let it collapse back down. */
+async function pickCity(slug = 'mendoza') {
+  await fireEvent.press(await screen.findByTestId('city-open'));
+  await fireEvent.press(await screen.findByTestId(`city-${slug}`));
 }
 
 /** create_group returns the group row; invite_to_group returns a status. */
@@ -95,7 +107,44 @@ describe('NewGroupScreen', () => {
 
     expect(await screen.findByText('Name it first')).toBeTruthy();
     await fireEvent.changeText(screen.getByTestId('name-input'), 'Padel Dilluns');
+    expect(screen.getByText('Pick a city first')).toBeTruthy();
+    await pickCity();
     expect(screen.getByText('Create group')).toBeTruthy();
+  });
+
+  /**
+   * PLA-88: the city is required, and the picked city is what the group is
+   * created with. Both halves are here because a CTA that unlocks without
+   * sending `p_city_id` would look exactly like a working screen.
+   */
+  it('sends the picked city to create_group, and collapses the step once picked', async () => {
+    await renderNew();
+
+    await fireEvent.changeText(screen.getByTestId('name-input'), 'Padel Dilluns');
+    await pickCity('cordoba');
+
+    // The long list is gone and the choice is a single line again.
+    expect(screen.queryByTestId('city-mendoza')).toBeNull();
+    expect(screen.getByTestId('city-picked')).toBeTruthy();
+    expect(screen.getByText("Ideas will come from what's on in Córdoba.")).toBeTruthy();
+
+    await fireEvent.press(screen.getByText('Create group'));
+
+    await waitFor(() => expect(mockBack).toHaveBeenCalled());
+    expect(mockRpc).toHaveBeenCalledWith(
+      'create_group',
+      expect.objectContaining({ p_city_id: 'c-cordoba' })
+    );
+  });
+
+  it('finds a city by the accents nobody types', async () => {
+    await renderNew();
+
+    await fireEvent.press(await screen.findByTestId('city-open'));
+    await fireEvent.changeText(screen.getByTestId('city-search'), 'cordoba');
+
+    expect(screen.getByTestId('city-cordoba')).toBeTruthy();
+    expect(screen.queryByTestId('city-mendoza')).toBeNull();
   });
 
   it('lists friends from both friendship directions', async () => {
@@ -110,6 +159,7 @@ describe('NewGroupScreen', () => {
     await renderNew();
 
     await fireEvent.changeText(screen.getByTestId('name-input'), 'Padel Dilluns');
+    await pickCity();
     await fireEvent.press(await screen.findByTestId('person-f1'));
     await fireEvent.press(screen.getByTestId('person-f2'));
 
@@ -145,6 +195,7 @@ describe('NewGroupScreen', () => {
     await renderNew();
 
     await fireEvent.changeText(screen.getByTestId('name-input'), 'Cine');
+    await pickCity();
     await fireEvent.press(screen.getByText('Create group'));
 
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/(app)/group/g-new'));
@@ -174,6 +225,7 @@ describe('NewGroupScreen', () => {
     await renderNew();
 
     await fireEvent.changeText(screen.getByTestId('name-input'), 'Cine');
+    await pickCity();
     await fireEvent.press(screen.getByTestId('swatch-2'));
     await fireEvent.press(screen.getByText('Create group'));
 
@@ -191,6 +243,7 @@ describe('NewGroupScreen', () => {
     expect(screen.getByTestId('swatch-3').props.accessibilityState).toEqual({ selected: true });
 
     await fireEvent.changeText(screen.getByTestId('name-input'), 'Cine');
+    await pickCity();
     await fireEvent.press(screen.getByText('Create group'));
 
     await waitFor(() => {

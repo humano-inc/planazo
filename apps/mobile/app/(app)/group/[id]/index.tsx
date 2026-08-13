@@ -50,6 +50,7 @@ export default function GroupDetailScreen() {
         .from('groups')
         .select(
           `id, name, description, color, image_url, who_can_invite,
+          city:cities(name),
           group_members(user_id, role, profile:profiles(id, display_name, avatar_url)),
           plans(id, title, plan_type, status, event_date, locked_date, min_people, created_at,
             cancelled_at, cancelled_by, cancel_reason,
@@ -150,9 +151,19 @@ export default function GroupDetailScreen() {
             />
             <View style={styles.identityText}>
               <ThemedText variant="headerTitle">{group.name}</ThemedText>
-              <ThemedText variant="caption">
-                {myRole === 'admin' ? 'You run this group' : 'You’re a member here'}
-              </ThemedText>
+              {/* Where it meets, then who you are in it. The city comes first
+                  because it is the fact about the group; the second half is a
+                  fact about you. Never absent: city_id is NOT NULL, so the
+                  generated type has no null branch to guard here. */}
+              <View style={styles.captionRow}>
+                <ThemedText variant="caption" testID="group-city">
+                  {group.city.name}
+                </ThemedText>
+                <View style={styles.captionDot} />
+                <ThemedText variant="caption">
+                  {myRole === 'admin' ? 'You run this group' : 'You’re a member here'}
+                </ThemedText>
+              </View>
             </View>
           </View>
 
@@ -251,6 +262,17 @@ const styles = StyleSheet.create({
   identityText: {
     flex: 1,
     gap: spacing.xxs,
+  },
+  captionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  captionDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: colors.textFaint,
   },
   facesRow: {
     flexDirection: 'row',

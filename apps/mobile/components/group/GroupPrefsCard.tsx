@@ -19,6 +19,9 @@ interface Props {
   isAdmin: boolean;
   /** "Just you" or "N people run this group" — the Admins row's subtitle. */
   adminSummary: string;
+  /** Where the group meets. Every group has one, so this is never empty. */
+  cityName: string;
+  onCity: () => void;
   onEditProfile: () => void;
   onAdmins: () => void;
 }
@@ -41,10 +44,28 @@ export function GroupPrefsCard({
   notifyPending,
   isAdmin,
   adminSummary,
+  cityName,
+  onCity,
   onEditProfile,
   onAdmins,
 }: Props) {
   const limits = isAdmin ? [] : memberLimits(whoCanInvite, anyoneCanPost);
+
+  // A member reads the city and cannot change it, so the row is text rather
+  // than a disabled button: RLS refuses the write either way, and a chevron
+  // that opens nothing is the part that would be a lie.
+  const cityRow = (
+    <>
+      <View style={styles.prefBody}>
+        <ThemedText variant="bodyStrong">City</ThemedText>
+        <ThemedText variant="caption">Where ideas come from</ThemedText>
+      </View>
+      <ThemedText variant="bodyStrong" color={colors.textSecondary} testID="city-value">
+        {cityName}
+      </ThemedText>
+      {isAdmin ? <ForwardGlyph color={colors.textFaint} testID="city-forward-glyph" /> : null}
+    </>
+  );
 
   return (
     <View style={settingsStyles.section}>
@@ -69,6 +90,24 @@ export function GroupPrefsCard({
           divided={isAdmin}
           testID="pref-notify"
         />
+        {isAdmin ? (
+          <Pressable
+            style={({ pressed }) => [
+              settingsStyles.prefRow,
+              settingsStyles.divider,
+              pressed && styles.rowPressed,
+            ]}
+            onPress={onCity}
+            accessibilityRole="button"
+            testID="manage-city"
+          >
+            {cityRow}
+          </Pressable>
+        ) : (
+          <View style={[settingsStyles.prefRow, settingsStyles.divider]} testID="manage-city">
+            {cityRow}
+          </View>
+        )}
         {isAdmin ? (
           <>
             <Pressable

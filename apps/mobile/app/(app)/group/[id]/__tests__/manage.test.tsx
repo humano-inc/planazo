@@ -120,6 +120,8 @@ beforeEach(() => {
     anyone_can_post: true,
     who_can_invite: 'members',
     join_mode: 'open',
+    city_id: 'c-mendoza',
+    city: { id: 'c-mendoza', name: 'Mendoza' },
     group_members: [
       {
         user_id: 'me',
@@ -140,6 +142,31 @@ beforeEach(() => {
 });
 
 describe('ManageGroupScreen', () => {
+  /**
+   * PLA-88. The city row is the same row for everyone; what changes is whether
+   * it opens anything. A member is not shown a chevron into a sheet that RLS
+   * would refuse the write from.
+   */
+  it('an admin can open the city, a member only reads it', async () => {
+    await renderManage();
+
+    expect(await screen.findByTestId('city-value')).toHaveTextContent('Mendoza');
+    expect(screen.getByTestId('city-forward-glyph')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('manage-city'));
+    expect(mockPush).toHaveBeenCalledWith('/(app)/group/g1/city');
+
+    mockPush.mockClear();
+    group.group_members[0].role = 'member';
+    await renderManage();
+
+    expect(await screen.findByTestId('city-value')).toHaveTextContent('Mendoza');
+    expect(screen.queryByTestId('city-forward-glyph')).toBeNull();
+    await fireEvent.press(screen.getByTestId('manage-city'));
+    expect(mockPush).not.toHaveBeenCalled();
+
+    group.group_members[0].role = 'admin';
+  });
+
   it('admin sees themselves first, badged', async () => {
     await renderManage();
 

@@ -66,6 +66,7 @@ const demoGroups = [
     key: 'weekend',
     inviteCode: 'WEEKENDS',
     name: 'Weekend Crew',
+    citySlug: 'mendoza',
     description: 'Low-pressure plans for Saturdays, Sundays, and last-minute ideas.',
     members: ['primary', 'demo', 'alex', 'bianca', 'diego', 'maya', 'sam'],
   },
@@ -73,6 +74,7 @@ const demoGroups = [
     key: 'food',
     inviteCode: 'FEASTDAY',
     name: 'Food & Drinks',
+    citySlug: 'cordoba',
     description: 'Restaurants, bars, pop-ups, and dinner experiments.',
     members: ['primary', 'demo', 'alex', 'bianca', 'lucia', 'theo', 'nina'],
   },
@@ -80,6 +82,7 @@ const demoGroups = [
     key: 'outdoors',
     inviteCode: 'TREKDAYS',
     name: 'Outdoors Club',
+    citySlug: 'san-carlos-de-bariloche',
     description: 'Hikes, parks, paddle days, and anything outside.',
     members: ['primary', 'demo', 'diego', 'lucia', 'maya', 'nina', 'sam'],
   },
@@ -87,6 +90,7 @@ const demoGroups = [
     key: 'culture',
     inviteCode: 'CULTURES',
     name: 'Culture Club',
+    citySlug: 'buenos-aires',
     description: 'Museums, concerts, galleries, and coffee after.',
     members: ['primary', 'demo', 'bianca', 'lucia', 'maya', 'theo'],
   },
@@ -440,12 +444,24 @@ async function upsertDemoFeedback(primary) {
 }
 
 async function upsertGroups(primaryUserId) {
-  const groupRows = demoGroups.map((group) => ({
-    name: group.name,
-    description: group.description,
-    invite_code: group.inviteCode,
-    created_by: primaryUserId,
-  }));
+  // groups.city_id is NOT NULL (PLA-88). Four different cities rather than one,
+  // so the demo stack shows the city on a group profile and has somewhere real
+  // to move a group to.
+  const { data: cities, error: citiesError } = await supabase.from('cities').select('id, slug');
+  if (citiesError) throw citiesError;
+  const cityIdBySlug = new Map(cities.map((city) => [city.slug, city.id]));
+
+  const groupRows = demoGroups.map((group) => {
+    const cityId = cityIdBySlug.get(group.citySlug);
+    if (!cityId) throw new Error(`seed: no city seeded with slug "${group.citySlug}"`);
+    return {
+      name: group.name,
+      description: group.description,
+      invite_code: group.inviteCode,
+      city_id: cityId,
+      created_by: primaryUserId,
+    };
+  });
 
   const { data, error } = await supabase
     .from('groups')
