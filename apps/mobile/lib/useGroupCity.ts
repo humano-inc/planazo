@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
-import { alertActionError } from './queryErrors';
+import { alertActionError, UserFacingError } from './queryErrors';
 import { groupManageQuery, invalidateGroup } from './groupManageQuery';
 
 /**
@@ -16,6 +16,12 @@ import { groupManageQuery, invalidateGroup } from './groupManageQuery';
  * step. It lives in this hook rather than in the sheet for the same reason the
  * other five group writes live in `useGroupManage`: they all go stale through
  * `invalidateGroup`, and a copy in a screen is the one that forgets a key.
+ *
+ * It ends in a `select` because an UPDATE the policy filters to no rows is not
+ * an error. PostgREST reports zero rows and `error: null`, so a bare update
+ * would report a move that never happened: the caches would refetch, the sheet
+ * would close, and the group would still be where it was.
+ * `group-city.test.ts` drives exactly that write against a live database.
  */
 export function useGroupCity(id: string) {
   const queryClient = useQueryClient();
@@ -23,8 +29,17 @@ export function useGroupCity(id: string) {
 
   const save = useMutation({
     mutationFn: async (cityId: string) => {
-      const { error } = await supabase.from('groups').update({ city_id: cityId }).eq('id', id);
+      const { data, error } = await supabase
+        .from('groups')
+        .update({ city_id: cityId })
+        .eq('id', id)
+        .select('id');
       if (error) throw error;
+      // `id` is readable: 20260807000000 revoked table-level SELECT on groups
+      // and re-granted a column list that names it.
+      if (data.length === 0) {
+        throw new UserFacingError('Only an admin can move this group to another city.');
+      }
     },
     onSuccess: () => invalidateGroup(queryClient, id),
     onError: alertActionError,

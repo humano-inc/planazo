@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { City } from '@planazo/shared';
-import { filterCities, citiesEmptyLine } from '../../lib/cities';
+import { filterCities, citiesEmptyLine, CITIES_MISSING_LINE } from '../../lib/cities';
 import { useCities } from '../../lib/useCities';
 import { errorCopy } from '../../lib/queryErrors';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
@@ -38,7 +38,16 @@ interface Props {
 export function CityPicker({ selectedId, onSelect }: Props) {
   const [query, setQuery] = useState('');
   const { data, isPending, isError, error } = useCities();
-  const found = filterCities(data ?? [], query);
+  // Memoised on the two things it reads: `filterCities` copies and sorts the
+  // whole seeded list, and this component re-renders on every keystroke.
+  const found = useMemo(() => filterCities(data ?? [], query), [data, query]);
+
+  // Four ways to have no rows, and only one of them is the search box. The
+  // fetch resolving empty is the one with no error attached to explain itself.
+  let emptyLine = citiesEmptyLine(query);
+  if (isPending) emptyLine = 'Loading cities…';
+  else if (isError) emptyLine = errorCopy(error).body;
+  else if (data.length === 0) emptyLine = CITIES_MISSING_LINE;
 
   return (
     <View style={settingsStyles.section}>
@@ -82,11 +91,7 @@ export function CityPicker({ selectedId, onSelect }: Props) {
         })}
         {found.length === 0 ? (
           <ThemedText variant="sub" style={settingsStyles.emptyLine} testID="cities-empty">
-            {isPending
-              ? 'Loading cities…'
-              : isError
-                ? errorCopy(error).body
-                : citiesEmptyLine(query)}
+            {emptyLine}
           </ThemedText>
         ) : null}
       </Card>

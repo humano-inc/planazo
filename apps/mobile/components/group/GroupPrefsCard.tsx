@@ -60,7 +60,13 @@ export function GroupPrefsCard({
         <ThemedText variant="bodyStrong">City</ThemedText>
         <ThemedText variant="caption">Where ideas come from</ThemedText>
       </View>
-      <ThemedText variant="bodyStrong" color={colors.textSecondary} testID="city-value">
+      <ThemedText
+        variant="bodyStrong"
+        color={colors.textSecondary}
+        numberOfLines={1}
+        style={styles.cityValue}
+        testID="city-value"
+      >
         {cityName}
       </ThemedText>
       {isAdmin ? <ForwardGlyph color={colors.textFaint} testID="city-forward-glyph" /> : null}
@@ -159,10 +165,17 @@ const styles = StyleSheet.create({
   limits: {
     gap: 2,
   },
+  // `flex: 1` would set flexBasis to 0, and a row that runs out of width takes
+  // it out of whoever has a basis to give: the labels would collapse to
+  // nothing while a long city name stayed whole. Growing from a natural basis
+  // and refusing to shrink leaves the value as the only thing that can, which
+  // is the one that ellipsises well.
   prefBody: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     gap: 3,
   },
+  cityValue: { flexShrink: 1 },
   rowPressed: {
     backgroundColor: colors.surfaceSunken,
   },

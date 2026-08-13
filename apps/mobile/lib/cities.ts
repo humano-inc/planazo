@@ -72,13 +72,25 @@ export function filterCities<T extends NamedCity>(cities: T[], query: string): T
 /**
  * What the empty results card says, echoing the search that emptied it.
  *
- * Only a search can empty the card: `CityPicker` says "Loading cities…" or the
- * failure line for the other two ways it can have no rows, so there is no
- * branch here for a list that simply is not there.
+ * A search is not the only way the card can end up empty, so this is not the
+ * only line it can carry: `CityPicker` says "Loading cities…" while the fetch
+ * is in flight, the failure line when it threw, and the one below when it came
+ * back with nothing.
  */
 export function citiesEmptyLine(query: string): string {
   return `No city called “${query.trim()}” on the list.`;
 }
+
+/**
+ * The card when the fetch resolved with an empty list.
+ *
+ * Reachable without an error to show for it: `cities` is readable `TO
+ * authenticated`, so a read whose token has stopped being one comes back as
+ * zero rows and `error: null` rather than as a failure. Echoing the search
+ * there would print `No city called “” on the list.`, which blames the person
+ * typing for a list that never arrived.
+ */
+export const CITIES_MISSING_LINE = 'The city list is unavailable right now. Try again in a moment.';
 
 /** The line under a city once it is picked, saying what picking it does. */
 export function cityCaption(name: string): string {

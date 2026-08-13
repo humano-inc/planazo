@@ -156,7 +156,14 @@ export default function GroupDetailScreen() {
                   fact about you. Never absent: city_id is NOT NULL, so the
                   generated type has no null branch to guard here. */}
               <View style={styles.captionRow}>
-                <ThemedText variant="caption" testID="group-city">
+                {/* Long names ("San Fernando del Valle de Catamarca") give
+                    way here rather than push the role off the screen. */}
+                <ThemedText
+                  variant="caption"
+                  numberOfLines={1}
+                  style={styles.cityCaption}
+                  testID="group-city"
+                >
                   {group.city.name}
                 </ThemedText>
                 <View style={styles.captionDot} />
@@ -268,6 +275,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 7,
   },
+  // Not minWidth too: Yoga starts a node at zero, so a text node shrinks
+  // without the reset CSS flex items need.
+  cityCaption: { flexShrink: 1 },
   captionDot: {
     width: 3,
     height: 3,

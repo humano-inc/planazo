@@ -3,6 +3,7 @@ import {
   filterByName,
   adminSub,
   adminCount,
+  isGroupAdmin,
   adminSummary,
   adminsNote,
   candidatesEmptyLine,
@@ -112,6 +113,30 @@ describe('adminCount', () => {
       adminCount([member('a', 'admin', null), member('b', 'member', null), member('c', null, null)])
     ).toBe(1);
     expect(adminCount([])).toBe(0);
+  });
+});
+
+describe('isGroupAdmin', () => {
+  const rows = [member('a', 'admin', null), member('b', 'member', null), member('c', null, null)];
+
+  it('is true only for a row that is both this person and an admin', () => {
+    expect(isGroupAdmin(rows, 'a')).toBe(true);
+    expect(isGroupAdmin(rows, 'b')).toBe(false);
+    expect(isGroupAdmin(rows, 'c')).toBe(false);
+  });
+
+  it('is false for someone who is not in the group at all', () => {
+    expect(isGroupAdmin(rows, 'zz')).toBe(false);
+    expect(isGroupAdmin([], 'a')).toBe(false);
+  });
+
+  /**
+   * `user?.id` is undefined until the session loads, and every screen that
+   * asks passes it straight through. Answering false is what keeps a
+   * half-loaded screen from drawing an admin's controls for a moment.
+   */
+  it('is false with no signed-in id, however many admins there are', () => {
+    expect(isGroupAdmin(rows, undefined)).toBe(false);
   });
 });
 

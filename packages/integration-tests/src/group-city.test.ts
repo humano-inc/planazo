@@ -112,11 +112,18 @@ describe('moving a group', () => {
 
     // RLS filters the UPDATE to rows the member can write, which is none of
     // them, so this succeeds over an empty set. The row is what says no.
+    //
+    // `select()` is how the client tells that apart from a move, and it is the
+    // only way: `useGroupCity` would otherwise invalidate its caches and close
+    // the sheet over a group that never went anywhere. Asserted here rather
+    // than in the hook's own test, because what makes it true is postgres.
     const refused = await member.client
       .from('groups')
       .update({ city_id: elsewhere })
-      .eq('id', group.id);
+      .eq('id', group.id)
+      .select('id');
     expect(refused.error).toBeNull();
+    expect(refused.data).toEqual([]);
     const afterMember = ok(
       await member.client.from('groups').select('city_id').eq('id', group.id).single(),
     );

@@ -32,6 +32,24 @@ export function adminCount(members: AdminsMember[]): number {
 }
 
 /**
+ * Whether the person looking runs this group.
+ *
+ * Takes the two columns it reads at their generated width rather than
+ * `AdminsMember`'s, so a screen can ask straight off a query result instead of
+ * casting one into the Admins screen's shape first. A signed-out reader is
+ * never an admin, which is why the id being absent is answered here rather
+ * than left for a caller to remember: `undefined === undefined` would
+ * otherwise make the first row with no user_id say yes.
+ */
+export function isGroupAdmin(
+  members: { user_id: string; role: string | null }[],
+  myId: string | undefined
+): boolean {
+  if (!myId) return false;
+  return members.some((m) => m.user_id === myId && m.role === 'admin');
+}
+
+/**
  * The two cards: current admins, then everyone who could become one. Both
  * keep the People card's order (you first, then by arrival), so a name sits
  * where the previous screen taught you to look for it.

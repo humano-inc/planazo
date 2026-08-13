@@ -5,6 +5,8 @@ import type { City } from '@planazo/shared';
 import { groupGoneCopy } from '../../../../lib/queryErrors';
 import { useDismissTo } from '../../../../lib/navigation';
 import { useGroupCity } from '../../../../lib/useGroupCity';
+import { isGroupAdmin } from '../../../../lib/groupAdmins';
+import { useAuthStore } from '../../../../stores/authStore';
 import { cityMoveNote } from '../../../../lib/cities';
 import { CityPicker } from '../../../../components/group/CityPicker';
 import {
@@ -20,6 +22,7 @@ import { colors, spacing } from '../../../../theme/tokens';
 export default function GroupCityScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const leave = useDismissTo(`/(app)/group/${id}/manage`);
+  const { user } = useAuthStore();
   // The whole row, not its id: the note needs the name, and looking it back up
   // from the list would be buying back what the picker already handed over.
   const [picked, setPicked] = useState<City | null>(null);
@@ -44,6 +47,13 @@ export default function GroupCityScreen() {
     );
   }
 
+  // Manage only draws the chevron for an admin, but the route is a deep link
+  // and nothing stops a member following one. Without this they would get the
+  // whole picker, tap Save, and watch the sheet close over a group that never
+  // moved. The write refuses them too (`useGroupCity` reads back the row it
+  // updated); this is so they are told before they choose rather than after.
+  const isAdmin = isGroupAdmin(group.group_members, user?.id);
+
   const changed = !!picked && picked.id !== group.city_id;
   const note = changed ? cityMoveNote(group.city.name, picked.name) : null;
 
@@ -51,17 +61,33 @@ export default function GroupCityScreen() {
     <HeaderRow
       left={<HeaderAction label="Cancel" onPress={leave} tone="muted" testID="cancel" />}
       right={
-        <HeaderAction
-          label="Save"
-          align="end"
-          onPress={() => changed && save.mutate(picked.id, { onSuccess: leave })}
-          disabled={!changed || save.isPending}
-          testID="save"
-        />
+        isAdmin ? (
+          <HeaderAction
+            label="Save"
+            align="end"
+            onPress={() => changed && save.mutate(picked.id, { onSuccess: leave })}
+            disabled={!changed || save.isPending}
+            testID="save"
+          />
+        ) : undefined
       }
+      // Only read when there is no Save to place: roughly Cancel's width, so
+      // the title stays centred on a member's copy of the screen.
+      rightSpacerWidth={56}
       title="City"
     />
   );
+
+  if (!isAdmin) {
+    return (
+      <FormScreen header={header} contentContainerStyle={styles.content} testID="group-city">
+        <View style={styles.note} testID="city-read-only">
+          <ThemedText variant="bodyStrong">{`This group meets in ${group.city.name}`}</ThemedText>
+          <ThemedText variant="sub">Only an admin can move it to another city.</ThemedText>
+        </View>
+      </FormScreen>
+    );
+  }
 
   return (
     <FormScreen header={header} contentContainerStyle={styles.content} testID="group-city">
