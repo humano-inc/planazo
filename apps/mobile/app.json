@@ -27,7 +27,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F2542D"
       },
-      "package": "com.planazo.app",
+      "package": "com.somosplanazo.app",
       "edgeToEdgeEnabled": true,
       "googleServicesFile": "./google-services.json",
       "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"]

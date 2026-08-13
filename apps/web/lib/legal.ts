@@ -475,6 +475,176 @@ export const TERMS: Record<Lang, LegalDoc> = {
   },
 };
 
+/**
+ * Account deletion, on its own page because Google Play asks for a URL it can
+ * publish next to the listing: it has to name the app, spell out the steps, and
+ * say what is deleted and what is kept. A section inside /privacy satisfies none
+ * of that on its own, since the reviewer lands on the page and looks for those
+ * three things.
+ *
+ * The steps quote the app's own labels, which are English while the app is, and
+ * the data lists have to keep agreeing with the "Deleting your account" section
+ * of PRIVACY above and with delete_my_account in supabase/migrations.
+ */
+export const DELETE_ACCOUNT: Record<Lang, LegalDoc> = {
+  en: {
+    title: 'Deleting your Planazo account',
+    updatedLabel: 'Last updated',
+    lede: 'You can delete your Planazo account yourself, from inside the app, in four taps. It is immediate and it is not reversible.',
+    backHome: 'Back to planazo.me',
+    sections: [
+      {
+        heading: 'How to delete it from the app',
+        paras: [
+          '1. Open Planazo and sign in with the account you want to delete.',
+          '2. Tap Profile, the last tab at the bottom of the screen.',
+          '3. Scroll to the end of the page and tap "Delete my account".',
+          '4. Confirm twice: "Delete", then "Delete for good".',
+          'The account is gone the moment you confirm the second time, and the app returns you to the sign-in screen. Nobody has to approve it and there is no waiting period.',
+        ],
+      },
+      {
+        heading: 'If you no longer have the app',
+        paras: [
+          `Write to ${CONTACT_EMAIL} from the email address the account uses, with "Delete my account" as the subject. We do it by hand within 30 days, and usually the same week.`,
+          'We answer from the same address to say it is done. If you write from an address that does not match an account, we will ask you to write from the right one rather than delete somebody else by mistake.',
+        ],
+      },
+      {
+        heading: 'What gets deleted',
+        bullets: [
+          {
+            term: 'Your account and profile',
+            detail:
+              'Your email address, display name, handle, and the login itself. The account can no longer be signed into and the handle goes back into circulation.',
+          },
+          {
+            term: 'Your photos',
+            detail:
+              'Your profile photo and any screenshots you attached to feedback are deleted from storage, not just unlinked from your account.',
+          },
+          {
+            term: 'Everything you answered',
+            detail:
+              'Your yes, no, and maybe on every plan, the dates you marked, your notification preferences, your push tokens, and any feedback you sent.',
+          },
+          {
+            term: 'Your blocks and pending invites',
+            detail: 'Every block you set and every invitation waiting on you or sent by you.',
+          },
+        ],
+      },
+      {
+        heading: 'What is kept, and for how long',
+        bullets: [
+          {
+            term: 'Reports you filed about somebody else',
+            detail:
+              'The report stays so it can still be acted on, but it stops being linked to you. It is a record about their behaviour, not about you.',
+          },
+          {
+            term: 'Groups and plans other people are still using',
+            detail:
+              'A group you created passes to someone already in it, an existing admin where there is one, and is deleted outright only if nobody else is left. Plans you posted stay in their group so the people who answered them keep their evening, but they stop carrying your name.',
+          },
+          {
+            term: 'Crash reports',
+            detail:
+              'Held by Sentry and deleted on their own schedule within 90 days. They carry the app version, the device model, and where in the code it failed.',
+          },
+          {
+            term: 'Encrypted backups',
+            detail:
+              'Our database provider keeps encrypted backups that roll off within 30 days. Nothing is read out of them except to restore the service.',
+          },
+        ],
+      },
+      {
+        heading: 'Contact',
+        paras: [`Anything about this page or a deletion request: ${CONTACT_EMAIL}.`],
+      },
+    ],
+  },
+  es: {
+    title: 'Borrar tu cuenta de Planazo',
+    updatedLabel: 'Última actualización',
+    lede: 'Podés borrar tu cuenta de Planazo vos mismo, desde la app, en cuatro toques. Es inmediato y no se puede deshacer.',
+    backHome: 'Volver a planazo.me',
+    sections: [
+      {
+        heading: 'Cómo borrarla desde la app',
+        paras: [
+          '1. Abrí Planazo e iniciá sesión con la cuenta que querés borrar.',
+          '2. Tocá Profile, la última pestaña de abajo.',
+          '3. Bajá hasta el final de la página y tocá "Delete my account".',
+          '4. Confirmá dos veces: "Delete" y después "Delete for good".',
+          'La cuenta se borra en el momento en que confirmás la segunda vez, y la app te devuelve a la pantalla de inicio de sesión. No lo tiene que aprobar nadie y no hay período de espera.',
+        ],
+      },
+      {
+        heading: 'Si ya no tenés la app',
+        paras: [
+          `Escribinos a ${CONTACT_EMAIL} desde el email de la cuenta, con "Borrar mi cuenta" en el asunto. Lo hacemos a mano dentro de los 30 días, casi siempre en la misma semana.`,
+          'Te respondemos desde la misma dirección para avisarte que está hecho. Si escribís desde una dirección que no corresponde a ninguna cuenta, te vamos a pedir que escribas desde la correcta antes que borrar a otra persona por error.',
+        ],
+      },
+      {
+        heading: 'Qué se borra',
+        bullets: [
+          {
+            term: 'Tu cuenta y tu perfil',
+            detail:
+              'Tu email, tu nombre, tu usuario y el acceso en sí. No se puede volver a iniciar sesión y el usuario vuelve a quedar libre.',
+          },
+          {
+            term: 'Tus fotos',
+            detail:
+              'Tu foto de perfil y las capturas que hayas mandado con el feedback se borran del almacenamiento, no quedan sueltas.',
+          },
+          {
+            term: 'Todo lo que contestaste',
+            detail:
+              'Tus sí, no y quizás en cada plan, las fechas que marcaste, tus preferencias de notificaciones, los tokens de notificación y el feedback que hayas mandado.',
+          },
+          {
+            term: 'Tus bloqueos y tus invitaciones pendientes',
+            detail: 'Todos los bloqueos que pusiste y toda invitación pendiente, tuya o hacia vos.',
+          },
+        ],
+      },
+      {
+        heading: 'Qué se conserva y por cuánto tiempo',
+        bullets: [
+          {
+            term: 'Los reportes que hiciste sobre otra persona',
+            detail:
+              'El reporte queda para poder actuar sobre él, pero deja de estar vinculado a vos. Es un registro sobre la conducta de esa persona, no sobre vos.',
+          },
+          {
+            term: 'Los grupos y planes que otros siguen usando',
+            detail:
+              'Un grupo que creaste pasa a alguien que ya estaba adentro, un admin si hay alguno, y se borra solo si no queda nadie. Los planes que publicaste siguen en su grupo, para que quienes contestaron no pierdan la noche, pero dejan de llevar tu nombre.',
+          },
+          {
+            term: 'Los reportes de fallos',
+            detail:
+              'Los guarda Sentry y se borran solos dentro de los 90 días. Llevan la versión de la app, el modelo del dispositivo y en qué parte del código falló.',
+          },
+          {
+            term: 'Las copias de seguridad cifradas',
+            detail:
+              'Nuestro proveedor de base de datos guarda copias cifradas que se descartan en un plazo de 30 días. No se leen salvo para restaurar el servicio.',
+          },
+        ],
+      },
+      {
+        heading: 'Contacto',
+        paras: [`Cualquier cosa sobre esta página o sobre un pedido de borrado: ${CONTACT_EMAIL}.`],
+      },
+    ],
+  },
+};
+
 export const SUPPORT: Record<Lang, LegalDoc> = {
   en: {
     title: 'Support',
