@@ -7,30 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.15"
   }
   public: {
     Tables: {
@@ -64,6 +44,36 @@ export type Database = {
           blocked_id?: string
           blocker_id?: string
           created_at?: string
+        }
+        Relationships: []
+      }
+      cities: {
+        Row: {
+          country_code: string
+          id: string
+          lat: number
+          lon: number
+          name: string
+          slug: string
+          timezone: string
+        }
+        Insert: {
+          country_code: string
+          id?: string
+          lat: number
+          lon: number
+          name: string
+          slug: string
+          timezone: string
+        }
+        Update: {
+          country_code?: string
+          id?: string
+          lat?: number
+          lon?: number
+          name?: string
+          slug?: string
+          timezone?: string
         }
         Relationships: []
       }
@@ -333,6 +343,7 @@ export type Database = {
       groups: {
         Row: {
           anyone_can_post: boolean
+          city_id: string
           color: string | null
           created_at: string | null
           created_by: string | null
@@ -347,6 +358,7 @@ export type Database = {
         }
         Insert: {
           anyone_can_post?: boolean
+          city_id: string
           color?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -361,6 +373,7 @@ export type Database = {
         }
         Update: {
           anyone_can_post?: boolean
+          city_id?: string
           color?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -374,6 +387,13 @@ export type Database = {
           who_can_invite?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "groups_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "groups_created_by_fkey"
             columns: ["created_by"]
@@ -850,9 +870,15 @@ export type Database = {
       }
       color_for_name: { Args: { p_name: string }; Returns: string }
       create_group: {
-        Args: { p_color?: string; p_description?: string; p_name: string }
+        Args: {
+          p_city_id: string
+          p_color?: string
+          p_description?: string
+          p_name: string
+        }
         Returns: {
           anyone_can_post: boolean
+          city_id: string
           color: string | null
           created_at: string | null
           created_by: string | null
@@ -1112,11 +1138,7 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
 } as const
-

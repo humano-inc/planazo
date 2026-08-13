@@ -51,6 +51,7 @@ beforeEach(() => {
     description: 'The flat, plus honorary members',
     color: '#F7B0DC',
     who_can_invite: 'members',
+    city: { name: 'Mendoza' },
     group_members: [
       { user_id: 'me', role: 'admin', profile: { id: 'me', display_name: 'Rocío' } },
       { user_id: 'u2', role: 'member', profile: { id: 'u2', display_name: 'Aina' } },
@@ -111,6 +112,8 @@ describe('GroupDetailScreen', () => {
     await renderDetail();
 
     expect(await screen.findByText('Piso Gràcia')).toBeTruthy();
+    // PLA-88: where it meets, then who you are in it, on one caption line.
+    expect(screen.getByTestId('group-city')).toHaveTextContent('Mendoza');
     expect(screen.getByText('You run this group')).toBeTruthy();
     // PLA-61: an admin is the only person who manages anything through here.
     expect(within(screen.getByTestId('manage')).getByText('Manage')).toBeTruthy();

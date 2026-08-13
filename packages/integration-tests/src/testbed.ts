@@ -74,6 +74,7 @@ export class TestBed {
   readonly service: Client = newServiceClient();
   private users: TestUser[] = [];
   private groupIds: string[] = [];
+  private cityId: string | null = null;
 
   /**
    * Deliberately neither signUp nor signInWithPassword: signUp would tie the
@@ -126,11 +127,33 @@ export class TestBed {
     this.groupIds.push(id);
   }
 
+  /**
+   * A city id for groups this bed makes (PLA-88).
+   *
+   * `create_group` requires one and most tests do not care which, so they all
+   * share this arbitrary seeded row and read it once. Resolved by slug rather
+   * than "the first row", so a later seed migration cannot silently move every
+   * test group to a different city.
+   */
+  async defaultCityId(): Promise<string> {
+    if (!this.cityId) {
+      const row = ok(
+        await this.service.from('cities').select('id').eq('slug', 'mendoza').single(),
+      );
+      this.cityId = row.id;
+    }
+    return this.cityId;
+  }
+
   /** Creates a group the way the app does: one create_group call that also seats the owner as admin. */
-  async createGroup(owner: TestUser, opts: { name?: string; anyone_can_post?: boolean } = {}) {
+  async createGroup(
+    owner: TestUser,
+    opts: { name?: string; anyone_can_post?: boolean; city_id?: string } = {},
+  ) {
     const group = ok(
       await owner.client.rpc('create_group', {
         p_name: opts.name ?? `it-group-${randomUUID().slice(0, 8)}`,
+        p_city_id: opts.city_id ?? (await this.defaultCityId()),
       }),
     );
     this.groupIds.push(group.id);

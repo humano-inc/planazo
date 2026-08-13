@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, StyleSheet, TextInput } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { City } from '@planazo/shared';
 import { supabase } from '../../../lib/supabase';
 import { alertActionError, UserFacingError } from '../../../lib/queryErrors';
 import { useDismissTo, useLeaveFor } from '../../../lib/navigation';
@@ -10,6 +11,7 @@ import { groupsKey } from '../../../lib/useGroupRows';
 import { uploadGroupPhoto } from '../../../lib/images';
 import { captureError } from '../../../lib/sentry';
 import { FriendPicker } from '../../../components/group/FriendPicker';
+import { CityField } from '../../../components/group/CityField';
 import { GroupNameRow } from '../../../components/group/GroupNameRow';
 import {
   ThemedText,
@@ -44,6 +46,7 @@ export default function NewGroupScreen() {
   );
   const [picks, setPicks] = useState<string[]>([]);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [city, setCity] = useState<City | null>(null);
 
   const togglePick = (id: string) =>
     setPicks((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
@@ -56,6 +59,9 @@ export default function NewGroupScreen() {
         'group description': desc,
       });
       if (violation) throw new UserFacingError(violation);
+      // The CTA is disabled until a city is picked, so this only fires if the
+      // gate below and this call ever disagree.
+      if (!city) throw new UserFacingError('Pick the city you meet in first.');
       // PLA-35: the group row and the creator's admin membership are one
       // server-side write. The client can no longer insert either, and a
       // half-created group was an orphan nobody could see or delete.
@@ -64,6 +70,7 @@ export default function NewGroupScreen() {
       // value an explicit null was sending anyway.
       const { data: group, error: groupError } = await supabase.rpc('create_group', {
         p_name: name.trim(),
+        p_city_id: city.id,
         p_description: desc.trim() || undefined,
         p_color: color,
       });
@@ -104,13 +111,19 @@ export default function NewGroupScreen() {
   });
 
   const named = name.trim().length > 0;
+  // Both are required, and the label says which one is still missing rather
+  // than a single "fill this in": the city step is closed by default, so a
+  // generic refusal would point at nothing.
+  const ready = named && !!city;
   const ctaLabel = !named
     ? 'Name it first'
-    : createGroup.isPending
-      ? 'Creating…'
-      : picks.length > 0
-        ? `Create and invite ${picks.length}`
-        : 'Create group';
+    : !city
+      ? 'Pick a city first'
+      : createGroup.isPending
+        ? 'Creating…'
+        : picks.length > 0
+          ? `Create and invite ${picks.length}`
+          : 'Create group';
 
   const header = (
     <HeaderRow
@@ -129,15 +142,17 @@ export default function NewGroupScreen() {
       footer={
         <Button
           label={ctaLabel}
-          variant={named ? 'primary' : 'secondary'}
-          disabled={!named || createGroup.isPending}
-          haptic={named}
+          variant={ready ? 'primary' : 'secondary'}
+          disabled={!ready || createGroup.isPending}
+          haptic={ready}
           onPress={() => createGroup.mutate()}
           testID="create-cta"
         />
       }
     >
       <GroupNameRow name={name} color={color} imageUrl={photoUri} onChangeName={setName} />
+
+      <CityField value={city} onChange={setCity} />
 
       <GroupPhotoField
         uri={photoUri}

@@ -3,7 +3,7 @@ import { View, StyleSheet, Pressable } from 'react-native';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { filterByName, candidatesEmptyLine, memberName } from '../../lib/groupAdmins';
 import { ThemedText, Card, Avatar, SearchField } from '../ui';
-import { colors, radii, spacing } from '../../theme/tokens';
+import { colors, radii } from '../../theme/tokens';
 import { settingsStyles } from './settingsStyles';
 import { adminRowStyles } from './AdminsCard';
 import type { GroupMemberRow } from './MemberList';
@@ -70,7 +70,7 @@ export function PromoteCard({ candidates, disabled, onPromote }: Props) {
           </Pressable>
         ))}
         {found.length === 0 ? (
-          <ThemedText variant="sub" style={styles.emptyLine} testID="candidates-empty">
+          <ThemedText variant="sub" style={settingsStyles.emptyLine} testID="candidates-empty">
             {candidatesEmptyLine(query)}
           </ThemedText>
         ) : null}
@@ -108,10 +108,5 @@ const styles = StyleSheet.create({
     width: 1.5,
     height: 9,
     backgroundColor: colors.surface,
-  },
-  emptyLine: {
-    paddingVertical: 26,
-    paddingHorizontal: spacing.xl,
-    textAlign: 'center',
   },
 });

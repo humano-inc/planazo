@@ -101,9 +101,12 @@ describe('group_members INSERT is server-side only', () => {
   });
 
   it('a client cannot create a group row directly either', async () => {
+    // A complete row on purpose, city and all: RLS has to be what refuses it,
+    // not a NOT NULL constraint tripping first and passing for the same thing.
     const denied = await outsider.client.from('groups').insert({
       name: 'Orphan by hand',
       invite_code: 'ZZZZ2345',
+      city_id: await bed.defaultCityId(),
       created_by: outsider.id,
     });
     expect(denied.error?.message).toMatch(/row-level security/);
@@ -115,6 +118,7 @@ describe('create_group and join_group_by_invite_code', () => {
     const created = ok(
       await outsider.client.rpc('create_group', {
         p_name: '  Rls Created Group  ',
+        p_city_id: await bed.defaultCityId(),
         p_description: '  from the rpc  ',
       }),
     );
@@ -134,12 +138,20 @@ describe('create_group and join_group_by_invite_code', () => {
   });
 
   it('create_group refuses a blank name', async () => {
-    const denied = await outsider.client.rpc('create_group', { p_name: '   ' });
+    const denied = await outsider.client.rpc('create_group', {
+      p_name: '   ',
+      p_city_id: await bed.defaultCityId(),
+    });
     expect(denied.error?.message).toMatch(/A group needs a name/);
   });
 
   it('joining by code always lands as member, never admin', async () => {
-    const created = ok(await owner.client.rpc('create_group', { p_name: 'Rls Join Target' }));
+    const created = ok(
+      await owner.client.rpc('create_group', {
+        p_name: 'Rls Join Target',
+        p_city_id: await bed.defaultCityId(),
+      }),
+    );
     bed.trackGroup(created.id);
 
     // Lower-cased and padded, the way a pasted code arrives.
@@ -166,7 +178,12 @@ describe('create_group and join_group_by_invite_code', () => {
   });
 
   it('a bad code and a second join report themselves instead of throwing', async () => {
-    const created = ok(await owner.client.rpc('create_group', { p_name: 'Rls Rejoin Target' }));
+    const created = ok(
+      await owner.client.rpc('create_group', {
+        p_name: 'Rls Rejoin Target',
+        p_city_id: await bed.defaultCityId(),
+      }),
+    );
     bed.trackGroup(created.id);
 
     expect(

@@ -9,6 +9,14 @@ import type { Tables } from './database.types';
 export type Profile = Tables<'profiles'>;
 
 /**
+ * A city a group can meet in (PLA-88). Seeded reference data, so the alias is
+ * the whole type: there is no narrowing to do and nothing hand-written to
+ * drift, and the coordinates and timezone the idea engine reads come along
+ * with the name the picker draws.
+ */
+export type City = Tables<'cities'>;
+
+/**
  * The domain unions behind the CHECK-constrained `text` columns. The generated
  * types can only see `string` there, so these stay hand-written, and a query
  * that feeds domain logic narrows to them at the boundary rather than letting

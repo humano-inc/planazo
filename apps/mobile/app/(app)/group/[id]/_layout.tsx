@@ -7,6 +7,7 @@ export default function GroupLayout() {
       <Stack.Screen name="manage" />
       <Stack.Screen name="admins" />
       <Stack.Screen name="edit" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="city" options={{ presentation: 'formSheet', sheetCornerRadius: 30 }} />
       <Stack.Screen
         name="invite"
         options={{

@@ -187,6 +187,8 @@ export default function ManageGroupScreen() {
           notifyPending={setNotify.isPending}
           isAdmin={isAdmin}
           adminSummary={adminSummary(adminCount(members))}
+          cityName={group.city.name}
+          onCity={() => router.push(`/(app)/group/${id}/city`)}
           onEditProfile={() => router.push(`/(app)/group/${id}/edit`)}
           onAdmins={() => router.push(`/(app)/group/${id}/admins`)}
         />

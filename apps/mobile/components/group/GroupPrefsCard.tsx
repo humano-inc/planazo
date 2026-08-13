@@ -19,6 +19,9 @@ interface Props {
   isAdmin: boolean;
   /** "Just you" or "N people run this group" — the Admins row's subtitle. */
   adminSummary: string;
+  /** Where the group meets. Every group has one, so this is never empty. */
+  cityName: string;
+  onCity: () => void;
   onEditProfile: () => void;
   onAdmins: () => void;
 }
@@ -41,10 +44,34 @@ export function GroupPrefsCard({
   notifyPending,
   isAdmin,
   adminSummary,
+  cityName,
+  onCity,
   onEditProfile,
   onAdmins,
 }: Props) {
   const limits = isAdmin ? [] : memberLimits(whoCanInvite, anyoneCanPost);
+
+  // A member reads the city and cannot change it, so the row is text rather
+  // than a disabled button: RLS refuses the write either way, and a chevron
+  // that opens nothing is the part that would be a lie.
+  const cityRow = (
+    <>
+      <View style={styles.prefBody}>
+        <ThemedText variant="bodyStrong">City</ThemedText>
+        <ThemedText variant="caption">Where ideas come from</ThemedText>
+      </View>
+      <ThemedText
+        variant="bodyStrong"
+        color={colors.textSecondary}
+        numberOfLines={1}
+        style={styles.cityValue}
+        testID="city-value"
+      >
+        {cityName}
+      </ThemedText>
+      {isAdmin ? <ForwardGlyph color={colors.textFaint} testID="city-forward-glyph" /> : null}
+    </>
+  );
 
   return (
     <View style={settingsStyles.section}>
@@ -69,6 +96,24 @@ export function GroupPrefsCard({
           divided={isAdmin}
           testID="pref-notify"
         />
+        {isAdmin ? (
+          <Pressable
+            style={({ pressed }) => [
+              settingsStyles.prefRow,
+              settingsStyles.divider,
+              pressed && styles.rowPressed,
+            ]}
+            onPress={onCity}
+            accessibilityRole="button"
+            testID="manage-city"
+          >
+            {cityRow}
+          </Pressable>
+        ) : (
+          <View style={[settingsStyles.prefRow, settingsStyles.divider]} testID="manage-city">
+            {cityRow}
+          </View>
+        )}
         {isAdmin ? (
           <>
             <Pressable
@@ -120,10 +165,17 @@ const styles = StyleSheet.create({
   limits: {
     gap: 2,
   },
+  // `flex: 1` would set flexBasis to 0, and a row that runs out of width takes
+  // it out of whoever has a basis to give: the labels would collapse to
+  // nothing while a long city name stayed whole. Growing from a natural basis
+  // and refusing to shrink leaves the value as the only thing that can, which
+  // is the one that ellipsises well.
   prefBody: {
-    flex: 1,
+    flexGrow: 1,
+    flexShrink: 0,
     gap: 3,
   },
+  cityValue: { flexShrink: 1 },
   rowPressed: {
     backgroundColor: colors.surfaceSunken,
   },
