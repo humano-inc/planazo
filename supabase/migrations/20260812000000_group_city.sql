@@ -192,15 +192,18 @@ ON CONFLICT (slug) DO NOTHING;
 ALTER TABLE public.groups
   ADD COLUMN city_id UUID REFERENCES public.cities(id);
 
+-- Every row, no predicate: the column did not exist a statement ago, so there
+-- is no partial state a WHERE could be selecting out of.
 UPDATE public.groups
-SET city_id = (SELECT id FROM public.cities WHERE slug = 'mendoza')
-WHERE city_id IS NULL;
+SET city_id = (SELECT id FROM public.cities WHERE slug = 'mendoza');
 
 ALTER TABLE public.groups
   ALTER COLUMN city_id SET NOT NULL;
 
--- Every read of a group's city goes through this, and the weekly idea job will
--- group by it.
+-- For the weekly idea job's second step. Counting groups per city is a scan
+-- whatever this does; what the index serves is the `WHERE city_id = $1` that
+-- comes after it, once the job knows which city it is posting into. Nothing
+-- reads groups by city yet, so today this is one btree kept warm on trust.
 CREATE INDEX groups_city_idx ON public.groups (city_id);
 
 -- 20260807000000 revoked table-level SELECT on groups and re-granted a column

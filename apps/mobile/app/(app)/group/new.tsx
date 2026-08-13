@@ -8,7 +8,6 @@ import { alertActionError, UserFacingError } from '../../../lib/queryErrors';
 import { useDismissTo, useLeaveFor } from '../../../lib/navigation';
 import { contentViolation } from '../../../lib/moderation';
 import { groupsKey } from '../../../lib/useGroupRows';
-import { useCities } from '../../../lib/useCities';
 import { uploadGroupPhoto } from '../../../lib/images';
 import { captureError } from '../../../lib/sentry';
 import { FriendPicker } from '../../../components/group/FriendPicker';
@@ -48,8 +47,6 @@ export default function NewGroupScreen() {
   const [picks, setPicks] = useState<string[]>([]);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [city, setCity] = useState<City | null>(null);
-
-  const cities = useCities();
 
   const togglePick = (id: string) =>
     setPicks((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
@@ -155,13 +152,7 @@ export default function NewGroupScreen() {
     >
       <GroupNameRow name={name} color={color} imageUrl={photoUri} onChangeName={setName} />
 
-      <CityField
-        cities={cities.data ?? []}
-        loading={cities.isPending}
-        failed={cities.isError}
-        value={city}
-        onChange={setCity}
-      />
+      <CityField value={city} onChange={setCity} />
 
       <GroupPhotoField
         uri={photoUri}

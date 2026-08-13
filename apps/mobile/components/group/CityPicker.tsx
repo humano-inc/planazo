@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import type { City } from '@planazo/shared';
 import { filterCities, citiesEmptyLine } from '../../lib/cities';
+import { useCities } from '../../lib/useCities';
+import { errorCopy } from '../../lib/queryErrors';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { ThemedText, Card, SearchField } from '../ui';
 import { settingsStyles } from './settingsStyles';
 import { colors, radii, spacing } from '../../theme/tokens';
 
 interface Props {
-  cities: City[];
   /** The city currently chosen, if any. Ticked in the list. */
   selectedId: string | null;
   onSelect: (city: City) => void;
@@ -18,9 +19,12 @@ interface Props {
  * Search the seeded city list and pick one (PLA-88).
  *
  * The same component in both places a city is chosen: inline inside group
- * creation, and inside the change-city sheet on Manage. It owns the search box
- * and its own query state, because the query is scratch: nothing outside cares
- * what was typed, only which city came out.
+ * creation, and inside the change-city sheet on Manage. It owns the query as
+ * well as the search box, the way `FriendPicker` owns its friends query and
+ * for the same reason: nothing outside this list reads either, and a list that
+ * fetches its own rows has one story about not having them yet. Handed the
+ * rows as a prop instead, each caller invented its own, and the sheet's was to
+ * say "No cities to choose from." while the fetch was still in flight.
  *
  * Rows carry the name and nothing else. The design draws a "Province · Country"
  * subtitle under each one, and `cities` has neither column: the table holds
@@ -31,12 +35,13 @@ interface Props {
  * purpose rather than capped: a cap would quietly hide cities from someone
  * scrolling for one, and the search box directly above is the fast path.
  */
-export function CityPicker({ cities, selectedId, onSelect }: Props) {
+export function CityPicker({ selectedId, onSelect }: Props) {
   const [query, setQuery] = useState('');
-  const found = filterCities(cities, query);
+  const { data, isPending, isError, error } = useCities();
+  const found = filterCities(data ?? [], query);
 
   return (
-    <View style={styles.stack}>
+    <View style={settingsStyles.section}>
       <SearchField
         placeholder="Search cities"
         value={query}
@@ -67,7 +72,7 @@ export function CityPicker({ cities, selectedId, onSelect }: Props) {
               </ThemedText>
               {selected ? (
                 <View style={styles.tick} testID={`city-${city.slug}-tick`}>
-                  <ThemedText variant="caption" color={colors.textOnAccent}>
+                  <ThemedText variant="tag" color={colors.textOnAccent}>
                     ✓
                   </ThemedText>
                 </View>
@@ -76,8 +81,12 @@ export function CityPicker({ cities, selectedId, onSelect }: Props) {
           );
         })}
         {found.length === 0 ? (
-          <ThemedText variant="sub" style={styles.emptyLine} testID="cities-empty">
-            {citiesEmptyLine(query)}
+          <ThemedText variant="sub" style={settingsStyles.emptyLine} testID="cities-empty">
+            {isPending
+              ? 'Loading cities…'
+              : isError
+                ? errorCopy(error).body
+                : citiesEmptyLine(query)}
           </ThemedText>
         ) : null}
       </Card>
@@ -86,9 +95,6 @@ export function CityPicker({ cities, selectedId, onSelect }: Props) {
 }
 
 const styles = StyleSheet.create({
-  stack: {
-    gap: 10,
-  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -114,10 +120,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  emptyLine: {
-    paddingVertical: 26,
-    paddingHorizontal: spacing.xl,
-    textAlign: 'center',
   },
 });

@@ -28,4 +28,14 @@ export const settingsStyles = StyleSheet.create({
   note: {
     paddingHorizontal: spacing.xs,
   },
+  /**
+   * What a searchable card says when the search emptied it. Shared for the
+   * same reason as the rows above: two cards a screen apart that are meant to
+   * look alike have nothing else keeping them that way.
+   */
+  emptyLine: {
+    paddingVertical: 26,
+    paddingHorizontal: spacing.xl,
+    textAlign: 'center',
+  },
 });

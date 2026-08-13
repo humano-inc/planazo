@@ -28,6 +28,10 @@ export function useCities() {
       return data;
     },
     staleTime: Infinity,
+    // Kept past the last screen that wanted it, too. With the default gcTime
+    // the list is dropped five minutes after the picker closes and refetched
+    // on the next group, which is not what "never goes stale" means.
+    gcTime: Infinity,
     refetchOnWindowFocus: false,
   });
 }

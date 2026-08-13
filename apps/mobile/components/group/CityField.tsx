@@ -8,16 +8,8 @@ import { ThemedText, ForwardGlyph, TextAction } from '../ui';
 import { colors, radii, spacing } from '../../theme/tokens';
 
 interface Props {
-  cities: City[];
-  loading: boolean;
-  failed: boolean;
   value: City | null;
   onChange: (city: City) => void;
-}
-
-/** What the row says while the list it opens is not there yet. */
-function unavailableLabel(failed: boolean): string {
-  return failed ? "The city list didn't load. Close this and try again." : 'Loading cities…';
 }
 
 /**
@@ -32,10 +24,13 @@ function unavailableLabel(failed: boolean): string {
  * There is no way back to "no city". The group cannot be created without one,
  * so an empty state after a choice would be a step backwards into a state the
  * Create button refuses.
+ *
+ * The row opens whether or not the list has arrived: `CityPicker` fetches it
+ * and says so itself, which is one story about loading rather than two that
+ * can disagree.
  */
-export function CityField({ cities, loading, failed, value, onChange }: Props) {
+export function CityField({ value, onChange }: Props) {
   const [open, setOpen] = useState(false);
-  const usable = !loading && !failed;
 
   const choose = (city: City) => {
     onChange(city);
@@ -52,7 +47,7 @@ export function CityField({ cities, loading, failed, value, onChange }: Props) {
       </View>
 
       {open ? (
-        <CityPicker cities={cities} selectedId={value?.id ?? null} onSelect={choose} />
+        <CityPicker selectedId={value?.id ?? null} onSelect={choose} />
       ) : value ? (
         <>
           <View style={styles.row} testID="city-picked">
@@ -70,15 +65,14 @@ export function CityField({ cities, loading, failed, value, onChange }: Props) {
         <Pressable
           style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
           onPress={() => setOpen(true)}
-          disabled={!usable}
           accessibilityRole="button"
           testID="city-open"
         >
           <View style={styles.emptyDot} />
           <ThemedText variant="body" color={colors.textFaint} style={styles.rowLabel}>
-            {usable ? 'Pick the city you meet in' : unavailableLabel(failed)}
+            Pick the city you meet in
           </ThemedText>
-          {usable ? <ForwardGlyph color={colors.textFaint} testID="city-forward-glyph" /> : null}
+          <ForwardGlyph color={colors.textFaint} testID="city-open-glyph" />
         </Pressable>
       )}
     </View>

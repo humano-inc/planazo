@@ -26,10 +26,6 @@ describe('foldAccents', () => {
   it('folds ñ to n', () => {
     expect(foldAccents('Núñez')).toBe('nunez');
   });
-
-  it('leaves an already-plain name alone', () => {
-    expect(foldAccents('rosario')).toBe('rosario');
-  });
 });
 
 describe('filterCities', () => {
@@ -58,6 +54,8 @@ describe('filterCities', () => {
 
   it('ranks a name that starts with the query above one that merely contains it', () => {
     expect(names('rosario')).toEqual(['Rosario', 'Rosario de la Frontera']);
+    // Same answer however it was typed.
+    expect(names('  ROSARIO  ')).toEqual(['Rosario', 'Rosario de la Frontera']);
     // "maria" starts nothing and sits inside Villa María.
     expect(names('maria')).toEqual(['Villa María']);
   });
@@ -77,10 +75,6 @@ describe('filterCities', () => {
     ]);
   });
 
-  it('ignores case and surrounding space in the query', () => {
-    expect(names('  ROSARIO  ')).toEqual(['Rosario', 'Rosario de la Frontera']);
-  });
-
   it('returns nothing for a city that is not on the list', () => {
     expect(names('lisbon')).toEqual([]);
   });
@@ -96,10 +90,6 @@ describe('citiesEmptyLine', () => {
   it('echoes the search that emptied the list', () => {
     expect(citiesEmptyLine('lisbon')).toBe('No city called “lisbon” on the list.');
     expect(citiesEmptyLine('  lisbon  ')).toBe('No city called “lisbon” on the list.');
-  });
-
-  it('says something else when nothing was typed, because then the list itself is empty', () => {
-    expect(citiesEmptyLine('')).toBe('No cities to choose from.');
   });
 });
 

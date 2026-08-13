@@ -69,10 +69,15 @@ export function filterCities<T extends NamedCity>(cities: T[], query: string): T
   return [...prefix, ...contains];
 }
 
-/** What the empty results card says, echoing the search that emptied it. */
+/**
+ * What the empty results card says, echoing the search that emptied it.
+ *
+ * Only a search can empty the card: `CityPicker` says "Loading cities…" or the
+ * failure line for the other two ways it can have no rows, so there is no
+ * branch here for a list that simply is not there.
+ */
 export function citiesEmptyLine(query: string): string {
-  const q = query.trim();
-  return q ? `No city called “${q}” on the list.` : 'No cities to choose from.';
+  return `No city called “${query.trim()}” on the list.`;
 }
 
 /** The line under a city once it is picked, saying what picking it does. */
