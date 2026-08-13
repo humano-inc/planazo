@@ -65,14 +65,19 @@ export default function GroupCityScreen() {
 
   return (
     <FormScreen header={header} contentContainerStyle={styles.content} testID="group-city">
-      <CityPicker selectedId={picked?.id ?? group.city_id} onSelect={setPicked} />
-
+      {/* Above the list, not under it as the design draws it. The mock's list
+          is two rows deep because a search narrowed it; ours is every city
+          until someone types, which puts a note underneath several screens
+          below the Save that acts on it. What the note is for is being read
+          before you commit, so it sits where Save is. */}
       {note ? (
         <View style={styles.note} testID="city-move-note">
           <ThemedText variant="bodyStrong">{note.title}</ThemedText>
           <ThemedText variant="sub">{note.body}</ThemedText>
         </View>
       ) : null}
+
+      <CityPicker selectedId={picked?.id ?? group.city_id} onSelect={setPicked} />
     </FormScreen>
   );
 }
