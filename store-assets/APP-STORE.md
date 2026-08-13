@@ -313,7 +313,7 @@ Play's target-API requirement.
 | Listing icon, 512² | done | `store-assets/play/icon-512.png` |
 | Feature graphic, 1024×500 | done | `store-assets/play/feature-graphic.png` |
 | Phone screenshots, 1290×2580 | done | `store-assets/screenshots/android-phone/` |
-| Package `com.planazo.app` | done | `app.json` |
+| Package `com.somosplanazo.app` | done | `app.json`. Not `com.planazo.app`: that one was already taken on Play, and iOS keeps it |
 | Edge-to-edge (API 35) | done | `app.json` → `edgeToEdgeEnabled` |
 | Only the permissions we use | done | see §7.8 |
 | Privacy / terms / support URLs | done | same three as §1 |
@@ -329,7 +329,11 @@ Two different files, and mixing them up is the usual way this goes wrong:
 
 - **`google-services.json`** — client config. Ships inside the APK, so it is
   not a secret and is committed to the repo. From Firebase → Project settings →
-  Your apps → Android app with package `com.planazo.app`.
+  Your apps, in project `planazo-487f1`. The file lists every Android app in
+  the project, so the committed one carries both `com.somosplanazo.app`, which
+  is what ships, and the abandoned `com.planazo.app`. Registering a new package
+  means downloading it again: a config that does not name the running package
+  is a config Firebase ignores, and push fails without a word.
 - **The FCM V1 service account key** — a private key. Never commit it. From
   Firebase → Project settings → Service accounts → Generate new private key,
   then upload it to Expo once:

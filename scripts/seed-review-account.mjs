@@ -70,6 +70,7 @@ const groups = [
     inviteCode: 'REVWKEND',
     name: 'Weekend Crew',
     description: 'Low-pressure plans for Saturdays, Sundays, and last-minute ideas.',
+    citySlug: 'mendoza',
     admins: ['review', 'alex'],
     members: ['review', 'alex', 'bianca', 'diego', 'lucia'],
   },
@@ -78,6 +79,9 @@ const groups = [
     inviteCode: 'REVFEAST',
     name: 'Food & Drinks',
     description: 'Restaurants, bars, pop-ups, and dinner experiments.',
+    // A second city so the reviewer sees that a group has one and that two
+    // groups can differ, rather than a field that is the same everywhere.
+    citySlug: 'buenos-aires',
     admins: ['alex'],
     members: ['review', 'alex', 'bianca', 'theo', 'lucia'],
   },
@@ -226,12 +230,27 @@ async function upsertProfiles(byHandle) {
 }
 
 async function upsertGroups(byHandle) {
-  const rows = groups.map((group) => ({
-    name: group.name,
-    description: group.description,
-    invite_code: group.inviteCode,
-    created_by: byHandle.get(group.admins[0]).id,
-  }));
+  // groups.city_id is NOT NULL (PLA-88), and the column has no default on
+  // purpose: a group's city is chosen, never inherited from whatever was
+  // fashionable when the migration ran.
+  const { data: cities, error: citiesError } = await supabase
+    .from('cities')
+    .select('id, slug');
+  if (citiesError) throw citiesError;
+  const cityIdBySlug = new Map(cities.map((city) => [city.slug, city.id]));
+
+  const rows = groups.map((group) => {
+    const cityId = cityIdBySlug.get(group.citySlug);
+    if (!cityId) throw new Error(`seed: no city seeded with slug "${group.citySlug}"`);
+
+    return {
+      name: group.name,
+      description: group.description,
+      invite_code: group.inviteCode,
+      city_id: cityId,
+      created_by: byHandle.get(group.admins[0]).id,
+    };
+  });
 
   const { data, error } = await supabase
     .from('groups')
