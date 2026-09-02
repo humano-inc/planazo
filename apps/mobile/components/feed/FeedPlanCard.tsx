@@ -28,8 +28,9 @@ interface FeedPlanRow {
   plan_type: PlanType;
   min_people: number;
   /**
-   * Never null: `plans.group_id` is NOT NULL, and a plan is only readable by
-   * members of its group, so the embed cannot be the row RLS hides.
+   * Never null: the feed's select inner-joins `groups`, so a plan without one
+   * (an audience plan) is not in the feed at all, and a plan with one is only
+   * readable by members of its group, so the embed cannot be the row RLS hides.
    */
   groups: { name: string; color: string | null };
 }

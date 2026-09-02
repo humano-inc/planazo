@@ -26,6 +26,8 @@ export type City = Tables<'cities'>;
 export type GroupRole = 'admin' | 'member';
 export type RsvpResponse = 'yes' | 'no' | 'pending';
 export type PlanType = 'fixed' | 'flexible';
+/** Who a plan is for: its group, all the creator's friends, or their friends' friends (PLA-139). */
+export type PlanAudience = 'group' | 'friends' | 'friends_of_friends';
 export type PlanStatus = 'open' | 'locked' | 'cancelled';
 
 // Plan domain logic (single source of truth for confirmation math), by topic.

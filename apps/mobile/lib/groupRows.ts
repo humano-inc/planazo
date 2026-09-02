@@ -20,7 +20,8 @@ export interface GroupMembership {
 
 /** One open plan, sliced to what "waiting on you" reads. */
 export interface GroupNeedsSource {
-  group_id: string;
+  /** Null on a plan with no group (an audience plan); it counts toward no row. */
+  group_id: string | null;
   plan_type: string;
   status?: string | null;
   rsvps?: RsvpLike[] | null;
@@ -69,7 +70,7 @@ export function deriveGroupRows({ memberships, memberRows, plans, userId }: Deri
       },
       userId
     );
-    if (needs) needsCount[plan.group_id] = (needsCount[plan.group_id] ?? 0) + 1;
+    if (needs && plan.group_id) needsCount[plan.group_id] = (needsCount[plan.group_id] ?? 0) + 1;
   });
 
   // Ordered before the map, so the sort key never rides along on a row the
