@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { PlanStatus, PlanType } from '@planazo/shared';
+import type { PlanAudience, PlanStatus, PlanType } from '@planazo/shared';
 import { supabase } from './supabase';
 import { deleteOwnRsvp, offerWaitingList } from './rsvp';
 import { keyFactory } from './queryKey';
@@ -47,13 +47,13 @@ export function planDetailQuery(id: string | undefined) {
       // `enabled` below keeps this from running without an id; the guard is
       // what tells the typed client that.
       if (!id) throw new Error('planDetailQuery needs a plan id');
-      // `groups!inner`: this screen draws a plan through its group, and a plan
-      // without one (an audience plan, PLA-139) has no shape here yet, so the
-      // join keeps the embed non-null and such a plan lands on "not found".
+      // `plan_bridge` is a computed column: the mutual friend a
+      // friends-of-friends plan reaches you through (PLA-140). `groups` is
+      // null on a plan with no group, and the screen says the audience instead.
       const { data, error } = await supabase
         .from('plans')
         .select(
-          '*, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups!inner(id, name, color)'
+          '*, plan_bridge, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups(id, name, color)'
         )
         .eq('id', id)
         .single();
@@ -61,7 +61,12 @@ export function planDetailQuery(id: string | undefined) {
       // `status` and `plan_type` are CHECK-constrained text, which the
       // generated types can only call `string`. Narrowing at the query means
       // the screens and their cards never see the widened columns.
-      return { ...data, status: data.status as PlanStatus, plan_type: data.plan_type as PlanType };
+      return {
+        ...data,
+        status: data.status as PlanStatus,
+        plan_type: data.plan_type as PlanType,
+        audience: data.audience as PlanAudience,
+      };
     },
     enabled: !!id,
   };

@@ -698,6 +698,7 @@ export type Database = {
           status: string
           title: string
           updated_at: string | null
+          plan_bridge: string | null
         }
         Insert: {
           audience?: string
@@ -974,6 +975,12 @@ export type Database = {
       plan_audience_recipients: {
         Args: { p_audience: string; p_created_by: string; p_group_id: string }
         Returns: string[]
+      }
+      plan_bridge: {
+        Args: { "": Database["public"]["Tables"]["plans"]["Row"] }
+        Returns: {
+          error: true
+        } & "the function public.plan_bridge with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
       }
       plan_photo_plan_id: { Args: { p_name: string }; Returns: string }
       record_feedback_linear_issue: {

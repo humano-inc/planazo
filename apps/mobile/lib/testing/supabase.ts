@@ -19,6 +19,7 @@ const BUILDER_METHODS = [
   'neq',
   'in',
   'gte',
+  'or',
   'order',
   'limit',
   'single',

@@ -8,6 +8,8 @@ import { MIN_TOUCH_TARGET } from '../../lib/a11y';
 import { colors, fonts, radii } from '../../theme/tokens';
 import { usePendingInvites } from '../../lib/usePendingInvites';
 import { useMyGroups } from '../../lib/useMyGroups';
+import { useFriends } from '../../lib/useFriends';
+import { needsPeople } from '../../lib/planAudience';
 
 // Minimal slice of react-navigation's BottomTabBarProps — typed locally so we
 // don't import from a transitive package.
@@ -51,6 +53,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
   const router = useRouter();
   const { count: pendingCount } = usePendingInvites();
   const { hasGroups, loading: groupsLoading } = useMyGroups();
+  const { friends, isPending: friendsLoading } = useFriends();
 
   // `undefined` is accepted so callers can index `state.routes` directly; a
   // missing route renders nothing rather than crashing the whole tab bar.
@@ -104,8 +107,11 @@ export function TabBar({ state, navigation }: TabBarProps) {
   // in-flight case goes there rather than guessing.
   const onCreate = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    const needsGroup = !groupsLoading && !hasGroups;
-    router.push(needsGroup ? '/(app)/plan/needs-group' : '/(app)/plan/create');
+    // Since PLA-140 a plan can go to your friends, so the dead end is the
+    // person with neither a group nor a friend.
+    const needsAnyone =
+      !groupsLoading && !friendsLoading && needsPeople(hasGroups, friends.length > 0);
+    router.push(needsAnyone ? '/(app)/plan/needs-group' : '/(app)/plan/create');
   };
 
   return (

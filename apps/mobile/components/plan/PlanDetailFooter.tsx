@@ -17,6 +17,8 @@ type Props = {
   onRestore: () => void;
   onTryAgain: () => void;
   onHeight: (height: number) => void;
+  /** Why you are looking at this: the reach of a plan with no group (PLA-140). */
+  note?: string | null;
 };
 
 /**
@@ -37,6 +39,7 @@ export function PlanDetailFooter({
   onRestore,
   onTryAgain,
   onHeight,
+  note,
 }: Props) {
   const renderContent = () => {
     // 19b: reopen lives on the host's cancelled screen only, and only while
@@ -162,6 +165,16 @@ export function PlanDetailFooter({
       testID="plan-footer"
     >
       {content}
+      {note ? (
+        <ThemedText
+          variant="caption"
+          color={colors.textMuted}
+          style={styles.footerNote}
+          testID="plan-reach"
+        >
+          {note}
+        </ThemedText>
+      ) : null}
     </FooterBar>
   );
 }

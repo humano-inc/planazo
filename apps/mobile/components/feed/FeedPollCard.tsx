@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { ReduceMotion, ZoomIn } from 'react-native-reanimated';
-import { ThemedText, Badge, Button, Card, colorForName } from '../ui';
+import { ThemedText, Badge, Button, Card, colorForName,
+  PeopleGlyph,
+} from '../ui';
 import type { FeedPollItem } from '../../lib/feedPolls';
 import type { FeedPollTransition } from '../../lib/useFeedPollVoteTransition';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
@@ -20,7 +22,7 @@ function voteLabel(votes: number): string {
 
 export function FeedPollCard({ item, transition, onOpen, onSendVote }: FeedPollCardProps) {
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
-  const groupColor = item.groupColor ?? colorForName(item.groupName);
+  const contextColor = item.contextColor ?? colorForName(item.contextLabel);
   const transitioning = transition !== undefined;
   const chosenOptionId = transition?.optionId ?? selectedOptionId;
   const status = transition?.phase === 'saved' ? 'Vote saved' : 'Saving your vote';
@@ -35,9 +37,15 @@ export function FeedPollCard({ item, transition, onOpen, onSendVote }: FeedPollC
         testID={`poll-card-plan-${item.planId}`}
       >
         <View style={styles.identity}>
-          <View style={[styles.swatch, { backgroundColor: groupColor }]} />
+          {item.contextPeople ? (
+            <View style={[styles.swatch, styles.peopleTile]}>
+              <PeopleGlyph size={9} />
+            </View>
+          ) : (
+            <View style={[styles.swatch, { backgroundColor: contextColor }]} />
+          )}
           <ThemedText variant="caption" color={colors.textSecondary} numberOfLines={1}>
-            {item.groupName}
+            {item.contextLabel}
           </ThemedText>
         </View>
         <Badge
@@ -177,6 +185,11 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 6,
+  },
+  peopleTile: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accentSoft,
   },
   question: {
     marginTop: spacing.xs,

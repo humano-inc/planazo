@@ -30,7 +30,7 @@ describe('NeedsGroupSheet', () => {
   it('says why a plan cannot be made yet and offers both ways out', async () => {
     await render(<NeedsGroupSheet />);
 
-    expect(screen.getByText('Plans need a group first')).toBeTruthy();
+    expect(screen.getByText('Plans need people first')).toBeTruthy();
     expect(screen.getByTestId('sort-out-group')).toBeTruthy();
     expect(screen.getByTestId('not-now')).toBeTruthy();
   });
