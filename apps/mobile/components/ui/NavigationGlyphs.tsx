@@ -89,6 +89,14 @@ const GLYPHS = {
     fallbackSize: 20,
     color: colors.textPrimary,
   },
+  // The people mark: a plan for your friends rather than a group (PLA-140).
+  people: {
+    sf: 'person.2.fill',
+    material: 'people',
+    size: 12,
+    fallbackSize: 14,
+    color: colors.accentText,
+  },
 } satisfies Record<string, GlyphSpec>;
 
 type GlyphName = keyof typeof GLYPHS;
@@ -165,4 +173,8 @@ export function RemoveGlyph(props: GlyphProps) {
 
 export function BlockGlyph(props: GlyphProps) {
   return <Glyph name="block" {...props} />;
+}
+
+export function PeopleGlyph(props: GlyphProps) {
+  return <Glyph name="people" {...props} />;
 }

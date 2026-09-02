@@ -7,16 +7,18 @@ import { EmptyState } from '../ui';
  * and wrong anywhere a plan is being composed.
  */
 export const NEEDS_GROUP_COPY = {
-  title: 'Plans need a group first',
+  title: 'Plans need people first',
   feedBody:
-    'A plan goes to one group, not to everybody. Join one or start one, and your plans land here.',
+    'A plan goes to your friends or to a group. Add a friend or start a group, and your plans land here.',
   planBody:
-    'A plan goes to one group, not to everybody. Join one or start one, then come back and post this.',
+    'A plan goes to your friends or to a group. Add a friend or start a group, then come back and post this.',
   cta: 'Sort out a group',
 } as const;
 
 /**
- * What a user in no groups is told, wherever they meet it (PLA-68).
+ * What a user with nobody to post to is told, wherever they meet it (PLA-68).
+ * Since PLA-140 a plan can go to your friends, so "nobody" means no groups
+ * and no friends; `needsPeople` in lib/planAudience.ts is the one predicate.
  *
  * The feed and the create sheet both reach this state, and before this they
  * said different things about it: the feed told you to start a plan, and the

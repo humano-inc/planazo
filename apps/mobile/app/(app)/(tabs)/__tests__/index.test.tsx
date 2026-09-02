@@ -71,6 +71,7 @@ const fixedOpen = {
   min_people: 3,
   event_date: iso(2),
   location: 'Padel Indoor Gràcia',
+  audience: 'group',
   groups: GROUP,
   rsvps: [
     { user_id: 'u-marta', response: 'yes', profile: { display_name: 'Marta' } },
@@ -99,6 +100,7 @@ const flexibleOpen = {
   event_date: null,
   locked_date: null,
   description: 'Last time was humiliating',
+  audience: 'group',
   groups: { id: 'g2', name: 'Escapistas' },
   rsvps: [],
   // An undated flexible plan is past once its *last* option day has gone.
@@ -118,6 +120,7 @@ const lockedFlexible = {
   min_people: 2,
   event_date: null,
   locked_date: iso(9),
+  audience: 'group',
   groups: { id: 'g2', name: 'Escapistas' },
   rsvps: [
     { user_id: 'me', response: 'yes', profile: { display_name: 'Me' } },
@@ -143,8 +146,18 @@ let availChain: ReturnType<typeof chain>;
 
 let noticesChain: ReturnType<typeof chain>;
 
-/** One group, in the shape both readers of group_members expect. */
+/** One group, in the shape useMyGroups reads off group_members. */
 const IN_A_GROUP = [{ group_id: 'g1', groups: { id: 'g1', name: 'Domingueros', color: null } }];
+
+/** One accepted friendship, in the shape useFriends reads. */
+const A_FRIEND = [
+  {
+    requester_id: 'me',
+    addressee_id: 'u-marta',
+    requester: { id: 'me', display_name: 'Rocío', handle: null, avatar_url: null },
+    addressee: { id: 'u-marta', display_name: 'Marta', handle: null, avatar_url: null },
+  },
+];
 
 function primeSupabase(
   plans: unknown[],
@@ -152,7 +165,13 @@ function primeSupabase(
     notices = [],
     cancelledPlans = [],
     memberships = IN_A_GROUP,
-  }: { notices?: unknown[]; cancelledPlans?: unknown[]; memberships?: unknown[] } = {}
+    friends = [],
+  }: {
+    notices?: unknown[];
+    cancelledPlans?: unknown[];
+    memberships?: unknown[];
+    friends?: unknown[];
+  } = {}
 ) {
   plansChain = chain({ data: plans, error: null });
   pollVotesChain = chain({ error: null });
@@ -162,12 +181,12 @@ function primeSupabase(
   availChain = chain({ error: null });
   noticesChain = chain({ data: notices, error: null });
   mockFrom.mockImplementation((table: string) => {
-    // Two queries read this table with different shapes: the feed wants
-    // group_id to filter plans, useMyGroups wants the joined row to decide
-    // which empty state you get (PLA-68). One stub row satisfies both.
+    // useMyGroups wants the joined row to decide which empty state you get
+    // (PLA-68); the feed itself no longer reads this table, RLS decides.
     if (table === 'group_members') {
       return chain({ data: memberships, error: null });
     }
+    if (table === 'friendships') return chain({ data: friends, error: null });
     if (table === 'plans') {
       // The home query filters cancelled via .neq; the 19e notice fetch
       // doesn't — that call gets the cancelled rows.
@@ -588,11 +607,11 @@ describe('FeedScreen', () => {
 
   // PLA-68: the same empty feed, and the reason for it decides what to say.
   // "Start a plan" was the one thing this user could not do.
-  it('sends a user in no groups to Groups instead of the create sheet', async () => {
+  it('sends a user with nobody to post to to Groups instead of the create sheet', async () => {
     primeSupabase([], { memberships: [] });
     await renderFeed();
 
-    await waitFor(() => expect(screen.getByText('Plans need a group first')).toBeTruthy());
+    await waitFor(() => expect(screen.getByText('Plans need people first')).toBeTruthy());
     expect(screen.queryByText('Nothing on the table')).toBeNull();
     expect(screen.queryByText('Start a plan')).toBeNull();
 
@@ -606,7 +625,47 @@ describe('FeedScreen', () => {
     await renderFeed();
 
     await waitFor(() => expect(screen.getByText('Nothing on the table')).toBeTruthy());
-    expect(screen.queryByText('Plans need a group first')).toBeNull();
+    expect(screen.queryByText('Plans need people first')).toBeNull();
+  });
+
+  // PLA-140: a friend is somebody to post to, so no group is no longer the dead end.
+  it('keeps the plans copy for someone with a friend and no group', async () => {
+    primeSupabase([], { memberships: [], friends: A_FRIEND });
+    await renderFeed();
+
+    await waitFor(() => expect(screen.getByText('Nothing on the table')).toBeTruthy());
+    expect(screen.queryByText('Plans need people first')).toBeNull();
+  });
+
+  // PLA-140: a plan with no group says who it is for where the group's name
+  // would go, and a friends-of-friends plan names the friend you share.
+  it('says who a group-less plan is for, naming the bridge on a friends-of-friends plan', async () => {
+    primeSupabase([
+      {
+        ...fixedOpen,
+        id: 'p-friends',
+        title: 'Birras del jueves',
+        group_id: null,
+        groups: null,
+        audience: 'friends',
+      },
+      {
+        ...fixedOpen,
+        id: 'p-fof',
+        title: 'Vermut en la plaza',
+        group_id: null,
+        groups: null,
+        audience: 'friends_of_friends',
+        plan_bridge: 'Marta',
+      },
+    ]);
+    await renderFeed();
+
+    await waitFor(() => expect(screen.getByText('Birras del jueves')).toBeTruthy());
+    expect(screen.getByText('Your friends')).toBeTruthy();
+    expect(screen.getByText('Friends of friends · via Marta')).toBeTruthy();
+    expect(screen.getAllByTestId('plan-card-people')).toHaveLength(2);
+    expect(screen.queryByText('Domingueros')).toBeNull();
   });
 
   it('19e: past plans leave the feed silently at the end of their day', async () => {

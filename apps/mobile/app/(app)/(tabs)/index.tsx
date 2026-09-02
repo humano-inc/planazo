@@ -22,6 +22,8 @@ import { deriveFeedItems } from '../../../lib/feedDerived';
 import { useFeedAnswers } from '../../../lib/useFeedAnswers';
 import { useCancelNotices } from '../../../lib/useCancelNotices';
 import { useMyGroups } from '../../../lib/useMyGroups';
+import { useFriends } from '../../../lib/useFriends';
+import { audienceLabel, needsPeople } from '../../../lib/planAudience';
 import { errorCopy } from '../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../lib/usePullToRefresh';
 import { deriveFeedPollItems } from '../../../lib/feedPolls';
@@ -37,6 +39,13 @@ import { colors, spacing } from '../../../theme/tokens';
 
 type Filter = 'all' | 'needs' | 'happening';
 
+/** The poll card's context slot, in the field names lib/feedPolls.ts reads. */
+const pollContext = (context: ReturnType<typeof audienceLabel>) => ({
+  contextLabel: context.label,
+  contextColor: context.color,
+  contextPeople: context.people,
+});
+
 export default function FeedScreen() {
   const { profile, user } = useAuthStore();
   const router = useRouter();
@@ -49,9 +58,12 @@ export default function FeedScreen() {
   const { refreshing, onRefresh } = usePullToRefresh(refetch);
 
   // An empty feed means two different things, and the plans query cannot tell
-  // them apart: it returns [] for "no groups" before it ever asks about plans.
-  // Only one of the two is the user's problem to solve (PLA-68).
+  // them apart: nothing posted yet, or nobody to post to. Only the second is
+  // the user's problem to solve (PLA-68), and since PLA-140 it takes both no
+  // groups and no friends to be there.
   const { hasGroups, loading: groupsLoading } = useMyGroups();
+  const { friends, isPending: friendsLoading } = useFriends();
+  const needsAnyone = needsPeople(hasGroups, friends.length > 0);
 
   const { notices, dismiss } = useCancelNotices();
 
@@ -67,8 +79,7 @@ export default function FeedScreen() {
         decorated.map((item) => ({
           planId: item.plan.id,
           planTitle: item.plan.title,
-          groupName: item.plan.groups.name,
-          groupColor: item.plan.groups.color,
+          ...pollContext(audienceLabel(item.plan)),
           isPast: item.isPast,
           canVote: item.canVoteOnPolls,
           peopleIn: item.pollPeopleIn,
@@ -147,7 +158,7 @@ export default function FeedScreen() {
 
       {/* Both queries, or the feed shows one empty state and swaps it for the
           other a moment later. */}
-      {isLoading || groupsLoading ? (
+      {isLoading || groupsLoading || friendsLoading ? (
         <View style={styles.loading}>
           <ActivityIndicator size="large" color={colors.accent} />
         </View>
@@ -169,19 +180,19 @@ export default function FeedScreen() {
         >
           <CancelNotices notices={notices} onDismiss={dismiss} />
 
-          {!hasVisibleItems && !hasGroups ? (
+          {!hasVisibleItems && needsAnyone ? (
             // Sending this user to the create sheet was the loop PLA-68 is
             // about: the one action offered was the one thing they could not
             // do. A filter they cannot have set yet is not worth a branch —
-            // with no groups there are no plans to filter.
+            // with nobody to post to there are no plans to filter.
             <NeedsGroupState testID="feed-needs-group" />
           ) : !hasVisibleItems ? (
             <EmptyState
               title={filter === 'needs' ? 'Nothing to answer' : 'Nothing on the table'}
               body={
                 filter === 'needs'
-                  ? 'When someone in a group proposes a plan, it lands here.'
-                  : 'Start something. Pick a group, throw out a date or a few, and see who bites.'
+                  ? 'When someone proposes a plan to you, it lands here.'
+                  : "Start something. Pick who it's for, throw out a date or a few, and see who bites."
               }
               ctaLabel="Start a plan"
               onPress={() => router.push('/(app)/plan/create')}

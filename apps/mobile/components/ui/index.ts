@@ -15,6 +15,7 @@ export {
   SearchGlyph,
   RemoveGlyph,
   BlockGlyph,
+  PeopleGlyph,
 } from './NavigationGlyphs';
 export { ButtonRow } from './ButtonRow';
 export { BrandMark } from './BrandMark';

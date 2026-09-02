@@ -62,6 +62,7 @@ const basePlan = {
   max_people: 6,
   created_by: 'u-marta',
   creator: { display_name: 'Marta' },
+  audience: 'group',
   groups: { id: 'g1', name: 'Domingueros' },
 };
 
@@ -1120,5 +1121,79 @@ describe('PlanDetailScreen — a plan you cannot see', () => {
 
     await waitFor(() => expect(screen.getByText("Couldn't reach Planazo")).toBeTruthy());
     expect(screen.getByTestId('plan-error-retry')).toBeTruthy();
+  });
+});
+
+/**
+ * PLA-140: a plan with no group. The chip row says who it is for, back goes
+ * home rather than to a group, the footer explains the reach, and the creator
+ * is the host with nobody else to share it with.
+ */
+describe('PlanDetailScreen — audience plans', () => {
+  const friendsPlan = {
+    ...basePlan,
+    group_id: null,
+    groups: null,
+    audience: 'friends',
+    plan_type: 'fixed',
+    status: 'open',
+    event_date: iso(7),
+  };
+
+  it('a friends plan says so, goes home on back, and explains the reach', async () => {
+    prime({ plan: friendsPlan });
+    await renderDetail();
+
+    await waitFor(() => expect(screen.getByText('Your friends')).toBeTruthy());
+    expect(screen.getByTestId('plan-title-people')).toBeTruthy();
+    expect(screen.getByText('Home')).toBeTruthy();
+    expect(screen.getByTestId('plan-reach')).toHaveTextContent(
+      'Marta shares this with all their friends.'
+    );
+
+    mockCanGoBack = false;
+    await fireEvent.press(screen.getByTestId('back'));
+    expect(mockReplace).toHaveBeenCalledWith('/(app)/(tabs)');
+  });
+
+  it('a friends-of-friends plan names the bridge in the chip row and the footer', async () => {
+    prime({ plan: { ...friendsPlan, audience: 'friends_of_friends', plan_bridge: 'Lucía' } });
+    await renderDetail();
+
+    await waitFor(() => expect(screen.getByText('Friends of friends · via Lucía')).toBeTruthy());
+    expect(screen.getByTestId('plan-reach')).toHaveTextContent(
+      "Marta shares plans with friends of friends. You're here through Lucía."
+    );
+  });
+
+  it('the creator of a group-less plan is its host, told in the second person', async () => {
+    prime({
+      plan: { ...friendsPlan, audience: 'friends_of_friends', created_by: 'me', creator: null },
+      rsvps: [{ user_id: 'me', response: 'yes', profile: { display_name: 'Me' } }],
+    });
+    await renderDetail();
+
+    await waitFor(() => expect(screen.getByTestId('plan-reach')).toBeTruthy());
+    expect(screen.getByTestId('plan-reach')).toHaveTextContent(
+      'You share this with friends of friends.'
+    );
+    expect(await openMenu()).toContain('Call it off');
+  });
+
+  it('"try again" from a friends plan keeps it among friends', async () => {
+    prime({
+      plan: { ...friendsPlan, event_date: iso(-2) },
+      rsvps: [{ user_id: 'me', response: 'yes', profile: { display_name: 'Me' } }],
+    });
+    await renderDetail();
+
+    await waitFor(() => expect(screen.getByTestId('try-again')).toBeTruthy());
+    await fireEvent.press(screen.getByTestId('try-again'));
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/plan/create',
+      params: expect.objectContaining({ audience: 'friends', title: 'Padel + pizza' }),
+    });
+    const call = mockPush.mock.calls.at(-1)?.[0] as { params: Record<string, unknown> };
+    expect(call.params).not.toHaveProperty('groupId');
   });
 });
