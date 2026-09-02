@@ -122,6 +122,14 @@ describe('deriveGroupRows', () => {
     ]);
   });
 
+  it('a plan with no group (an audience plan) counts toward no row', () => {
+    const rows = derive({
+      memberships: [membership('g1')],
+      plans: [openFixed('g1'), { ...openFixed('g1'), group_id: null }],
+    });
+    expect(rows[0]!.needsYou).toBe(1);
+  });
+
   it('orders groups oldest first, a missing created_at sorting to the front', () => {
     const rows = derive({
       memberships: [

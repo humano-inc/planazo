@@ -47,10 +47,13 @@ export function planDetailQuery(id: string | undefined) {
       // `enabled` below keeps this from running without an id; the guard is
       // what tells the typed client that.
       if (!id) throw new Error('planDetailQuery needs a plan id');
+      // `groups!inner`: this screen draws a plan through its group, and a plan
+      // without one (an audience plan, PLA-139) has no shape here yet, so the
+      // join keeps the embed non-null and such a plan lands on "not found".
       const { data, error } = await supabase
         .from('plans')
         .select(
-          '*, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups(id, name, color)'
+          '*, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups!inner(id, name, color)'
         )
         .eq('id', id)
         .single();
@@ -123,12 +126,12 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   });
 
   const { data: membership } = useQuery({
-    queryKey: planMembershipKey(plan?.group_id, user?.id),
+    queryKey: planMembershipKey(plan?.group_id ?? undefined, user?.id),
     queryFn: async () => {
       const { data } = await supabase
         .from('group_members')
         .select('role')
-        .eq('group_id', plan!.group_id)
+        .eq('group_id', plan!.group_id!)
         .eq('user_id', user!.id)
         .single();
       return data;
@@ -139,12 +142,12 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
   // Everyone in the circle — the menu's nudge count and 19c's "never
   // answered" line are both "members minus anyone who responded".
   const { data: memberIds } = useQuery({
-    queryKey: planGroupMemberIdsKey(plan?.group_id),
+    queryKey: planGroupMemberIdsKey(plan?.group_id ?? undefined),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('group_members')
         .select('user_id')
-        .eq('group_id', plan!.group_id);
+        .eq('group_id', plan!.group_id!);
       if (error) throw error;
       return (data as { user_id: string }[]).map((m) => m.user_id);
     },

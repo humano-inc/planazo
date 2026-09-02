@@ -40,7 +40,7 @@ export function useFeed() {
           // the receipt trigger and settle-time refetch arrive, so keep this
           // nested shape in step with that cache edit.
           `*,
-          groups(id, name, color),
+          groups!inner(id, name, color),
           rsvps(user_id, response, waitlist_seq, profile:profiles(display_name)),
           plan_date_options(id, date, date_availability(user_id, profile:profiles(display_name))),
           plan_polls(id, question, created_at, plan_poll_options!plan_poll_options_poll_id_plan_id_fkey(id, label, position), plan_poll_votes(option_id, user_id), plan_poll_vote_receipts(user_id))`

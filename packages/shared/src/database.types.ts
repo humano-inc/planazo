@@ -678,6 +678,7 @@ export type Database = {
       }
       plans: {
         Row: {
+          audience: string
           cancel_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
@@ -686,7 +687,7 @@ export type Database = {
           deadline: string | null
           description: string | null
           event_date: string | null
-          group_id: string
+          group_id: string | null
           id: string
           location: string | null
           locked_at: string | null
@@ -699,6 +700,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          audience?: string
           cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -707,7 +709,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           event_date?: string | null
-          group_id: string
+          group_id?: string | null
           id?: string
           location?: string | null
           locked_at?: string | null
@@ -720,6 +722,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          audience?: string
           cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
@@ -728,7 +731,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           event_date?: string | null
-          group_id?: string
+          group_id?: string | null
           id?: string
           location?: string | null
           locked_at?: string | null
@@ -858,6 +861,17 @@ export type Database = {
     Functions: {
       can_add_plan_photo: { Args: { p_plan_id: string }; Returns: boolean }
       can_manage_plan_poll: { Args: { p_plan_id: string }; Returns: boolean }
+      can_view_plan:
+        | { Args: { p_plan_id: string }; Returns: boolean }
+        | {
+            Args: {
+              p_audience: string
+              p_created_by: string
+              p_group_id: string
+              p_plan_id: string
+            }
+            Returns: boolean
+          }
       can_view_plan_photos: { Args: { p_plan_id: string }; Returns: boolean }
       can_vote_plan_poll: { Args: { p_poll_id: string }; Returns: boolean }
       cancel_plan: {
@@ -914,6 +928,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      friend_ids: { Args: { p_user: string }; Returns: string[] }
       generate_handle: { Args: { p_base: string }; Returns: string }
       generate_invite_code: { Args: never; Returns: string }
       get_group_by_invite_code: {
@@ -931,6 +946,8 @@ export type Database = {
       }
       is_app_admin: { Args: never; Returns: boolean }
       is_blocked_by: { Args: { p_other: string }; Returns: boolean }
+      is_friend: { Args: { p_other: string }; Returns: boolean }
+      is_friend_of_friend: { Args: { p_other: string }; Returns: boolean }
       is_group_admin: { Args: { check_group_id: string }; Returns: boolean }
       is_group_image_admin: { Args: { object_name: string }; Returns: boolean }
       is_group_member: { Args: { check_group_id: string }; Returns: boolean }
@@ -953,6 +970,10 @@ export type Database = {
           total: number
           uploaders: number
         }[]
+      }
+      plan_audience_recipients: {
+        Args: { p_audience: string; p_created_by: string; p_group_id: string }
+        Returns: string[]
       }
       plan_photo_plan_id: { Args: { p_name: string }; Returns: string }
       record_feedback_linear_issue: {
@@ -1028,12 +1049,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1057,11 +1078,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1082,11 +1103,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1107,11 +1128,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1124,11 +1145,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
