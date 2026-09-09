@@ -11,6 +11,10 @@ import { feedbackSheetOpen } from '../lib/feedbackState';
  * the screen the instant the event fires: same pixels, no photo permission.
  * The OS notification never fires in the Simulator (host-side capture), so
  * this hop is verifiable only on a physical device.
+ *
+ * On Android this needs READ_MEDIA_IMAGES on Android 13 alone, which Play
+ * refuses to an app that only ever picks a photo, so app.json blocks it
+ * (APP-STORE.md §7.8). The listener is silent on 13 and works everywhere else.
  */
 export function ScreenshotFeedback() {
   const router = useRouter();

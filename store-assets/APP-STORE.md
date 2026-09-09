@@ -446,19 +446,27 @@ an emulator at all: `registerPushToken` returns early on `!Device.isDevice`.
 
 ### 7.8 The permission list is public
 
-Play prints every permission on the listing, so the app asks for four and
-refuses two it never earns. `npx expo prebuild --platform android` regenerates
-the manifest; read `android/app/src/main/AndroidManifest.xml` to check this,
-then delete the folder.
+Play prints every permission on the listing, and it refuses a release over
+some of them, so the rule is: nothing in the manifest that the app does not
+earn. Nobody hand-writes the manifest, though. It is the merge of every
+dependency's own, so the way to check it is to dump the AAB EAS actually built:
+
+```bash
+bundletool dump manifest --bundle <the .aab> | grep uses-permission
+```
+
+What that shows, and where each one comes from:
 
 | Permission | Why |
 | --- | --- |
-| `INTERNET` | the app talks to Supabase |
-| `VIBRATE` | `expo-notifications` |
-| `READ_EXTERNAL_STORAGE` | picking a photo on Android 12 and below. Android 13+ uses the system photo picker and ignores it |
-| `WRITE_EXTERNAL_STORAGE` | same, same |
+| `INTERNET`, `ACCESS_NETWORK_STATE` | the app talks to Supabase |
+| `CAMERA` | `takePhoto()` for a profile or group photo |
+| `POST_NOTIFICATIONS`, `VIBRATE`, `WAKE_LOCK`, `RECEIVE_BOOT_COMPLETED`, `c2dm.permission.RECEIVE` and the vendor badge permissions | `expo-notifications` and FCM |
+| `READ_EXTERNAL_STORAGE` (Android 12 and below), `WRITE_EXTERNAL_STORAGE` | picking a photo on Android 12 and below. Android 13+ uses the system photo picker, which needs no permission at all |
+| `USE_BIOMETRIC`, `USE_FINGERPRINT` | `expo-secure-store`, which holds the session |
+| `DETECT_SCREEN_CAPTURE` (Android 14+) | `expo-screen-capture`, so an OS screenshot opens the feedback sheet |
 
-Two are blocked, and each needs its own mechanism because they arrive by
+Blocked permissions, each by its own mechanism because they arrive by
 different routes:
 
 - **`RECORD_AUDIO`** is added by `expo-image-picker`'s config plugin unless you
@@ -472,9 +480,17 @@ different routes:
   `android.blockedPermissions` removes it. Nothing in Planazo draws an overlay.
   Debug builds declare it in their own flavour manifest, so the dev client is
   unaffected.
+- **`READ_MEDIA_IMAGES`** comes from `expo-screen-capture`, which declares it
+  for Android 13 only, where screenshot detection still meant watching the
+  photo library. Play's photo-permissions policy refuses it to any app that
+  touches photos occasionally rather than as its product, and the release
+  review stops on a declaration form until it is gone. `blockedPermissions`
+  removes it; the photo picker never needed it, and the one thing lost is the
+  screenshot-opens-feedback hop on Android 13 exactly. Android 14+ detects a
+  screenshot through `DETECT_SCREEN_CAPTURE` instead.
 
-Both then appear in the main manifest as `tools:node="remove"`, which is the
-merger being told to drop them, not the app requesting them.
+Each blocked one then appears in the main manifest as `tools:node="remove"`,
+which is the merger being told to drop it, not the app requesting it.
 
 ---
 
