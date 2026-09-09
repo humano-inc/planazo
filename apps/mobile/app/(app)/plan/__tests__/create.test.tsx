@@ -63,6 +63,16 @@ const MEMBERSHIPS = [
   { groups: { id: 'g2', name: 'Escapistas' } },
 ];
 
+/** One accepted friendship, in the shape useFriends reads. */
+const FRIENDS = [
+  {
+    requester_id: 'me',
+    addressee_id: 'u-marta',
+    requester: { id: 'me', display_name: 'Rocío', handle: null, avatar_url: null },
+    addressee: { id: 'u-marta', display_name: 'Marta', handle: null, avatar_url: null },
+  },
+];
+
 let plansChain: ReturnType<typeof chain>;
 let optionsChain: ReturnType<typeof chain>;
 let rsvpsChain: ReturnType<typeof chain>;
@@ -70,7 +80,7 @@ let availChain: ReturnType<typeof chain>;
 let pollsChain: ReturnType<typeof chain>;
 let pollOptionsChain: ReturnType<typeof chain>;
 
-function primeSupabase(memberships: unknown[] = MEMBERSHIPS) {
+function primeSupabase(memberships: unknown[] = MEMBERSHIPS, friends: unknown[] = FRIENDS) {
   plansChain = chain({ data: { id: 'new-plan' }, error: null });
   optionsChain = chain({ data: [{ id: 'd1' }, { id: 'd2' }], error: null });
   rsvpsChain = chain({ error: null });
@@ -79,6 +89,7 @@ function primeSupabase(memberships: unknown[] = MEMBERSHIPS) {
   pollOptionsChain = chain({ error: null });
   mockFrom.mockImplementation((table: string) => {
     if (table === 'group_members') return chain({ data: memberships, error: null });
+    if (table === 'friendships') return chain({ data: friends, error: null });
     if (table === 'plans') return plansChain;
     if (table === 'plan_date_options') return optionsChain;
     if (table === 'rsvps') return rsvpsChain;
@@ -171,10 +182,10 @@ describe('CreatePlanScreen', () => {
    * answer for this state itself rather than assume a caller checked.
    */
   it('offers the way into a group instead of a form that cannot be posted', async () => {
-    primeSupabase([]);
+    primeSupabase([], []);
     await renderCreate();
 
-    await screen.findByText('Plans need a group first');
+    await screen.findByText('Plans need people first');
     expect(screen.queryByTestId('post-cta')).toBeNull();
     expect(screen.queryByText("Who's it for")).toBeNull();
     expect(screen.queryByTestId('title-input')).toBeNull();
@@ -184,7 +195,7 @@ describe('CreatePlanScreen', () => {
   });
 
   it('dismisses the sheet before changing tabs underneath it', async () => {
-    primeSupabase([]);
+    primeSupabase([], []);
     await renderCreate();
 
     await fireEvent.press(await screen.findByText('Sort out a group'));
@@ -205,7 +216,7 @@ describe('CreatePlanScreen', () => {
    */
   it('leaves the sheet by replacing it when there is nothing to go back to', async () => {
     mockCanGoBack = false;
-    primeSupabase([]);
+    primeSupabase([], []);
     await renderCreate();
 
     await fireEvent.press(await screen.findByText('Sort out a group'));
@@ -371,6 +382,7 @@ describe('CreatePlanScreen', () => {
     await waitFor(() => expect(mockBack).toHaveBeenCalled());
     expect(plansChain.insert).toHaveBeenCalledWith(
       expect.objectContaining({
+        audience: 'group',
         group_id: 'g1',
         created_by: 'me',
         title: 'Padel + pizza',
@@ -509,5 +521,92 @@ describe('CreatePlanScreen', () => {
         description: 'Bring cash',
       })
     );
+  });
+});
+
+/**
+ * PLA-140: a plan can go to all your friends, or to friends of friends, and
+ * neither has a group. The two audience chips sit ahead of the groups, the
+ * footer names the destination, and the post carries `audience` with no
+ * group id.
+ */
+describe('CreatePlanScreen — audiences', () => {
+  it('offers Friends and Friends of friends ahead of the groups, with the first group still the default', async () => {
+    await renderCreate();
+    await screen.findByTestId('group-g1');
+
+    expect(screen.getByTestId('audience-friends')).toBeTruthy();
+    expect(screen.getByTestId('audience-friends_of_friends')).toBeTruthy();
+    expect(screen.getByTestId('group-g1')).toBeSelected();
+    expect(screen.getByText('Post to Los de siempre')).toBeTruthy();
+    // A group needs no join rule: you can see who is in it.
+    expect(screen.queryByTestId('audience-helper')).toBeNull();
+  });
+
+  it('picking Friends names the destination, states the rule, and posts with no group', async () => {
+    await renderCreate();
+    await screen.findByTestId('audience-friends');
+
+    await fireEvent.press(screen.getByTestId('audience-friends'));
+    expect(screen.getByTestId('audience-friends')).toBeSelected();
+    expect(screen.getByTestId('group-g1')).not.toBeSelected();
+    expect(screen.getByText('Post to your friends')).toBeTruthy();
+    expect(screen.getByText("Everyone you're friends with sees it and can join.")).toBeTruthy();
+
+    await fireEvent.changeText(screen.getByTestId('title-input'), 'Birras del jueves');
+    await fireEvent.press(screen.getByTestId('cal-day-2026-08-07'));
+    await fireEvent.press(screen.getByTestId('post-cta'));
+
+    await waitFor(() => expect(mockBack).toHaveBeenCalled());
+    expect(plansChain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ audience: 'friends', group_id: null, created_by: 'me' })
+    );
+  });
+
+  it('Friends of friends explains its wider reach', async () => {
+    await renderCreate();
+    await screen.findByTestId('audience-friends_of_friends');
+
+    await fireEvent.press(screen.getByTestId('audience-friends_of_friends'));
+    expect(screen.getByText('Post to friends of friends')).toBeTruthy();
+    expect(screen.getByText('Your friends and their friends see it and can join.')).toBeTruthy();
+  });
+
+  it('hides the audience chips from someone with no friends to reach', async () => {
+    primeSupabase(MEMBERSHIPS, []);
+    await renderCreate();
+    await screen.findByTestId('group-g1');
+
+    expect(screen.queryByTestId('audience-friends')).toBeNull();
+    expect(screen.queryByTestId('audience-friends_of_friends')).toBeNull();
+  });
+
+  it('with a friend and no groups, Friends is the default and the form is offered', async () => {
+    primeSupabase([], FRIENDS);
+    await renderCreate();
+
+    await screen.findByTestId('audience-friends');
+    expect(screen.getByTestId('audience-friends')).toBeSelected();
+    expect(screen.getByText('Post to your friends')).toBeTruthy();
+    expect(screen.queryByText('Plans need people first')).toBeNull();
+    expect(screen.getByTestId('title-input')).toBeTruthy();
+  });
+
+  it('opened from a group, the row collapses to that group and the audiences step aside', async () => {
+    mockParams = { groupId: 'g2' };
+    await renderCreate();
+    await screen.findByTestId('group-g2');
+
+    expect(screen.queryByTestId('audience-friends')).toBeNull();
+    expect(screen.getByText('Post to Escapistas')).toBeTruthy();
+  });
+
+  it('an audience param preselects it, which is how "try again" keeps a friends plan among friends', async () => {
+    mockParams = { audience: 'friends_of_friends' };
+    await renderCreate();
+    await screen.findByTestId('audience-friends_of_friends');
+
+    expect(screen.getByTestId('audience-friends_of_friends')).toBeSelected();
+    expect(screen.getByText('Post to friends of friends')).toBeTruthy();
   });
 });

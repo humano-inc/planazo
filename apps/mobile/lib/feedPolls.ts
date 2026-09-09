@@ -27,8 +27,11 @@ interface FeedPollRow {
 export interface FeedPollSource {
   planId: string;
   planTitle: string;
-  groupName: string;
-  groupColor?: string | null;
+  /** What the plan is for: its group's name, or the audience (lib/planAudience.ts). */
+  contextLabel: string;
+  contextColor?: string | null;
+  /** True when the slot draws the people mark rather than a group swatch. */
+  contextPeople?: boolean;
   isPast: boolean;
   canVote: boolean;
   peopleIn: number;
@@ -39,8 +42,9 @@ export interface FeedPollItem {
   id: string;
   planId: string;
   planTitle: string;
-  groupName: string;
-  groupColor?: string | null;
+  contextLabel: string;
+  contextColor?: string | null;
+  contextPeople?: boolean;
   question: string;
   createdAt: string;
   caption: string;
@@ -80,8 +84,9 @@ export function deriveFeedPollItems(
             id: poll.id,
             planId: source.planId,
             planTitle: source.planTitle,
-            groupName: source.groupName,
-            groupColor: source.groupColor,
+            contextLabel: source.contextLabel,
+            contextColor: source.contextColor,
+            contextPeople: source.contextPeople,
             question: poll.question,
             createdAt: poll.created_at,
             caption: pollVotedPhrase(votes.length, source.peopleIn),

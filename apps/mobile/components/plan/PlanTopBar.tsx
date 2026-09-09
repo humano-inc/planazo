@@ -12,12 +12,13 @@ type Props = {
   planId: string;
   groupId?: string | null;
   d: PlanDerived;
-  groupName: string;
+  /** Where back goes: the group's name, or "Home" on a plan with no group. */
+  backLabel: string;
   onNudge: () => void;
 };
 
 /** The back label, the ··· menu, and the menu itself (20a). */
-export function PlanTopBar({ planId, groupId, d, groupName, onNudge }: Props) {
+export function PlanTopBar({ planId, groupId, d, backLabel, onNudge }: Props) {
   const router = useRouter();
   // Deep links (push, QA) mount this as the first screen, so the back label
   // falls back to where it points rather than to nothing.
@@ -67,7 +68,7 @@ export function PlanTopBar({ planId, groupId, d, groupName, onNudge }: Props) {
     <HeaderRow
       left={
         <BackButton
-          label={groupName}
+          label={backLabel}
           onPress={goBack}
           testID="back"
           style={styles.backAction}

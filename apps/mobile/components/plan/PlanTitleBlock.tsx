@@ -1,10 +1,11 @@
 import { StyleSheet, View } from 'react-native';
 import type { PlanDerived, PlanDetailRow } from '../../lib/planDerived';
-import { Badge, ThemedText, colorForName } from '../ui';
+import { Badge, PeopleGlyph, ThemedText, colorForName } from '../ui';
+import { audienceLabel } from '../../lib/planAudience';
 import { colors, spacing } from '../../theme/tokens';
 
 /**
- * What the plan is: its state, whose group it belongs to, its title and blurb.
+ * What the plan is: its state, who it is for, its title and blurb.
  *
  * The badge's four states come from `derivePlanDetail`, beside the headline
  * that runs the same precedence — an ending beats a confirmation. Deciding it
@@ -12,7 +13,7 @@ import { colors, spacing } from '../../theme/tokens';
  */
 export function PlanTitleBlock({ plan, d }: { plan: PlanDetailRow; d: PlanDerived }) {
   const badge = d.statusBadge;
-  const { name: groupName, color } = plan.groups;
+  const context = audienceLabel(plan);
 
   return (
     <View style={styles.titleBlock}>
@@ -28,8 +29,18 @@ export function PlanTitleBlock({ plan, d }: { plan: PlanDetailRow; d: PlanDerive
         ) : (
           <Badge label={badge.label} tone={badge.tone} uppercase />
         )}
-        <View style={[styles.swatch, { backgroundColor: color ?? colorForName(groupName) }]} />
-        <ThemedText variant="caption">{groupName}</ThemedText>
+        {context.people ? (
+          <View style={[styles.swatch, styles.peopleTile]} testID="plan-title-people">
+            <PeopleGlyph size={9} />
+          </View>
+        ) : (
+          <View
+            style={[styles.swatch, { backgroundColor: context.color ?? colorForName(context.label) }]}
+          />
+        )}
+        <ThemedText variant="caption" numberOfLines={1} style={styles.contextLabel}>
+          {context.label}
+        </ThemedText>
       </View>
       <ThemedText variant="screenTitle" color={d.isEnded ? colors.textSecondary : colors.textPrimary}>
         {plan.title}
@@ -57,5 +68,15 @@ const styles = StyleSheet.create({
     height: 14,
     borderRadius: 5,
     marginLeft: spacing.xs,
+  },
+  peopleTile: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accentSoft,
+  },
+  // "Friends of friends · via Marta García" is the longest thing this row
+  // holds; it yields to the badge rather than pushing it off.
+  contextLabel: {
+    flexShrink: 1,
   },
 });

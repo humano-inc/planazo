@@ -6,6 +6,7 @@ import { TabBar } from '../TabBar';
 const mockPush = jest.fn();
 let mockPendingCount = 0;
 let mockGroups = { groups: [], hasGroups: true, loading: false };
+let mockFriends = { friends: [] as { id: string }[], isPending: false };
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
@@ -13,6 +14,10 @@ jest.mock('expo-router', () => ({
 
 jest.mock('../../../lib/useMyGroups', () => ({
   useMyGroups: () => mockGroups,
+}));
+
+jest.mock('../../../lib/useFriends', () => ({
+  useFriends: () => mockFriends,
 }));
 
 jest.mock('../../../lib/usePendingInvites', () => ({
@@ -44,6 +49,7 @@ describe('TabBar', () => {
     jest.clearAllMocks();
     mockPendingCount = 0;
     mockGroups = { groups: [], hasGroups: true, loading: false };
+    mockFriends = { friends: [], isPending: false };
   });
 
   it('renders both tabs and the create button', async () => {
@@ -86,12 +92,31 @@ describe('TabBar', () => {
   // PLA-68: still a sheet about making a plan, just the one that can be acted
   // on. A short detent has to be declared before the screen mounts, which is
   // why the choice lives here and not inside the create screen.
-  it('opens the needs-a-group sheet while the user is in no groups', async () => {
+  it('opens the needs-people sheet with neither a group nor a friend', async () => {
     mockGroups = { groups: [], hasGroups: false, loading: false };
     await render(<TabBar {...makeProps()} />);
 
     await fireEvent.press(screen.getByTestId('tab-create'));
     expect(mockPush).toHaveBeenCalledWith('/(app)/plan/needs-group');
+  });
+
+  // PLA-140: a plan can go to your friends, so a friend is enough to post.
+  it('goes to the create sheet with a friend and no groups', async () => {
+    mockGroups = { groups: [], hasGroups: false, loading: false };
+    mockFriends = { friends: [{ id: 'u-marta' }], isPending: false };
+    await render(<TabBar {...makeProps()} />);
+
+    await fireEvent.press(screen.getByTestId('tab-create'));
+    expect(mockPush).toHaveBeenCalledWith('/(app)/plan/create');
+  });
+
+  it('falls back to the create sheet while the friends query is in flight', async () => {
+    mockGroups = { groups: [], hasGroups: false, loading: false };
+    mockFriends = { friends: [], isPending: true };
+    await render(<TabBar {...makeProps()} />);
+
+    await fireEvent.press(screen.getByTestId('tab-create'));
+    expect(mockPush).toHaveBeenCalledWith('/(app)/plan/create');
   });
 
   // "No groups" is also what an unanswered query looks like. Guessing would

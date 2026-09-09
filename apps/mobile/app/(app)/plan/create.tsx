@@ -2,10 +2,20 @@ import { useState } from 'react';
 import { View, StyleSheet, TextInput, Pressable } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
+import type { PlanAudience } from '@planazo/shared';
 import { useCreatePlan } from '../../../lib/useCreatePlan';
 import { useMyGroups } from '../../../lib/useMyGroups';
+import { useFriends } from '../../../lib/useFriends';
+import {
+  FRIEND_AUDIENCES,
+  audienceHelper,
+  isPlanAudience,
+  needsPeople,
+  postLabel,
+} from '../../../lib/planAudience';
 import { emptyPollDraft, pollDraftTouched, pollDraftValid } from '../../../lib/pollDraft';
 import { PollComposer } from '../../../components/plan/PollComposer';
+import { WhoField } from '../../../components/plan/WhoField';
 import { WhenField } from '../../../components/plan/WhenField';
 import { HowManyField } from '../../../components/plan/HowManyField';
 import { NEEDS_GROUP_COPY, NeedsGroupState } from '../../../components/group/NeedsGroupState';
@@ -18,7 +28,6 @@ import {
   HeaderAction,
   HeaderRow,
   DisclosureGlyph,
-  colorForName,
 } from '../../../components/ui';
 import { colors, radii, spacing } from '../../../theme/tokens';
 import { type } from '../../../theme/tokens';
@@ -29,6 +38,8 @@ export default function CreatePlanScreen() {
   //   planazo://plan/create?title=Padel&dates=2026-08-07,2026-08-09&min=5&cap=8&details=1
   const params = useLocalSearchParams<{
     groupId?: string;
+    /** "Try again" from a group-less plan lands on the same audience (PLA-140). */
+    audience?: string;
     title?: string;
     dates?: string;
     time?: string;
@@ -40,7 +51,8 @@ export default function CreatePlanScreen() {
   }>();
 
   const [title, setTitle] = useState(params.title ?? '');
-  const [pickedGroupId, setPickedGroupId] = useState<string | null>(null);
+  // A group id, or one of the two friend audiences: one row of chips, one pick.
+  const [picked, setPicked] = useState<string | null>(null);
   const [dates, setDates] = useState<string[]>(() =>
     params.dates ? params.dates.split(',').filter(Boolean).sort() : []
   );
@@ -59,12 +71,28 @@ export default function CreatePlanScreen() {
   const [pollDraft, setPollDraft] = useState(emptyPollDraft());
 
   const { groups, hasGroups, loading: groupsLoading } = useMyGroups();
+  const { friends, isPending: friendsLoading } = useFriends();
+  const hasFriends = friends.length > 0;
 
   // Opened from a group: that group is settled and the chip row collapses to it.
   const paramGroupId = params.groupId || null;
   const choices = paramGroupId ? groups.filter((g) => g.id === paramGroupId) : groups;
-  const groupId = paramGroupId ?? pickedGroupId ?? choices[0]?.id ?? null;
+  // The friend audiences (PLA-140) come first in the row, but only for someone
+  // with a friend to reach: a plan for nobody is not a choice worth offering.
+  const audienceChoices = hasFriends && !paramGroupId ? FRIEND_AUDIENCES : [];
+  const paramAudience =
+    isPlanAudience(params.audience) && params.audience !== 'group' && hasFriends
+      ? params.audience
+      : null;
+  // The default keeps the habit: your first group when you have one, and your
+  // friends only when you have none.
+  const pick =
+    paramGroupId ?? picked ?? paramAudience ?? choices[0]?.id ?? audienceChoices[0] ?? null;
+  const audience: PlanAudience =
+    pick === 'friends' || pick === 'friends_of_friends' ? pick : 'group';
+  const groupId = audience === 'group' ? pick : null;
   const group = choices.find((g) => g.id === groupId) ?? null;
+  const helper = audienceHelper(audience);
 
   const toggleDay = (iso: string) =>
     setDates((d) => (d.includes(iso) ? d.filter((x) => x !== iso) : [...d, iso].sort()));
@@ -73,7 +101,11 @@ export default function CreatePlanScreen() {
   // dropped: posting "Which film?" with one option is a poll nobody can
   // answer, and discarding typed text is worse.
   const pollBlocks = pollDraftTouched(pollDraft) && !pollDraftValid(pollDraft);
-  const isValid = title.trim().length > 0 && dates.length > 0 && !!groupId && !pollBlocks;
+  const isValid =
+    title.trim().length > 0 &&
+    dates.length > 0 &&
+    (audience !== 'group' || !!groupId) &&
+    !pollBlocks;
 
   const createPlan = useCreatePlan();
 
@@ -81,11 +113,11 @@ export default function CreatePlanScreen() {
   // back() is a no-op there: Cancel did nothing at all on a cold deep link.
   const cancel = useDismissTo('/(app)/(tabs)');
 
-  // The form below cannot be completed without a group, so it is not offered:
-  // that empty chip row and its permanently disabled "Post to …" were the dead
-  // end PLA-68 was reported for. The "+" already sends this user to the
-  // needs-group sheet, but this route is a live deep link nothing guards.
-  const needsGroup = !groupsLoading && !hasGroups;
+  // The form below cannot be completed with nobody to post to, so it is not
+  // offered: that empty chip row and its permanently disabled "Post to …" were
+  // the dead end PLA-68 was reported for. The "+" already sends this user to
+  // the needs-group sheet, but this route is a live deep link nothing guards.
+  const needsAnyone = !groupsLoading && !friendsLoading && needsPeople(hasGroups, hasFriends);
 
   const header = (
     <HeaderRow
@@ -98,7 +130,7 @@ export default function CreatePlanScreen() {
   // Nothing to post to, so nothing to compose: the form is replaced outright
   // rather than shown behind a disabled button (PLA-68). No footer either —
   // the way out of this state is inside the empty state itself.
-  if (needsGroup) {
+  if (needsAnyone) {
     return (
       <FormScreen header={header} contentContainerStyle={styles.emptyContent} testID="create-empty">
         <NeedsGroupState
@@ -118,16 +150,13 @@ export default function CreatePlanScreen() {
       testID="create"
       footer={
         <Button
-          // Naming the group is the point of this label, so it waits until
-          // there is a name: "Post to …" used to flash for everyone while the
-          // groups query resolved, and sat there forever for anyone with none
-          // (PLA-68).
-          label={createPlan.isPending ? 'Posting…' : group ? `Post to ${group.name}` : 'Post'}
+          label={createPlan.isPending ? 'Posting…' : postLabel(audience, group?.name ?? null)}
           variant={isValid ? 'primary' : 'secondary'}
           disabled={!isValid || createPlan.isPending}
           haptic={isValid}
           onPress={() =>
             createPlan.mutate({
+              audience,
               groupId,
               title,
               dates,
@@ -155,33 +184,14 @@ export default function CreatePlanScreen() {
         <View style={styles.rule} />
       </View>
 
-      <View style={styles.section}>
-        <ThemedText variant="sectionLabel">Who's it for</ThemedText>
-        <View style={styles.chipWrap}>
-          {choices.map((g) => {
-            const active = g.id === groupId;
-            return (
-              <Pressable
-                key={g.id}
-                onPress={() => setPickedGroupId(g.id)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-                testID={`group-${g.id}`}
-                style={[styles.groupChip, active && styles.groupChipActive]}
-              >
-                <View style={[styles.groupDot, { backgroundColor: g.color ?? colorForName(g.name) }]} />
-                <ThemedText
-                  variant="bodyStrong"
-                  style={styles.chipLabel}
-                  color={active ? colors.background : colors.textSecondary}
-                >
-                  {g.name}
-                </ThemedText>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
+      <WhoField
+        audiences={audienceChoices}
+        groups={choices}
+        audience={audience}
+        groupId={groupId}
+        onPick={setPicked}
+        helper={helper}
+      />
 
       <WhenField dates={dates} onToggleDay={toggleDay} time={time} onTimeChange={setTime} />
 
@@ -271,39 +281,6 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: 10,
-  },
-  chipWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  chipLabel: {
-    fontSize: 14,
-    lineHeight: 18,
-  },
-  // 39 (9 + 18 + 9 + border) — picking the group is the first thing this
-  // screen asks for. No row padding to reclaim, so the pill grows (PLA-40).
-  groupChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: MIN_TOUCH_TARGET,
-    gap: 7,
-    paddingVertical: 9,
-    paddingHorizontal: 13,
-    borderRadius: radii.pill,
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.borderStrong,
-  },
-  groupChipActive: {
-    backgroundColor: colors.ink,
-    borderColor: colors.ink,
-  },
-  groupDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 5,
   },
   detailsToggle: {
     flexDirection: 'row',

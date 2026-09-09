@@ -3,8 +3,8 @@ import { deriveFeedPollItems, type FeedPollSource } from '../feedPolls';
 const source = (over: Partial<FeedPollSource> = {}): FeedPollSource => ({
   planId: 'plan-1',
   planTitle: 'Sunday roast',
-  groupName: 'Domingueros',
-  groupColor: '#F7B0DC',
+  contextLabel: 'Domingueros',
+  contextColor: '#F7B0DC',
   isPast: false,
   canVote: true,
   peopleIn: 4,

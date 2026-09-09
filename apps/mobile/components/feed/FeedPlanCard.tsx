@@ -8,8 +8,10 @@ import {
   AnswerFooter,
   ButtonRow,
   DateOptionRow,
+  PeopleGlyph,
   colorForName,
 } from '../ui';
+import { audienceLabel, type AudienceSource } from '../../lib/planAudience';
 import { fmtDay } from '../../lib/dates';
 import { waitingLabel } from '../../lib/rsvp';
 import { colors, spacing } from '../../theme/tokens';
@@ -28,11 +30,14 @@ interface FeedPlanRow {
   plan_type: PlanType;
   min_people: number;
   /**
-   * Never null: the feed's select inner-joins `groups`, so a plan without one
-   * (an audience plan) is not in the feed at all, and a plan with one is only
-   * readable by members of its group, so the embed cannot be the row RLS hides.
+   * A group plan always carries its group: a plan with one is only readable
+   * by members of that group, so the embed cannot be the row RLS hides. A
+   * friends or friends-of-friends plan has none, and the slot says who it is
+   * for instead (PLA-140).
    */
-  groups: { name: string; color: string | null };
+  groups: AudienceSource['groups'];
+  audience: AudienceSource['audience'];
+  plan_bridge?: AudienceSource['plan_bridge'];
 }
 
 /** One feed card's slice of the decorated plan the feed screen computes. */
@@ -77,8 +82,8 @@ export function FeedPlanCard({
   onDecline,
 }: FeedPlanCardProps) {
   const { plan } = item;
-  const groupName = plan.groups.name;
-  const groupColor = plan.groups.color ?? colorForName(groupName);
+  const context = audienceLabel(plan);
+  const contextColor = context.color ?? colorForName(context.label);
 
   const renderAnswer = () => {
     // A called-off plan is a record — the notice above the feed carries it.
@@ -176,13 +181,24 @@ export function FeedPlanCard({
   };
 
   return (
-    <Card stripeColor={groupColor} testID={`plan-card-${plan.id}`}>
+    <Card stripeColor={contextColor} testID={`plan-card-${plan.id}`}>
       <Pressable onPress={() => onOpen(plan.id)}>
         <View style={styles.cardTop}>
           <View style={styles.groupRow}>
-            <View style={[styles.swatch, { backgroundColor: groupColor }]} />
-            <ThemedText variant="caption" color={colors.textSecondary}>
-              {groupName}
+            {context.people ? (
+              <View style={[styles.swatch, styles.peopleTile]} testID="plan-card-people">
+                <PeopleGlyph />
+              </View>
+            ) : (
+              <View style={[styles.swatch, { backgroundColor: contextColor }]} />
+            )}
+            <ThemedText
+              variant="caption"
+              color={colors.textSecondary}
+              numberOfLines={1}
+              style={styles.contextLabel}
+            >
+              {context.label}
             </ThemedText>
           </View>
           {/*
@@ -234,11 +250,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
+    flexShrink: 1,
+  },
+  // "Friends of friends · via Marta García" is the longest thing this slot
+  // holds; it yields to the badge rather than pushing it off the card.
+  contextLabel: {
+    flexShrink: 1,
   },
   swatch: {
     width: 20,
     height: 20,
     borderRadius: 6,
+  },
+  peopleTile: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.accentSoft,
   },
   title: {
     marginBottom: spacing.xs,

@@ -17,6 +17,7 @@ import { useDismissTo } from '../../../../lib/navigation';
 import { planGoneCopy } from '../../../../lib/queryErrors';
 import { usePullToRefresh } from '../../../../lib/usePullToRefresh';
 import { usePlanDetail } from '../../../../lib/usePlanDetail';
+import { audienceLabel, reachCaption } from '../../../../lib/planAudience';
 import { derivePlanDetail } from '../../../../lib/planDerived';
 import { stashPendingPlan } from '../../../../lib/pendingPlan';
 import { planLinkFor } from '../../../../lib/shareLinks';
@@ -127,7 +128,15 @@ export default function PlanDetailScreen() {
   }
 
   const d = derived;
-  const groupName = plan.groups.name;
+  // A group plan goes back to its group by name; a plan with no group goes
+  // home, and its chip row says who it is for (PLA-140).
+  const backLabel = plan.groups ? audienceLabel(plan).label : 'Home';
+  const reach = reachCaption({
+    audience: plan.audience,
+    hostName: plan.creator?.display_name,
+    bridge: plan.plan_bridge,
+    youCreated: d.youCreated,
+  });
   // The date rows are always tappable, so the footer must follow them: you're
   // editing the moment you start picking, even over a standing "no". Gating
   // this on !userRsvp let a declined plan's rows toggle while the footer stayed
@@ -152,7 +161,7 @@ export default function PlanDetailScreen() {
     router.push({
       pathname: '/plan/create',
       params: {
-        groupId: plan.group_id,
+        ...(plan.group_id ? { groupId: plan.group_id } : { audience: plan.audience }),
         title: plan.title,
         min: String(plan.min_people),
         ...(plan.max_people ? { cap: String(plan.max_people) } : {}),
@@ -162,7 +171,7 @@ export default function PlanDetailScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <PlanTopBar planId={plan.id} groupId={plan.group_id} d={d} groupName={groupName} onNudge={nudge} />
+      <PlanTopBar planId={plan.id} groupId={plan.group_id} d={d} backLabel={backLabel} onNudge={nudge} />
 
       <ScrollView
         style={styles.scroll}
@@ -288,6 +297,7 @@ export default function PlanDetailScreen() {
         onClearRsvp={() => clearRsvp.mutate()}
         onStartEdit={() => setEditingPicks({ planId: id, picks: d.myPickIds })}
         onSendDates={() => sendDates.mutate(picked)}
+        note={reach}
         onDeclineAll={() => declineAll.mutate()}
         onRestore={() => restorePlan.mutate()}
         onTryAgain={tryAgain}

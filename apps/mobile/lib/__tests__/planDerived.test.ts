@@ -32,6 +32,7 @@ const plan = (over: Partial<PlanDetailRow> = {}): PlanDetailRow => ({
   title: 'Padel',
   description: null,
   location: null,
+  audience: 'group',
   groups: { name: 'The Regulars', color: null },
   min_people: 3,
   max_people: null,

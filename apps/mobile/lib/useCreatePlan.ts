@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { PlanAudience } from '@planazo/shared';
 import { supabase } from './supabase';
 import { alertActionError, UserFacingError } from './queryErrors';
 import { useLeaveFor } from './navigation';
@@ -9,6 +10,8 @@ import { pollDraftTouched, type PollDraft } from './pollDraft';
 import { useAuthStore } from '../stores/authStore';
 
 export interface CreatePlanInput {
+  /** Who it is for (PLA-140). A group plan names its group; the other two have none. */
+  audience: PlanAudience;
   groupId: string | null;
   title: string;
   /** YYYY-MM-DD days. One is a fixed plan, several is a flexible one. */
@@ -47,8 +50,12 @@ export function useCreatePlan() {
 
   return useMutation({
     mutationFn: async (input: CreatePlanInput) => {
-      const { groupId, title, dates, time, min, cap, location, notes, pollDraft } = input;
-      if (!groupId || !user) throw new Error('Pick a group first');
+      const { audience, title, dates, time, min, cap, location, notes, pollDraft } = input;
+      if (!user) throw new Error('Sign in first');
+      // The database refuses the mismatch too (plans_audience_matches_group);
+      // this is the same rule said before the round trip.
+      const groupId = audience === 'group' ? input.groupId : null;
+      if (audience === 'group' && !groupId) throw new Error('Pick a group first');
       // Guideline 1.2: objectionable language stops here, not in review.
       const violation = contentViolation({
         'plan title': title,
@@ -62,6 +69,7 @@ export function useCreatePlan() {
       const { data: plan, error } = await supabase
         .from('plans')
         .insert({
+          audience,
           group_id: groupId,
           created_by: user.id,
           title: title.trim(),
@@ -110,7 +118,9 @@ export function useCreatePlan() {
     },
     onSuccess: (plan, input) => {
       queryClient.invalidateQueries({ queryKey: feedKey() });
-      queryClient.invalidateQueries({ queryKey: ['group-plans', input.groupId] });
+      if (input.audience === 'group') {
+        queryClient.invalidateQueries({ queryKey: ['group-plans', input.groupId] });
+      }
       leaveFor(`/(app)/plan/${plan.id}`);
     },
     onError: alertActionError,

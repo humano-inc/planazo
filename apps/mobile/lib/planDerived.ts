@@ -1,4 +1,5 @@
 import {
+  type PlanAudience,
   bestViableOption,
   canAddPhotos,
   countAvailabilityByDate,
@@ -47,7 +48,11 @@ export interface PlanDetailRow extends PlanAlbumData {
   title: string;
   description: string | null;
   location: string | null;
-  groups: { name: string; color: string | null };
+  /** Who it is for (PLA-140). Only a group plan carries its group. */
+  audience: PlanAudience;
+  groups: { name: string; color: string | null } | null;
+  /** The mutual friend a friends-of-friends plan reaches you through, if you need one. */
+  plan_bridge?: string | null;
   min_people: number;
   max_people: number | null;
   cancelled_at: string | null;
