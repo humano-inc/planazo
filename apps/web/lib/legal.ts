@@ -13,7 +13,7 @@ import { CONTACT_EMAIL } from './links';
  * file changes in the same commit.
  */
 
-export const LAST_UPDATED = { en: '5 August 2026', es: '5 de agosto de 2026' };
+export const LAST_UPDATED = { en: '9 September 2026', es: '9 de septiembre de 2026' };
 
 export interface Section {
   heading: string;
@@ -363,6 +363,14 @@ export const TERMS: Record<Lang, LegalDoc> = {
         ],
       },
       {
+        heading: 'Child safety',
+        paras: [
+          'Planazo has zero tolerance for child sexual abuse and exploitation. Any content that sexualises a minor, any attempt to groom, solicit or extort a minor, and any sharing of child sexual abuse material is banned, whether it is a photo, a plan, a group name or a message to a member.',
+          'If we find it, or it is reported to us, we remove it at once, permanently close the account behind it, preserve what the law requires, and report it to the police and to the relevant child-protection authority. This is not a case where we warn first.',
+          `Report it from the plan or group in the app, or write to ${CONTACT_EMAIL} with “child safety” in the subject and we look at it before anything else. That address is also the point of contact for any authority or child-protection organisation.`,
+        ],
+      },
+      {
         heading: 'Your content',
         paras: [
           'What you post stays yours. You give us only the permission needed to run the service: to store your content and show it to the other members of the groups you put it in. Nothing is published beyond that, and nothing is used to advertise to anybody.',
@@ -444,6 +452,14 @@ export const TERMS: Record<Lang, LegalDoc> = {
           'Cualquier plan y cualquier grupo se puede reportar desde la app, y podés bloquear a cualquier integrante de un grupo en el que estés. Bloquear esconde los planes de esa persona al instante; a ella nunca se le avisa.',
           'Revisamos los reportes dentro de las 24 horas. Si el reporte tiene fundamento, damos de baja el contenido y, según la gravedad, suspendemos o cerramos definitivamente la cuenta. Los casos graves se derivan a la policía.',
           `También podés escribir a ${CONTACT_EMAIL}. Poné «urgente» en el asunto y lo miramos el mismo día.`,
+        ],
+      },
+      {
+        heading: 'Seguridad de los menores',
+        paras: [
+          'Planazo tiene tolerancia cero con el abuso y la explotación sexual de menores. Está prohibido cualquier contenido que sexualice a un menor, cualquier intento de contactar, captar o extorsionar a un menor con ese fin, y cualquier material de abuso sexual infantil, sea una foto, un plan, el nombre de un grupo o un mensaje a un integrante.',
+          'Si lo encontramos o nos lo reportan, lo damos de baja en el acto, cerramos la cuenta de forma definitiva, conservamos lo que la ley exige y lo denunciamos a la policía y al organismo de protección de menores que corresponda. Acá no hay aviso previo.',
+          `Reportalo desde el plan o el grupo en la app, o escribí a ${CONTACT_EMAIL} con «seguridad de menores» en el asunto y lo miramos antes que cualquier otra cosa. Esa dirección es también el contacto para cualquier autoridad u organización de protección de la infancia.`,
         ],
       },
       {
