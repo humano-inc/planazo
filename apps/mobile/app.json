@@ -30,7 +30,10 @@
       "package": "com.somosplanazo.app",
       "edgeToEdgeEnabled": true,
       "googleServicesFile": "./google-services.json",
-      "blockedPermissions": ["android.permission.SYSTEM_ALERT_WINDOW"]
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
