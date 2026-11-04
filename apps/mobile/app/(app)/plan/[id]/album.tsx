@@ -111,7 +111,7 @@ export default function PlanAlbumScreen() {
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.grid}
           ListEmptyComponent={
-            isLoading ? null : (
+            isLoading ? undefined : (
               <ThemedText variant="body" color={colors.textMuted}>
                 Nothing here yet.
               </ThemedText>

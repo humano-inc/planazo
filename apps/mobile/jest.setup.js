@@ -40,12 +40,3 @@ jest.mock('react-native-keyboard-controller', () =>
   jest.requireActual('react-native-keyboard-controller/jest')
 );
 
-/**
- * Worklets 0.7 dropped the JS fallback it used to pick under Jest, so importing
- * Reanimated (Toast does, and most screens reach Toast) now throws "Native part
- * of Worklets doesn't seem to be initialized". The library ships its own mock
- * for exactly this; Reanimated runs on top of it unchanged (PLA-141).
- */
-jest.mock('react-native-worklets', () =>
-  jest.requireActual('react-native-worklets/src/mock')
-);
