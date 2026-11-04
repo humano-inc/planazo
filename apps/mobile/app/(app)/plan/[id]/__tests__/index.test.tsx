@@ -453,7 +453,9 @@ describe('PlanDetailScreen — flexible plans', () => {
     await waitFor(() => expect(screen.getByText("You can't make it")).toBeTruthy());
     expect(screen.queryByText('Send 1 date')).toBeNull();
 
-    await fireEvent.press(screen.getByTestId('vote-d1'));
+    // The decline comes from the RSVPs and the rows from the date options, two
+    // queries that settle independently, so wait for the row itself.
+    await fireEvent.press(await screen.findByTestId('vote-d1'));
 
     // The footer follows the rows — the dead end is gone
     expect(screen.getByText('Send 1 date')).toBeTruthy();

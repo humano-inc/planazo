@@ -50,7 +50,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   alerts = [];
   jest.spyOn(Alert, 'alert').mockImplementation((title, body) => {
-    alerts.push([title, body ?? '']);
+    alerts.push([title ?? '', body ?? '']);
   });
   profiles = chain({ data: { ...PROFILE, push_enabled: true }, error: null });
   groupMembers = chain({ count: 3, error: null });

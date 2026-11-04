@@ -243,7 +243,7 @@ export default tseslint.config(
       '**/__tests__/**/*.{ts,tsx}',
       '**/*.test.{ts,tsx}',
       '**/__mocks__/**/*.{ts,tsx}',
-      'apps/mobile/lib/testing/**/*.{ts,tsx}',
+      'apps/mobile/lib/testing/**/*.{ts,tsx,js}',
       'packages/integration-tests/**/*.ts',
     ],
     rules: {

@@ -64,12 +64,11 @@
         // through an import, so dropping it turns every component test red.
         "react-test-renderer",
 
-        // Inferred by knip's Expo plugin from app.json keys rather than from
-        // any import: `userInterfaceStyle` implies expo-system-ui, the EAS
-        // project id implies expo-updates. Neither is installed and the app
-        // builds without them. Worth revisiting if Android ever ships, since
-        // expo-system-ui is what applies `userInterfaceStyle` there.
-        "expo-updates",
+        // Inferred by knip's Expo plugin from an app.json key rather than
+        // from any import: `userInterfaceStyle` implies expo-system-ui. It is
+        // not installed and the app builds without it. Worth revisiting if
+        // Android ever ships, since expo-system-ui is what applies
+        // `userInterfaceStyle` there.
         "expo-system-ui"
       ]
     }

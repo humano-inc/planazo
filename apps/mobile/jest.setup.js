@@ -39,3 +39,4 @@ jest.mock('react-native-safe-area-context', () => {
 jest.mock('react-native-keyboard-controller', () =>
   jest.requireActual('react-native-keyboard-controller/jest')
 );
+

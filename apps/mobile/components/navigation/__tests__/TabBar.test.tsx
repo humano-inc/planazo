@@ -37,10 +37,8 @@ function makeProps(activeIndex = 0) {
         { key: 'groups-key', name: 'groups' },
       ],
     },
-    navigation: {
-      navigate: jest.fn(),
-      emit: jest.fn(() => ({ defaultPrevented: false })),
-    },
+    emitter: { emit: jest.fn(() => ({ defaultPrevented: false })) },
+    navigateToTab: jest.fn(),
   };
 }
 
@@ -74,11 +72,25 @@ describe('TabBar', () => {
     await render(<TabBar {...props} />);
 
     await fireEvent.press(screen.getByTestId('tab-groups'));
-    expect(props.navigation.navigate).toHaveBeenCalledWith('groups');
+    expect(props.emitter.emit).toHaveBeenCalledWith({
+      type: 'tabPress',
+      target: 'groups-key',
+      canPreventDefault: true,
+    });
+    expect(props.navigateToTab).toHaveBeenCalledWith('groups-key');
 
     // Pressing the already-active tab does not re-navigate
     await fireEvent.press(screen.getByTestId('tab-index'));
-    expect(props.navigation.navigate).not.toHaveBeenCalledWith('index');
+    expect(props.navigateToTab).not.toHaveBeenCalledWith('index-key');
+  });
+
+  it('stays put when a tabPress listener prevents the default', async () => {
+    const props = makeProps(0);
+    props.emitter.emit.mockReturnValue({ defaultPrevented: true });
+    await render(<TabBar {...props} />);
+
+    await fireEvent.press(screen.getByTestId('tab-groups'));
+    expect(props.navigateToTab).not.toHaveBeenCalled();
   });
 
   it('opens the create sheet from the + button', async () => {

@@ -230,7 +230,7 @@ function InitialLayout() {
     // Both the warm-tap listener and the cold-start check land in state; the
     // effect below navigates once auth and the navigator are ready.
     const grab = (response: Notifications.NotificationResponse | null) => {
-      const planId = response?.notification.request.content.data.plan_id;
+      const planId = response?.notification.request.content.data?.plan_id;
       if (typeof planId === 'string') {
         setPushedPlanId(planId);
       }
