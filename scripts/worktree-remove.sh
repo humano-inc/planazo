@@ -80,7 +80,7 @@ if [ -n "$branch_name" ]; then
   wt_step "Deleting Supabase branch '$branch_name'"
   deleted=""
   doubt=""
-  if supabase branches delete "$branch_name" --project-ref "$WT_PROJECT_REF" --yes 2>/dev/null; then
+  if supabase branches delete "$branch_name" --remote="$WT_PROJECT_REF" --yes 2>/dev/null; then
     deleted=1
     wt_info "deleted (billing stops)"
   else
@@ -109,7 +109,7 @@ if [ -n "$branch_name" ]; then
 Stopping before the worktree is removed — $metadata is the only
 record of this branch, and removing the worktree would take it with it.
 
-  supabase branches delete $branch_name --project-ref $WT_PROJECT_REF
+  pnpm exec supabase branches delete $branch_name --remote=$WT_PROJECT_REF --yes
 
 Then re-run wt:rm. If you are certain the branch is gone, clear
 PLANAZO_BRANCH_NAME in that file first."

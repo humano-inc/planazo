@@ -182,6 +182,10 @@ environment over it.
 - Merged migrations are immutable; fix forward. Edited-but-applied branch
   migrations need `pnpm wt:db:reset`.
 - Deploy pushes migrations on merge to main. Never by hand to production.
+- The Supabase CLI is the root `supabase` devDependency, pinned to one exact
+  version that CI runs too. pnpm scripts get it on PATH; typed by hand, it is
+  `pnpm exec supabase …`. A bare `supabase` in your shell may be another
+  version. Hosted targets take `--remote=<ref|url>` and `--yes`.
 - Never start a second jest run while one is in flight. Don't pipe gate output
   through `tail`/`grep`. A sudden jump from ~40s to minutes is starvation, not
   a broken suite. Keep `--maxWorkers=3`.

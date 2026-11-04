@@ -163,15 +163,6 @@ jobs:
         if: steps.scope.outputs.touched == 'true'
         run: pnpm install --frozen-lockfile
 
-      # Pinned, not latest: newer CLIs (2.110.0 observed) create the local DB
-      # without table grants for anon/authenticated/service_role, so every
-      # API query fails with "permission denied for table". 2.90.0 matches
-      # the locally verified behavior.
-      - uses: supabase/setup-cli@v1
-        if: steps.scope.outputs.touched == 'true'
-        with:
-          version: 2.90.0
-
       # Full stack, not `db start`: the integration tests sign up real users,
       # so auth (and the REST API) must be up. Migrations apply on start.
       #
@@ -182,9 +173,12 @@ jobs:
       # (realtime.test.ts) and mailpit (signup-confirmation.test.ts reads the
       # 6-digit code out of the inbox). Verified against the local stack, which
       # already runs without imgproxy/vector/pooler and passes all 142.
+      #
+      # The CLI is the `supabase` devDependency, the one pinned version every
+      # checkout runs, so CI tests with exactly what a laptop has.
       - name: Start local Supabase and apply all migrations
         if: steps.scope.outputs.touched == 'true'
-        run: supabase start -x studio,imgproxy,logflare,vector,supavisor
+        run: pnpm exec supabase start -x studio,imgproxy,logflare,vector,supavisor
 
       - name: Integration tests (RLS, RPCs, triggers)
         if: steps.scope.outputs.touched == 'true'
@@ -203,16 +197,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: supabase/setup-cli@v1
+      # The same pinned CLI the other jobs run, from the lockfile. There is no
+      # second version number to keep in step with package.json.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
         with:
-          version: 2.90.0
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       # The access token alone is enough: link mints a login role for the
       # session pooler, no database password required (verified in a clean
       # container). `db push` applies only migrations missing from the remote
       # history table, so re-runs are no-ops.
       - name: Link to production
-        run: supabase link --project-ref leszgvpjonzjclhbgzju
+        run: pnpm exec supabase link leszgvpjonzjclhbgzju
 
+      # `--remote` is what makes this production. Without it CLI v3 pushes to a
+      # local stack, which this job does not have. `--yes` is the only consent
+      # v3 accepts unattended; without it the push declines and changes nothing.
       - name: Push migrations
-        run: supabase db push --yes
+        run: pnpm exec supabase db push --remote --yes

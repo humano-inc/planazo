@@ -50,7 +50,7 @@ rebuilds a fresh stack with YOUR branch's migrations) is the merge gate.
 ## Iterating on migration SQL (`--db` worktrees)
 
 `db push` matches migrations by **version timestamp, not content**. First
-apply of a new file works via `supabase db push --db-url "$SUPABASE_DB_URL"`;
+apply of a new file works via `pnpm exec supabase db push --remote="$SUPABASE_DB_URL" --yes`;
 but once a version is recorded, editing its file does nothing — push skips it
 silently. So the loop is:
 
@@ -72,8 +72,8 @@ around them; run the named remedy.
 | "declares PLANAZO_DB_MODE=branch… loopback URL here" | `wt:setup --db` died before rewriting `.env`; checkout still points at main's stack | re-run `pnpm wt:setup --db` |
 | "This URL's ref does not match" | `.env` points at a different worktree's branch DB | re-run `pnpm wt:setup --db` |
 | "branch adds migrations but the worktree is in shared DB mode" | Schema work started in a shared worktree | `pnpm wt:setup --db` |
-| "missing N migration(s) from this checkout" | Target DB is behind the checkout (pulled main, or rebased) | loopback: `supabase migration up` (from main) · branch: `supabase db push --db-url "$SUPABASE_DB_URL"` |
-| "uncommitted edits… still running the OLD content" | You edited an already-applied migration | `pnpm wt:db:reset` (branch) · `supabase db reset` from main (loopback — wipes shared QA data) |
+| "missing N migration(s) from this checkout" | Target DB is behind the checkout (pulled main, or rebased) | loopback: `pnpm exec supabase migration up` (from main) · branch: `pnpm exec supabase db push --remote="$SUPABASE_DB_URL" --yes` |
+| "uncommitted edits… still running the OLD content" | You edited an already-applied migration | `pnpm wt:db:reset` (branch) · `pnpm db:reset` from main (loopback — wipes shared QA data) |
 | "No Postgres URL… cannot see" | `.env` predates `SUPABASE_DB_URL` being recorded | re-run `pnpm wt:setup --db` |
 
 ## Hard boundaries (scripts enforce these — don't fight them)

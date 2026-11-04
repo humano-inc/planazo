@@ -1,1054 +1,649 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.15"
-  }
-  public: {
-    Tables: {
-      app_admins: {
-        Row: {
-          created_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      blocked_users: {
-        Row: {
-          blocked_id: string
-          blocker_id: string
-          created_at: string
-        }
-        Insert: {
-          blocked_id: string
-          blocker_id: string
-          created_at?: string
-        }
-        Update: {
-          blocked_id?: string
-          blocker_id?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-      cities: {
-        Row: {
-          country_code: string
-          id: string
-          lat: number
-          lon: number
-          name: string
-          slug: string
-          timezone: string
-        }
-        Insert: {
-          country_code: string
-          id?: string
-          lat: number
-          lon: number
-          name: string
-          slug: string
-          timezone: string
-        }
-        Update: {
-          country_code?: string
-          id?: string
-          lat?: number
-          lon?: number
-          name?: string
-          slug?: string
-          timezone?: string
-        }
-        Relationships: []
-      }
-      content_reports: {
-        Row: {
-          created_at: string
-          id: string
-          note: string
-          reason: string
-          reporter_id: string | null
-          subject_id: string
-          subject_type: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          note?: string
-          reason: string
-          reporter_id?: string | null
-          subject_id: string
-          subject_type: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          note?: string
-          reason?: string
-          reporter_id?: string | null
-          subject_id?: string
-          subject_type?: string
-        }
-        Relationships: []
-      }
-      date_availability: {
-        Row: {
-          available: boolean
-          created_at: string | null
-          date_option_id: string
-          id: string
-          plan_id: string
-          user_id: string
-        }
-        Insert: {
-          available?: boolean
-          created_at?: string | null
-          date_option_id: string
-          id?: string
-          plan_id: string
-          user_id: string
-        }
-        Update: {
-          available?: boolean
-          created_at?: string | null
-          date_option_id?: string
-          id?: string
-          plan_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "date_availability_date_option_id_fkey"
-            columns: ["date_option_id"]
-            isOneToOne: false
-            referencedRelation: "plan_date_options"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "date_availability_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "plans"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "date_availability_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      feedback: {
-        Row: {
-          app_version: string | null
-          created_at: string
-          device_model: string | null
-          id: string
-          kind: string
-          linear_issue_id: string | null
-          linear_issue_identifier: string | null
-          linear_issue_url: string | null
-          message: string
-          resolution: string
-          resolution_updated_at: string
-          screenshot_path: string | null
-          user_id: string
-        }
-        Insert: {
-          app_version?: string | null
-          created_at?: string
-          device_model?: string | null
-          id?: string
-          kind: string
-          linear_issue_id?: string | null
-          linear_issue_identifier?: string | null
-          linear_issue_url?: string | null
-          message?: string
-          resolution?: string
-          resolution_updated_at?: string
-          screenshot_path?: string | null
-          user_id: string
-        }
-        Update: {
-          app_version?: string | null
-          created_at?: string
-          device_model?: string | null
-          id?: string
-          kind?: string
-          linear_issue_id?: string | null
-          linear_issue_identifier?: string | null
-          linear_issue_url?: string | null
-          message?: string
-          resolution?: string
-          resolution_updated_at?: string
-          screenshot_path?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      friendships: {
-        Row: {
-          addressee_id: string
-          created_at: string | null
-          id: string
-          requester_id: string
-          responded_at: string | null
-          status: string
-        }
-        Insert: {
-          addressee_id: string
-          created_at?: string | null
-          id?: string
-          requester_id: string
-          responded_at?: string | null
-          status?: string
-        }
-        Update: {
-          addressee_id?: string
-          created_at?: string | null
-          id?: string
-          requester_id?: string
-          responded_at?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "friendships_addressee_id_fkey"
-            columns: ["addressee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "friendships_requester_id_fkey"
-            columns: ["requester_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      group_invites: {
-        Row: {
-          created_at: string | null
-          group_id: string
-          id: string
-          invited_by: string | null
-          invitee_id: string
-          responded_at: string | null
-          status: string
-        }
-        Insert: {
-          created_at?: string | null
-          group_id: string
-          id?: string
-          invited_by?: string | null
-          invitee_id: string
-          responded_at?: string | null
-          status?: string
-        }
-        Update: {
-          created_at?: string | null
-          group_id?: string
-          id?: string
-          invited_by?: string | null
-          invitee_id?: string
-          responded_at?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "group_invites_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "group_invites_invited_by_fkey"
-            columns: ["invited_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "group_invites_invitee_id_fkey"
-            columns: ["invitee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      group_members: {
-        Row: {
-          group_id: string
-          id: string
-          joined_at: string | null
-          notify_new_plans: boolean
-          role: string
-          user_id: string
-        }
-        Insert: {
-          group_id: string
-          id?: string
-          joined_at?: string | null
-          notify_new_plans?: boolean
-          role?: string
-          user_id: string
-        }
-        Update: {
-          group_id?: string
-          id?: string
-          joined_at?: string | null
-          notify_new_plans?: boolean
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "group_members_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "group_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      groups: {
-        Row: {
-          anyone_can_post: boolean
-          city_id: string
-          color: string | null
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          id: string
-          image_url: string | null
-          invite_code: string
-          join_mode: string
-          name: string
-          updated_at: string | null
-          who_can_invite: string
-        }
-        Insert: {
-          anyone_can_post?: boolean
-          city_id: string
-          color?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          invite_code: string
-          join_mode?: string
-          name: string
-          updated_at?: string | null
-          who_can_invite?: string
-        }
-        Update: {
-          anyone_can_post?: boolean
-          city_id?: string
-          color?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          image_url?: string | null
-          invite_code?: string
-          join_mode?: string
-          name?: string
-          updated_at?: string | null
-          who_can_invite?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "groups_city_id_fkey"
-            columns: ["city_id"]
-            isOneToOne: false
-            referencedRelation: "cities"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "groups_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      notifications: {
-        Row: {
-          body: string
-          created_at: string | null
-          data: Json | null
-          id: string
-          pushed_at: string | null
-          read: boolean | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          body: string
-          created_at?: string | null
-          data?: Json | null
-          id?: string
-          pushed_at?: string | null
-          read?: boolean | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          body?: string
-          created_at?: string | null
-          data?: Json | null
-          id?: string
-          pushed_at?: string | null
-          read?: boolean | null
-          title?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      plan_date_options: {
-        Row: {
-          created_at: string | null
-          date: string
-          id: string
-          plan_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          date: string
-          id?: string
-          plan_id: string
-        }
-        Update: {
-          created_at?: string | null
-          date?: string
-          id?: string
-          plan_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "plan_date_options_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "plans"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      plan_photos: {
-        Row: {
-          created_at: string
-          height: number | null
-          id: string
-          plan_id: string
-          storage_path: string
-          thumb_path: string | null
-          uploaded_by: string
-          width: number | null
-        }
-        Insert: {
-          created_at?: string
-          height?: number | null
-          id?: string
-          plan_id: string
-          storage_path: string
-          thumb_path?: string | null
-          uploaded_by: string
-          width?: number | null
-        }
-        Update: {
-          created_at?: string
-          height?: number | null
-          id?: string
-          plan_id?: string
-          storage_path?: string
-          thumb_path?: string | null
-          uploaded_by?: string
-          width?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "plan_photos_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "plans"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "plan_photos_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      plan_poll_options: {
-        Row: {
-          created_at: string
-          id: string
-          label: string
-          plan_id: string
-          poll_id: string
-          position: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          label: string
-          plan_id: string
-          poll_id: string
-          position: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          label?: string
-          plan_id?: string
-          poll_id?: string
-          position?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "plan_poll_options_poll_id_plan_id_fkey"
-            columns: ["poll_id", "plan_id"]
-            isOneToOne: false
-            referencedRelation: "plan_polls"
-            referencedColumns: ["id", "plan_id"]
-          },
-        ]
-      }
-      plan_poll_vote_receipts: {
-        Row: {
-          first_voted_at: string
-          plan_id: string
-          poll_id: string
-          user_id: string
-        }
-        Insert: {
-          first_voted_at?: string
-          plan_id: string
-          poll_id: string
-          user_id: string
-        }
-        Update: {
-          first_voted_at?: string
-          plan_id?: string
-          poll_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "plan_poll_vote_receipts_poll_id_plan_id_fkey"
-            columns: ["poll_id", "plan_id"]
-            isOneToOne: false
-            referencedRelation: "plan_polls"
-            referencedColumns: ["id", "plan_id"]
-          },
-          {
-            foreignKeyName: "plan_poll_vote_receipts_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      plan_poll_votes: {
-        Row: {
-          created_at: string
-          id: string
-          option_id: string
-          plan_id: string
-          poll_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          option_id: string
-          plan_id: string
-          poll_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          option_id?: string
-          plan_id?: string
-          poll_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "plan_poll_votes_option_id_poll_id_fkey"
-            columns: ["option_id", "poll_id"]
-            isOneToOne: false
-            referencedRelation: "plan_poll_options"
-            referencedColumns: ["id", "poll_id"]
-          },
-          {
-            foreignKeyName: "plan_poll_votes_poll_id_plan_id_fkey"
-            columns: ["poll_id", "plan_id"]
-            isOneToOne: false
-            referencedRelation: "plan_polls"
-            referencedColumns: ["id", "plan_id"]
-          },
-          {
-            foreignKeyName: "plan_poll_votes_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      plan_polls: {
-        Row: {
-          created_at: string
-          id: string
-          plan_id: string
-          question: string
-          suggestions_open: boolean
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          plan_id: string
-          question: string
-          suggestions_open?: boolean
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          plan_id?: string
-          question?: string
-          suggestions_open?: boolean
-        }
-        Relationships: [
-          {
-            foreignKeyName: "plan_polls_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "plans"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      plans: {
-        Row: {
-          audience: string
-          cancel_reason: string | null
-          cancelled_at: string | null
-          cancelled_by: string | null
-          created_at: string | null
-          created_by: string | null
-          deadline: string | null
-          description: string | null
-          event_date: string | null
-          group_id: string | null
-          id: string
-          location: string | null
-          locked_at: string | null
-          locked_date: string | null
-          max_people: number | null
-          min_people: number
-          plan_type: string
-          status: string
-          title: string
-          updated_at: string | null
-          plan_bridge: string | null
-        }
-        Insert: {
-          audience?: string
-          cancel_reason?: string | null
-          cancelled_at?: string | null
-          cancelled_by?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          deadline?: string | null
-          description?: string | null
-          event_date?: string | null
-          group_id?: string | null
-          id?: string
-          location?: string | null
-          locked_at?: string | null
-          locked_date?: string | null
-          max_people?: number | null
-          min_people?: number
-          plan_type: string
-          status?: string
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          audience?: string
-          cancel_reason?: string | null
-          cancelled_at?: string | null
-          cancelled_by?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          deadline?: string | null
-          description?: string | null
-          event_date?: string | null
-          group_id?: string | null
-          id?: string
-          location?: string | null
-          locked_at?: string | null
-          locked_date?: string | null
-          max_people?: number | null
-          min_people?: number
-          plan_type?: string
-          status?: string
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "plans_cancelled_by_fkey"
-            columns: ["cancelled_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "plans_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "plans_group_id_fkey"
-            columns: ["group_id"]
-            isOneToOne: false
-            referencedRelation: "groups"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      profiles: {
-        Row: {
-          add_to_calendar: boolean
-          avatar_url: string | null
-          created_at: string | null
-          display_name: string
-          email: string
-          handle: string | null
-          id: string
-          onboarded_at: string | null
-          push_enabled: boolean
-          push_token: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          add_to_calendar?: boolean
-          avatar_url?: string | null
-          created_at?: string | null
-          display_name: string
-          email: string
-          handle?: string | null
-          id: string
-          onboarded_at?: string | null
-          push_enabled?: boolean
-          push_token?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          add_to_calendar?: boolean
-          avatar_url?: string | null
-          created_at?: string | null
-          display_name?: string
-          email?: string
-          handle?: string | null
-          id?: string
-          onboarded_at?: string | null
-          push_enabled?: boolean
-          push_token?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      rsvps: {
-        Row: {
-          created_at: string | null
-          id: string
-          plan_id: string
-          response: string | null
-          updated_at: string | null
-          user_id: string
-          waitlist_seq: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          plan_id: string
-          response?: string | null
-          updated_at?: string | null
-          user_id: string
-          waitlist_seq?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          plan_id?: string
-          response?: string | null
-          updated_at?: string | null
-          user_id?: string
-          waitlist_seq?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "rsvps_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "plans"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "rsvps_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+  
+  "public": {
+          Tables: {
+            "app_admins": {
+                  Row: {
+                    "created_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"blocked_users": {
+                  Row: {
+                    "blocked_id": string,"blocker_id": string,"created_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "blocked_id": string,"blocker_id": string,"created_at"?: string
+                  }
+                  Update: {
+                    "blocked_id"?: string,"blocker_id"?: string,"created_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"cities": {
+                  Row: {
+                    "country_code": string,"id": string,"lat": number,"lon": number,"name": string,"slug": string,"timezone": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "country_code": string,"id"?: string,"lat": number,"lon": number,"name": string,"slug": string,"timezone": string
+                  }
+                  Update: {
+                    "country_code"?: string,"id"?: string,"lat"?: number,"lon"?: number,"name"?: string,"slug"?: string,"timezone"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"content_reports": {
+                  Row: {
+                    "created_at": string,"id": string,"note": string,"reason": string,"reporter_id": string | null,"subject_id": string,"subject_type": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"note"?: string,"reason": string,"reporter_id"?: string | null,"subject_id": string,"subject_type": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"note"?: string,"reason"?: string,"reporter_id"?: string | null,"subject_id"?: string,"subject_type"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"date_availability": {
+                  Row: {
+                    "available": boolean,"created_at": string | null,"date_option_id": string,"id": string,"plan_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "available"?: boolean,"created_at"?: string | null,"date_option_id": string,"id"?: string,"plan_id": string,"user_id": string
+                  }
+                  Update: {
+                    "available"?: boolean,"created_at"?: string | null,"date_option_id"?: string,"id"?: string,"plan_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "date_availability_date_option_id_fkey"
+      columns: ["date_option_id"]
+isOneToOne: false
+      referencedRelation: "plan_date_options"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "date_availability_plan_id_fkey"
+      columns: ["plan_id"]
+isOneToOne: false
+      referencedRelation: "plans"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "date_availability_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
     }
-    Views: {
-      [_ in never]: never
+                  ]
+                },"feedback": {
+                  Row: {
+                    "app_version": string | null,"created_at": string,"device_model": string | null,"id": string,"kind": string,"linear_issue_id": string | null,"linear_issue_identifier": string | null,"linear_issue_url": string | null,"message": string,"resolution": string,"resolution_updated_at": string,"screenshot_path": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "app_version"?: string | null,"created_at"?: string,"device_model"?: string | null,"id"?: string,"kind": string,"linear_issue_id"?: string | null,"linear_issue_identifier"?: string | null,"linear_issue_url"?: string | null,"message"?: string,"resolution"?: string,"resolution_updated_at"?: string,"screenshot_path"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "app_version"?: string | null,"created_at"?: string,"device_model"?: string | null,"id"?: string,"kind"?: string,"linear_issue_id"?: string | null,"linear_issue_identifier"?: string | null,"linear_issue_url"?: string | null,"message"?: string,"resolution"?: string,"resolution_updated_at"?: string,"screenshot_path"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"friendships": {
+                  Row: {
+                    "addressee_id": string,"created_at": string | null,"id": string,"requester_id": string,"responded_at": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "addressee_id": string,"created_at"?: string | null,"id"?: string,"requester_id": string,"responded_at"?: string | null,"status"?: string
+                  }
+                  Update: {
+                    "addressee_id"?: string,"created_at"?: string | null,"id"?: string,"requester_id"?: string,"responded_at"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "friendships_addressee_id_fkey"
+      columns: ["addressee_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "friendships_requester_id_fkey"
+      columns: ["requester_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
     }
-    Functions: {
-      can_add_plan_photo: { Args: { p_plan_id: string }; Returns: boolean }
-      can_manage_plan_poll: { Args: { p_plan_id: string }; Returns: boolean }
-      can_view_plan:
-        | { Args: { p_plan_id: string }; Returns: boolean }
-        | {
-            Args: {
-              p_audience: string
-              p_created_by: string
-              p_group_id: string
-              p_plan_id: string
-            }
-            Returns: boolean
+                  ]
+                },"group_invites": {
+                  Row: {
+                    "created_at": string | null,"group_id": string,"id": string,"invited_by": string | null,"invitee_id": string,"responded_at": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string | null,"group_id": string,"id"?: string,"invited_by"?: string | null,"invitee_id": string,"responded_at"?: string | null,"status"?: string
+                  }
+                  Update: {
+                    "created_at"?: string | null,"group_id"?: string,"id"?: string,"invited_by"?: string | null,"invitee_id"?: string,"responded_at"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "group_invites_group_id_fkey"
+      columns: ["group_id"]
+isOneToOne: false
+      referencedRelation: "groups"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "group_invites_invited_by_fkey"
+      columns: ["invited_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "group_invites_invitee_id_fkey"
+      columns: ["invitee_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"group_members": {
+                  Row: {
+                    "group_id": string,"id": string,"joined_at": string | null,"notify_new_plans": boolean,"role": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "group_id": string,"id"?: string,"joined_at"?: string | null,"notify_new_plans"?: boolean,"role"?: string,"user_id": string
+                  }
+                  Update: {
+                    "group_id"?: string,"id"?: string,"joined_at"?: string | null,"notify_new_plans"?: boolean,"role"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "group_members_group_id_fkey"
+      columns: ["group_id"]
+isOneToOne: false
+      referencedRelation: "groups"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "group_members_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"groups": {
+                  Row: {
+                    "anyone_can_post": boolean,"city_id": string,"color": string | null,"created_at": string | null,"created_by": string | null,"description": string | null,"id": string,"image_url": string | null,"invite_code": string,"join_mode": string,"name": string,"updated_at": string | null,"who_can_invite": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "anyone_can_post"?: boolean,"city_id": string,"color"?: string | null,"created_at"?: string | null,"created_by"?: string | null,"description"?: string | null,"id"?: string,"image_url"?: string | null,"invite_code": string,"join_mode"?: string,"name": string,"updated_at"?: string | null,"who_can_invite"?: string
+                  }
+                  Update: {
+                    "anyone_can_post"?: boolean,"city_id"?: string,"color"?: string | null,"created_at"?: string | null,"created_by"?: string | null,"description"?: string | null,"id"?: string,"image_url"?: string | null,"invite_code"?: string,"join_mode"?: string,"name"?: string,"updated_at"?: string | null,"who_can_invite"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "groups_city_id_fkey"
+      columns: ["city_id"]
+isOneToOne: false
+      referencedRelation: "cities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "groups_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notifications": {
+                  Row: {
+                    "body": string,"created_at": string | null,"data": Json | null,"id": string,"pushed_at": string | null,"read": boolean | null,"title": string,"type": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"created_at"?: string | null,"data"?: Json | null,"id"?: string,"pushed_at"?: string | null,"read"?: boolean | null,"title": string,"type": string,"user_id": string
+                  }
+                  Update: {
+                    "body"?: string,"created_at"?: string | null,"data"?: Json | null,"id"?: string,"pushed_at"?: string | null,"read"?: boolean | null,"title"?: string,"type"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notifications_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"plan_date_options": {
+                  Row: {
+                    "created_at": string | null,"date": string,"id": string,"plan_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string | null,"date": string,"id"?: string,"plan_id": string
+                  }
+                  Update: {
+                    "created_at"?: string | null,"date"?: string,"id"?: string,"plan_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "plan_date_options_plan_id_fkey"
+      columns: ["plan_id"]
+isOneToOne: false
+      referencedRelation: "plans"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"plan_photos": {
+                  Row: {
+                    "created_at": string,"height": number | null,"id": string,"plan_id": string,"storage_path": string,"thumb_path": string | null,"uploaded_by": string,"width": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"height"?: number | null,"id"?: string,"plan_id": string,"storage_path": string,"thumb_path"?: string | null,"uploaded_by": string,"width"?: number | null
+                  }
+                  Update: {
+                    "created_at"?: string,"height"?: number | null,"id"?: string,"plan_id"?: string,"storage_path"?: string,"thumb_path"?: string | null,"uploaded_by"?: string,"width"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "plan_photos_plan_id_fkey"
+      columns: ["plan_id"]
+isOneToOne: false
+      referencedRelation: "plans"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "plan_photos_uploaded_by_fkey"
+      columns: ["uploaded_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"plan_poll_options": {
+                  Row: {
+                    "created_at": string,"id": string,"label": string,"plan_id": string,"poll_id": string,"position": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"label": string,"plan_id": string,"poll_id": string,"position": number
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"label"?: string,"plan_id"?: string,"poll_id"?: string,"position"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "plan_poll_options_poll_id_plan_id_fkey"
+      columns: ["poll_id","plan_id"]
+isOneToOne: false
+      referencedRelation: "plan_polls"
+      referencedColumns: ["id","plan_id"]
+    }
+                  ]
+                },"plan_poll_vote_receipts": {
+                  Row: {
+                    "first_voted_at": string,"plan_id": string,"poll_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "first_voted_at"?: string,"plan_id": string,"poll_id": string,"user_id": string
+                  }
+                  Update: {
+                    "first_voted_at"?: string,"plan_id"?: string,"poll_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "plan_poll_vote_receipts_poll_id_plan_id_fkey"
+      columns: ["poll_id","plan_id"]
+isOneToOne: false
+      referencedRelation: "plan_polls"
+      referencedColumns: ["id","plan_id"]
+    },{
+      foreignKeyName: "plan_poll_vote_receipts_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"plan_poll_votes": {
+                  Row: {
+                    "created_at": string,"id": string,"option_id": string,"plan_id": string,"poll_id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"option_id": string,"plan_id": string,"poll_id": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"option_id"?: string,"plan_id"?: string,"poll_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "plan_poll_votes_option_id_poll_id_fkey"
+      columns: ["option_id","poll_id"]
+isOneToOne: false
+      referencedRelation: "plan_poll_options"
+      referencedColumns: ["id","poll_id"]
+    },{
+      foreignKeyName: "plan_poll_votes_poll_id_plan_id_fkey"
+      columns: ["poll_id","plan_id"]
+isOneToOne: false
+      referencedRelation: "plan_polls"
+      referencedColumns: ["id","plan_id"]
+    },{
+      foreignKeyName: "plan_poll_votes_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"plan_polls": {
+                  Row: {
+                    "created_at": string,"id": string,"plan_id": string,"question": string,"suggestions_open": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"plan_id": string,"question": string,"suggestions_open"?: boolean
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"plan_id"?: string,"question"?: string,"suggestions_open"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "plan_polls_plan_id_fkey"
+      columns: ["plan_id"]
+isOneToOne: false
+      referencedRelation: "plans"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"plans": {
+                  Row: {
+                    "audience": string,"cancel_reason": string | null,"cancelled_at": string | null,"cancelled_by": string | null,"created_at": string | null,"created_by": string | null,"deadline": string | null,"description": string | null,"event_date": string | null,"group_id": string | null,"id": string,"location": string | null,"locked_at": string | null,"locked_date": string | null,"max_people": number | null,"min_people": number,"plan_type": string,"status": string,"title": string,"updated_at": string | null,"plan_bridge": string | null
+                  }
+                  ComputedFields: "plan_bridge"
+                  Insert: {
+                    "audience"?: string,"cancel_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"created_at"?: string | null,"created_by"?: string | null,"deadline"?: string | null,"description"?: string | null,"event_date"?: string | null,"group_id"?: string | null,"id"?: string,"location"?: string | null,"locked_at"?: string | null,"locked_date"?: string | null,"max_people"?: number | null,"min_people"?: number,"plan_type": string,"status"?: string,"title": string,"updated_at"?: string | null
+                  }
+                  Update: {
+                    "audience"?: string,"cancel_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"created_at"?: string | null,"created_by"?: string | null,"deadline"?: string | null,"description"?: string | null,"event_date"?: string | null,"group_id"?: string | null,"id"?: string,"location"?: string | null,"locked_at"?: string | null,"locked_date"?: string | null,"max_people"?: number | null,"min_people"?: number,"plan_type"?: string,"status"?: string,"title"?: string,"updated_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "plans_cancelled_by_fkey"
+      columns: ["cancelled_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "plans_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "plans_group_id_fkey"
+      columns: ["group_id"]
+isOneToOne: false
+      referencedRelation: "groups"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"profiles": {
+                  Row: {
+                    "add_to_calendar": boolean,"avatar_url": string | null,"created_at": string | null,"display_name": string,"email": string,"handle": string | null,"id": string,"onboarded_at": string | null,"push_enabled": boolean,"push_token": string | null,"updated_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "add_to_calendar"?: boolean,"avatar_url"?: string | null,"created_at"?: string | null,"display_name": string,"email": string,"handle"?: string | null,"id": string,"onboarded_at"?: string | null,"push_enabled"?: boolean,"push_token"?: string | null,"updated_at"?: string | null
+                  }
+                  Update: {
+                    "add_to_calendar"?: boolean,"avatar_url"?: string | null,"created_at"?: string | null,"display_name"?: string,"email"?: string,"handle"?: string | null,"id"?: string,"onboarded_at"?: string | null,"push_enabled"?: boolean,"push_token"?: string | null,"updated_at"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"rsvps": {
+                  Row: {
+                    "created_at": string | null,"id": string,"plan_id": string,"response": string | null,"updated_at": string | null,"user_id": string,"waitlist_seq": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string | null,"id"?: string,"plan_id": string,"response"?: string | null,"updated_at"?: string | null,"user_id": string,"waitlist_seq"?: number | null
+                  }
+                  Update: {
+                    "created_at"?: string | null,"id"?: string,"plan_id"?: string,"response"?: string | null,"updated_at"?: string | null,"user_id"?: string,"waitlist_seq"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "rsvps_plan_id_fkey"
+      columns: ["plan_id"]
+isOneToOne: false
+      referencedRelation: "plans"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "rsvps_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
-      can_view_plan_photos: { Args: { p_plan_id: string }; Returns: boolean }
-      can_vote_plan_poll: { Args: { p_poll_id: string }; Returns: boolean }
-      cancel_plan: {
-        Args: { p_plan_id: string; p_reason?: string }
-        Returns: Json
-      }
-      claim_feedback_for_linear: {
-        Args: { p_feedback_id: string }
-        Returns: boolean
-      }
-      color_for_name: { Args: { p_name: string }; Returns: string }
-      create_group: {
-        Args: {
-          p_city_id: string
-          p_color?: string
-          p_description?: string
-          p_name: string
+          Views: {
+            [_ in never]: never
+          }
+          Functions: {
+            "can_add_plan_photo":
+{ Args: { "p_plan_id": string }; Returns: boolean
+                           },
+"can_manage_plan_poll":
+{ Args: { "p_plan_id": string }; Returns: boolean
+                           },
+"can_view_plan":
+{ Args: { "p_plan_id": string }; Returns: boolean
+                           } |
+{ Args: { "p_audience": string,"p_created_by": string,"p_group_id": string,"p_plan_id": string }; Returns: boolean
+                           },
+"can_view_plan_photos":
+{ Args: { "p_plan_id": string }; Returns: boolean
+                           },
+"can_vote_plan_poll":
+{ Args: { "p_poll_id": string }; Returns: boolean
+                           },
+"cancel_plan":
+{ Args: { "p_plan_id": string,"p_reason"?: string }; Returns: Json
+                           },
+"claim_feedback_for_linear":
+{ Args: { "p_feedback_id": string }; Returns: boolean
+                           },
+"color_for_name":
+{ Args: { "p_name": string }; Returns: string
+                           },
+"create_group":
+{ Args: { "p_city_id": string,"p_color"?: string,"p_description"?: string,"p_name": string }; Returns: {
+              "anyone_can_post": boolean,
+"city_id": string,
+"color": string | null,
+"created_at": string | null,
+"created_by": string | null,
+"description": string | null,
+"id": string,
+"image_url": string | null,
+"invite_code": string,
+"join_mode": string,
+"name": string,
+"updated_at": string | null,
+"who_can_invite": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "groups"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
+"delete_my_account":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"dismiss_feedback":
+{ Args: { "p_feedback_id": string }; Returns: boolean
+                           },
+"dissolve_block_ties":
+{ Args: { "p_blocked": string,"p_blocker": string }; Returns: undefined
+                           },
+"file_report":
+{ Args: { "p_block_user_id"?: string,"p_note"?: string,"p_reason": string,"p_subject_id": string,"p_subject_type": string }; Returns: undefined
+                           },
+"friend_ids":
+{ Args: { "p_user": string }; Returns: string[]
+                           },
+"generate_handle":
+{ Args: { "p_base": string }; Returns: string
+                           },
+"generate_invite_code":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
+"get_group_by_invite_code":
+{ Args: { "code": string }; Returns: {
+              "id": string,"join_mode": string,"name": string
+            }[]
+                           },
+"get_group_invite_code":
+{ Args: { "p_group_id": string }; Returns: string
+                           },
+"invite_to_group":
+{ Args: { "p_group_id": string,"p_invitee": string }; Returns: Json
+                           },
+"is_app_admin":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"is_blocked_by":
+{ Args: { "p_other": string }; Returns: boolean
+                           },
+"is_friend":
+{ Args: { "p_other": string }; Returns: boolean
+                           },
+"is_friend_of_friend":
+{ Args: { "p_other": string }; Returns: boolean
+                           },
+"is_group_admin":
+{ Args: { "check_group_id": string }; Returns: boolean
+                           },
+"is_group_image_admin":
+{ Args: { "object_name": string }; Returns: boolean
+                           },
+"is_group_member":
+{ Args: { "check_group_id": string }; Returns: boolean
+                           },
+"is_plan_host":
+{ Args: { "p_created_by": string,"p_group_id": string }; Returns: boolean
+                           },
+"join_group_by_invite_code":
+{ Args: { "p_code": string }; Returns: Json
+                           },
+"leave_group":
+{ Args: { "p_group_id": string }; Returns: Json
+                           },
+"lock_plan":
+{ Args: { "p_date_option_id"?: string,"p_plan_id": string }; Returns: Json
+                           },
+"mint_invite_code":
+{ Args: { "p_group_id": string }; Returns: string
+                           },
+"plan_album_card":
+{ Args: { "p_plan_id": string }; Returns: {
+              "mine": number,"recent": Json,"total": number,"uploaders": number
+            }[]
+                           },
+"plan_audience_recipients":
+{ Args: { "p_audience": string,"p_created_by": string,"p_group_id": string }; Returns: string[]
+                           },
+"plan_bridge":
+{ Args: { "": Database["public"]['Tables']["plans"]['Row'] }; Returns: { error: true } & "the function public.plan_bridge with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+                           },
+"plan_photo_plan_id":
+{ Args: { "p_name": string }; Returns: string
+                           },
+"record_feedback_linear_issue":
+{ Args: { "p_feedback_id": string,"p_linear_issue_id": string,"p_linear_issue_identifier": string,"p_linear_issue_url": string }; Returns: boolean
+                           },
+"release_feedback_from_linear":
+{ Args: { "p_feedback_id": string }; Returns: boolean
+                           },
+"remove_group_member":
+{ Args: { "p_group_id": string,"p_user_id": string }; Returns: Json
+                           },
+"reopen_feedback":
+{ Args: { "p_feedback_id": string }; Returns: boolean
+                           },
+"reopen_plan":
+{ Args: { "p_plan_id": string }; Returns: Json
+                           },
+"respond_friend_request":
+{ Args: { "p_accept": boolean,"p_friendship_id": string }; Returns: Json
+                           },
+"respond_group_invite":
+{ Args: { "p_accept": boolean,"p_invite_id": string }; Returns: Json
+                           },
+"respond_to_join_request":
+{ Args: { "p_approve": boolean,"p_group_id": string,"p_user_id": string }; Returns: Json
+                           },
+"restore_plan":
+{ Args: { "p_plan_id": string }; Returns: Json
+                           },
+"rotate_invite_code":
+{ Args: { "p_group_id": string }; Returns: string
+                           },
+"search_people":
+{ Args: { "p_query": string }; Returns: {
+              "avatar_url": string,"display_name": string,"handle": string,"id": string
+            }[]
+                           },
+"send_friend_request":
+{ Args: { "p_addressee": string }; Returns: Json
+                           },
+"set_group_notify":
+{ Args: { "p_group_id": string,"p_notify": boolean }; Returns: undefined
+                           },
+"update_group_door":
+{ Args: { "p_group_id": string,"p_join_mode"?: string,"p_who_can_invite"?: string }; Returns: Json
+                           }
+          }
+          Enums: {
+            [_ in never]: never
+          }
+          CompositeTypes: {
+            [_ in never]: never
+          }
         }
-        Returns: {
-          anyone_can_post: boolean
-          city_id: string
-          color: string | null
-          created_at: string | null
-          created_by: string | null
-          description: string | null
-          id: string
-          image_url: string | null
-          invite_code: string
-          join_mode: string
-          name: string
-          updated_at: string | null
-          who_can_invite: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "groups"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      delete_my_account: { Args: never; Returns: undefined }
-      dismiss_feedback: { Args: { p_feedback_id: string }; Returns: boolean }
-      dissolve_block_ties: {
-        Args: { p_blocked: string; p_blocker: string }
-        Returns: undefined
-      }
-      file_report: {
-        Args: {
-          p_block_user_id?: string
-          p_note?: string
-          p_reason: string
-          p_subject_id: string
-          p_subject_type: string
-        }
-        Returns: undefined
-      }
-      friend_ids: { Args: { p_user: string }; Returns: string[] }
-      generate_handle: { Args: { p_base: string }; Returns: string }
-      generate_invite_code: { Args: never; Returns: string }
-      get_group_by_invite_code: {
-        Args: { code: string }
-        Returns: {
-          id: string
-          join_mode: string
-          name: string
-        }[]
-      }
-      get_group_invite_code: { Args: { p_group_id: string }; Returns: string }
-      invite_to_group: {
-        Args: { p_group_id: string; p_invitee: string }
-        Returns: Json
-      }
-      is_app_admin: { Args: never; Returns: boolean }
-      is_blocked_by: { Args: { p_other: string }; Returns: boolean }
-      is_friend: { Args: { p_other: string }; Returns: boolean }
-      is_friend_of_friend: { Args: { p_other: string }; Returns: boolean }
-      is_group_admin: { Args: { check_group_id: string }; Returns: boolean }
-      is_group_image_admin: { Args: { object_name: string }; Returns: boolean }
-      is_group_member: { Args: { check_group_id: string }; Returns: boolean }
-      is_plan_host: {
-        Args: { p_created_by: string; p_group_id: string }
-        Returns: boolean
-      }
-      join_group_by_invite_code: { Args: { p_code: string }; Returns: Json }
-      leave_group: { Args: { p_group_id: string }; Returns: Json }
-      lock_plan: {
-        Args: { p_date_option_id?: string; p_plan_id: string }
-        Returns: Json
-      }
-      mint_invite_code: { Args: { p_group_id: string }; Returns: string }
-      plan_album_card: {
-        Args: { p_plan_id: string }
-        Returns: {
-          mine: number
-          recent: Json
-          total: number
-          uploaders: number
-        }[]
-      }
-      plan_audience_recipients: {
-        Args: { p_audience: string; p_created_by: string; p_group_id: string }
-        Returns: string[]
-      }
-      plan_bridge: {
-        Args: { "": Database["public"]["Tables"]["plans"]["Row"] }
-        Returns: {
-          error: true
-        } & "the function public.plan_bridge with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
-      }
-      plan_photo_plan_id: { Args: { p_name: string }; Returns: string }
-      record_feedback_linear_issue: {
-        Args: {
-          p_feedback_id: string
-          p_linear_issue_id: string
-          p_linear_issue_identifier: string
-          p_linear_issue_url: string
-        }
-        Returns: boolean
-      }
-      release_feedback_from_linear: {
-        Args: { p_feedback_id: string }
-        Returns: boolean
-      }
-      remove_group_member: {
-        Args: { p_group_id: string; p_user_id: string }
-        Returns: Json
-      }
-      reopen_feedback: { Args: { p_feedback_id: string }; Returns: boolean }
-      reopen_plan: { Args: { p_plan_id: string }; Returns: Json }
-      respond_friend_request: {
-        Args: { p_accept: boolean; p_friendship_id: string }
-        Returns: Json
-      }
-      respond_group_invite: {
-        Args: { p_accept: boolean; p_invite_id: string }
-        Returns: Json
-      }
-      respond_to_join_request: {
-        Args: { p_approve: boolean; p_group_id: string; p_user_id: string }
-        Returns: Json
-      }
-      restore_plan: { Args: { p_plan_id: string }; Returns: Json }
-      rotate_invite_code: { Args: { p_group_id: string }; Returns: string }
-      search_people: {
-        Args: { p_query: string }
-        Returns: {
-          avatar_url: string
-          display_name: string
-          handle: string
-          id: string
-        }[]
-      }
-      send_friend_request: { Args: { p_addressee: string }; Returns: Json }
-      set_group_notify: {
-        Args: { p_group_id: string; p_notify: boolean }
-        Returns: undefined
-      }
-      update_group_door: {
-        Args: {
-          p_group_id: string
-          p_join_mode?: string
-          p_who_can_invite?: string
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>
 
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
@@ -1056,117 +651,107 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+  ? (DefaultSchema["Tables"] & DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+      Row: infer R
+    }
+    ? R
     : never
+  : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Insert: infer I
+    }
+    ? I
     : never
+  : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
-> = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaTableNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
+  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+      Update: infer U
+    }
+    ? U
     : never
+  : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never) = never,
-> = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = DefaultSchemaEnumNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+  : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never) = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
-}
+    : never = never
+> = PublicCompositeTypeNameOrOptions extends { schema: keyof DatabaseWithoutInternals }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  : never
 
 export const Constants = {
-  public: {
-    Enums: {},
-  },
+  "public": {
+          Enums: {
+            
+          }
+        }
 } as const

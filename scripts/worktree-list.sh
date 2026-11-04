@@ -99,11 +99,11 @@ if table=$(wt_branch_table); then
     echo
     echo "ORPHANED BRANCH DATABASES (billed hourly, no worktree using them):"
     echo "$orphans"
-    echo "  Delete with: supabase branches delete <name> --project-ref $WT_PROJECT_REF"
+    echo "  Delete with: pnpm exec supabase branches delete <name> --remote=$WT_PROJECT_REF --yes"
   fi
 else
   echo
   echo "WARNING: could not fetch the Supabase branch list, so orphaned branch"
   echo "databases (billed hourly) could NOT be checked. Verify by hand:"
-  echo "  supabase branches list --project-ref $WT_PROJECT_REF"
+  echo "  pnpm exec supabase branches list --remote=$WT_PROJECT_REF"
 fi
