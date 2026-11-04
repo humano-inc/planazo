@@ -69,7 +69,8 @@
           "imageWidth": 200,
           "enableFullScreenImage_legacy": true
         }
-      ]
+      ],
+      "expo-status-bar"
     ],
     "extra": {
       "router": {},
