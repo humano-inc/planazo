@@ -11,16 +11,17 @@ import { useMyGroups } from '../../lib/useMyGroups';
 import { useFriends } from '../../lib/useFriends';
 import { needsPeople } from '../../lib/planAudience';
 
-// Minimal slice of react-navigation's BottomTabBarProps — typed locally so we
-// don't import from a transitive package.
+// Minimal slice of expo-router's BottomTabBarProps. Since SDK 58 the tab bar
+// gets an event emitter and `navigateToTab(routeKey)` in place of
+// react-navigation's `navigation` object (PLA-141).
 interface TabBarProps {
   state: { index: number; routes: { key: string; name: string }[] };
-  navigation: {
-    navigate: (name: string) => void;
-    emit: (event: { type: string; target?: string; canPreventDefault?: boolean }) => {
+  emitter: {
+    emit: (event: { type: 'tabPress'; target: string; canPreventDefault: true }) => {
       defaultPrevented: boolean;
     };
   };
+  navigateToTab: (routeKey: string) => void;
 }
 
 const LABELS: Record<string, string> = {
@@ -48,7 +49,7 @@ function GroupsIcon({ color }: { color: string }) {
 }
 
 /** Two tabs and one create action — the entire navigation surface (design 2a). */
-export function TabBar({ state, navigation }: TabBarProps) {
+export function TabBar({ state, emitter, navigateToTab }: TabBarProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { count: pendingCount } = usePendingInvites();
@@ -64,9 +65,9 @@ export function TabBar({ state, navigation }: TabBarProps) {
     const label = LABELS[route.name] ?? route.name;
 
     const onPress = () => {
-      const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+      const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
       if (!focused && !event.defaultPrevented) {
-        navigation.navigate(route.name);
+        navigateToTab(route.key);
       }
     };
 
