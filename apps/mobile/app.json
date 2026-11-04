@@ -7,7 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "planazo",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -28,7 +27,6 @@
         "backgroundColor": "#F2542D"
       },
       "package": "com.somosplanazo.app",
-      "edgeToEdgeEnabled": true,
       "googleServicesFile": "./google-services.json",
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW",
@@ -65,7 +63,8 @@
           "organization": "thrive-aq",
           "project": "planazo"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "router": {},
