@@ -137,7 +137,7 @@ if [ "$db_mode" = "shared" ]; then
   # ledger as claimed, so it would never show up as orphaned either.
   if [ -n "$previous_branch_name" ]; then
     wt_step "Releasing the previous branch database '$previous_branch_name'"
-    if supabase branches delete "$previous_branch_name" --project-ref "$WT_PROJECT_REF" --yes 2>/dev/null; then
+    if supabase branches delete "$previous_branch_name" --remote="$WT_PROJECT_REF" --yes 2>/dev/null; then
       # Clear the name only now: while it is set, teardown still knows to delete.
       wt_upsert_env "$metadata" "PLANAZO_BRANCH_NAME" ""
       wt_upsert_env "$metadata" "PLANAZO_BRANCH_REF" ""
@@ -154,7 +154,7 @@ if [ "$db_mode" = "shared" ]; then
     else
       wt_die "Could not delete branch '$previous_branch_name'. Refusing to switch to
 shared mode while it may still exist and bill. Delete it and re-run:
-  supabase branches delete $previous_branch_name --project-ref $WT_PROJECT_REF"
+  pnpm exec supabase branches delete $previous_branch_name --remote=$WT_PROJECT_REF --yes"
     fi
   fi
 
@@ -178,7 +178,7 @@ else
     wt_info "branch '$branch_name' already exists — reusing"
   else
     wt_info "creating branch '$branch_name' (the slow step — minutes)"
-    supabase branches create "$branch_name" --project-ref "$WT_PROJECT_REF" --yes \
+    supabase branches create "$branch_name" --remote="$WT_PROJECT_REF" --yes \
       || wt_die "Could not create branch '$branch_name'"
     # Record it immediately: if provisioning or seeding fails below, the ledger
     # still names the branch so wt:rm can delete it rather than leaving it billing.
@@ -195,7 +195,7 @@ else
       FUNCTIONS_DEPLOYED|MIGRATIONS_PASSED|ACTIVE_HEALTHY|RUNNING) break ;;
       MIGRATIONS_FAILED|FUNCTIONS_FAILED)
         wt_die "Branch '$branch_name' failed to provision (status $status).
-Delete it with: supabase branches delete $branch_name --project-ref $WT_PROJECT_REF" ;;
+Delete it with: pnpm exec supabase branches delete $branch_name --remote=$WT_PROJECT_REF --yes" ;;
     esac
     sleep 5
   done
@@ -204,7 +204,7 @@ Delete it with: supabase branches delete $branch_name --project-ref $WT_PROJECT_
 
   # `branches get -o json` returns credentials, not metadata — one call has
   # everything: URL, anon key, service key and a direct Postgres URL.
-  branch_json=$(supabase branches get "$branch_name" --project-ref "$WT_PROJECT_REF" -o json 2>/dev/null || true)
+  branch_json=$(supabase branches get "$branch_name" --remote="$WT_PROJECT_REF" -o json 2>/dev/null || true)
   # Never echo the payload itself — it carries the service-role key and Postgres
   # URLs with passwords in them. Key names are enough to diagnose a shape change.
   branch_keys=$(wt_branch_keys "$branch_json")
@@ -238,14 +238,15 @@ Delete it with: supabase branches delete $branch_name --project-ref $WT_PROJECT_
   # Never the parent project: production's auth config keeps its own semantics.
   [ "$branch_ref" != "$WT_PROJECT_REF" ] || wt_die \
     "Branch ref equals the parent project ref — refusing to push config at production."
-  (cd "$target" && echo y | supabase config push --project-ref "$branch_ref" >/dev/null) \
+  (cd "$target" && supabase config push --remote="$branch_ref" --yes >/dev/null) \
     || wt_die "Could not push config.toml to branch '$branch_name'"
   wt_info "auth config aligned (autoconfirm, signup rate limits)"
 
   wt_step "Applying this branch's migrations"
-  # `db push` has no --project-ref; it takes a linked project or --db-url.
+  # By URL rather than ref: the payload's Postgres URL carries its own
+  # credentials, so the push needs neither a link nor a database password.
   if [ -n "$db_url" ]; then
-    (cd "$target" && supabase db push --db-url "$db_url" --yes) || wt_die "Migration push failed"
+    (cd "$target" && supabase db push --remote="$db_url" --yes) || wt_die "Migration push failed"
   else
     wt_die "No POSTGRES_URL_NON_POOLING in the branch payload — cannot push migrations."
   fi

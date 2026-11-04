@@ -84,10 +84,11 @@ git pull --quiet --ff-only 2>/dev/null
 after=$(git rev-parse HEAD 2>/dev/null)
 if [ "$before" != "$after" ] &&
    git diff --name-only "$before" "$after" -- supabase/migrations/ 2>/dev/null | grep -q .; then
-  if supabase migration up --local >/dev/null 2>&1; then
+  # A hook, not a pnpm script, so the pinned CLI is not on PATH here.
+  if pnpm exec supabase migration up >/dev/null 2>&1; then
     note="$note Pulled main and applied its new migrations locally."
   else
-    note="$note Pulled main, but its new migrations did not apply locally — run: supabase migration up --local"
+    note="$note Pulled main, but its new migrations did not apply locally. Run: pnpm exec supabase migration up"
   fi
 fi
 

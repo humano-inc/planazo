@@ -122,8 +122,8 @@ export function mailCatcher(): string | null {
   if (!isLoopback(resolveStack().url)) return null;
 
   const config = readFileSync(join(repoRoot(), 'supabase', 'config.toml'), 'utf8');
-  // Everything from [inbucket] up to the next section header.
-  const section = config.split(/^\[inbucket\]\s*$/m)[1]?.split(/^\[/m)[0];
+  // Everything from [local_smtp] up to the next section header.
+  const section = config.split(/^\[local_smtp\]\s*$/m)[1]?.split(/^\[/m)[0];
   if (!section || !/^enabled\s*=\s*true/m.test(section)) return null;
 
   const port = section.match(/^port\s*=\s*(\d+)/m)?.[1];
@@ -205,7 +205,7 @@ export function resolveStack(): Stack {
     throw new Error(
       'No database found for this checkout — expected SUPABASE_URL, SUPABASE_ANON_KEY\n' +
         'and SUPABASE_SERVICE_ROLE_KEY in the environment or the root .env, or a running\n' +
-        'local stack (`supabase start`). In a worktree, `pnpm wt:setup` writes .env.',
+        'local stack (`pnpm exec supabase start`). In a worktree, `pnpm wt:setup` writes .env.',
     );
   }
 
@@ -230,7 +230,7 @@ export function resolveStack(): Stack {
         `The suite signs its own access tokens instead of calling the rate-limited\n` +
         `auth endpoint, and needs the stack's JWT secret to do it.\n` +
         (isLoopback(url)
-          ? `Loopback answers via \`supabase status\` — is the stack up (supabase start)?\n` +
+          ? `Loopback answers via \`supabase status\` — is the stack up (pnpm exec supabase start)?\n` +
             `A worktree can also refresh its .env with: pnpm wt:setup`
           : `Re-run: pnpm wt:setup --db (rewrites this worktree's .env with the secret)`),
     );

@@ -33,7 +33,7 @@ export default async function globalSetup(): Promise<void> {
       'No Postgres URL for the target database, so the schema drift check cannot run — ' +
         'refusing to vouch for a schema it cannot see.\n' +
         'Branch worktree: re-run `pnpm wt:setup --db` to record SUPABASE_DB_URL in .env.\n' +
-        'Loopback: make sure the local stack is up (`supabase start` from main).',
+        'Loopback: make sure the local stack is up (`pnpm exec supabase start` from main).',
     );
   }
 
@@ -60,8 +60,8 @@ export default async function globalSetup(): Promise<void> {
       `The target database is missing ${missing.length} migration(s) from this checkout: ` +
         `${missing.join(', ')}.\nApply them first: ` +
         (isLocal
-          ? 'supabase migration up'
-          : 'supabase db push --db-url "$SUPABASE_DB_URL"  (from this worktree, or re-run pnpm wt:setup --db)'),
+          ? 'pnpm exec supabase migration up'
+          : 'pnpm exec supabase db push --remote="$SUPABASE_DB_URL" --yes  (from this worktree, or re-run pnpm wt:setup --db)'),
     );
   }
 
@@ -86,7 +86,7 @@ export default async function globalSetup(): Promise<void> {
         `The database is still running the OLD content — 'db push' matches by version ` +
         `and skips them.\nRe-apply everything: ` +
         (isLocal
-          ? 'supabase db reset  (from main — wipes shared QA data)'
+          ? 'pnpm db:reset  (from main — wipes shared QA data)'
           : 'pnpm wt:db:reset  (wipes and rebuilds this worktree\'s branch database)'),
     );
   }

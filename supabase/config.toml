@@ -93,12 +93,14 @@ openai_api_key = "env(OPENAI_API_KEY)"
 
 # Email testing server. Emails sent with the local dev setup are not actually sent - rather, they
 # are monitored, and you can view the emails that would have been sent from the web interface.
-[inbucket]
+[local_smtp]
 # On, because auth.email.enable_confirmations is on: every local signup now
 # sends a confirmation email, and this is where it lands. Without it the
 # confirm flow is unbuildable locally, which is the whole of PLA-71.
-# The section is still named [inbucket], but CLI 2.90.0 serves Mailpit on this
-# port. Its API is worth knowing when scripting a check:
+# The catcher is Mailpit, and the integration suite finds it by reading this
+# section's port (mailCatcher in packages/integration-tests/src/env.ts), so a
+# rename here has to land there too. Its API is worth knowing when scripting a
+# check:
 #   curl -s localhost:55324/api/v1/messages       # what has arrived
 #   curl -sX DELETE localhost:55324/api/v1/messages   # empty the mailbox
 enabled = true
@@ -231,8 +233,9 @@ web3 = 30
 # secret = ""
 
 [auth.email]
-# Allow/disallow new user signups via email to your project.
-enable_signup = true
+# Turns the email provider on or off. New signups are governed by
+# [auth] enable_signup above.
+enabled = true
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
@@ -301,8 +304,9 @@ content_path = "./supabase/templates/confirmation.html"
 # content_path = "./templates/password_changed_notification.html"
 
 [auth.sms]
-# Allow/disallow new user signups via SMS to your project.
-enable_signup = false
+# Turns the SMS provider on or off. New signups are governed by
+# [auth] enable_signup above.
+enabled = false
 # If enabled, users need to confirm their phone number before signing in.
 enable_confirmations = false
 # Template for sending OTP to users

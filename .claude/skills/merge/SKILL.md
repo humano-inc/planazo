@@ -135,7 +135,7 @@ check is listed as **not verified** — never assumed.
 | PR merged, remote branch gone | `gh pr view <n> --json state,headRefName` |
 | Worktree, simulator, branch DB reclaimed | `pnpm wt:list` no longer lists the branch |
 | main has the squash commit | `git log --oneline -1` from the primary checkout |
-| Local migrations applied | the hook said so, or `supabase migration up --local` |
+| Local migrations applied | the hook said so, or `pnpm exec supabase migration up` |
 | CI on main green, `deploy` included | Phase 4's run |
 | Issue is Done | Phase 5's response |
 
@@ -161,5 +161,5 @@ Two follow-ups belong here and nowhere else:
 | PR already `MERGED` on arrival | merged in the browser, so no hook fired | skip Phase 3; run Phases 4 to 6, reclaiming by hand |
 | `mergeStateStatus: BLOCKED` | a required check or review is missing | fix the check. Never `--admin` past it |
 | `deploy` job failed | migrations did not reach production | read the run log; fix forward with a new migration. Never `db push` to production by hand |
-| Migration failed locally after the pull | main's new migrations did not apply here | `supabase migration up --local` from the primary checkout |
+| Migration failed locally after the pull | main's new migrations did not apply here | `pnpm exec supabase migration up` from the primary checkout |
 | Anything database-shaped, or a `wt:*` refusal | a guard fired | invoke the **`wt`** skill; it has every refusal and its remedy. Do not work around one |

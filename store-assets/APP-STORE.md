@@ -213,8 +213,8 @@ and invite code, and only the plans inside the two review groups are replaced.
 REVIEW_SEED_CONFIRM=leszgvpjonzjclhbgzju \
   REVIEW_SEED_PASSWORD='<the password in the password manager>' \
   SUPABASE_URL=https://leszgvpjonzjclhbgzju.supabase.co \
-  SUPABASE_SERVICE_ROLE_KEY=$(supabase projects api-keys \
-    --project-ref leszgvpjonzjclhbgzju -o json \
+  SUPABASE_SERVICE_ROLE_KEY=$(pnpm exec supabase projects api-keys \
+    --remote=leszgvpjonzjclhbgzju -o json \
     | jq -r '.[] | select(.name=="service_role") | .api_key') \
   pnpm db:seed:review
 ```

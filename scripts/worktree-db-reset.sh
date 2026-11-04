@@ -17,7 +17,7 @@ source "$SCRIPT_DIR/worktree-common.sh"
 target=$(pwd)
 primary=$(wt_primary_path)
 [ "$target" != "$primary" ] || wt_die \
-  "wt:db:reset is for branch-mode worktrees. Main's local stack is reset with 'supabase db reset'."
+  "wt:db:reset is for branch-mode worktrees. Main's local stack is reset with 'pnpm db:reset'."
 
 metadata="$target/.env.worktree"
 [ -f "$metadata" ] || wt_die "No .env.worktree here. Run: pnpm wt:setup --db"
@@ -45,7 +45,7 @@ Refusing to reset a database that is not this worktree's. Re-run: pnpm wt:setup 
 [ "$url_ref" != "$WT_PROJECT_REF" ] || wt_die "That is the production ref. Never."
 
 wt_step "Resetting branch database $branch_ref"
-(cd "$target" && echo y | supabase db reset --db-url "$db_url") || wt_die "Reset failed"
+(cd "$target" && supabase db reset --remote="$db_url" --yes) || wt_die "Reset failed"
 
 wt_step "Reseeding demo data"
 supabase_url=$(wt_read_value "$target/.env" "SUPABASE_URL")

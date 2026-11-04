@@ -344,7 +344,7 @@ wt_local_keys() {
 
 wt_require_local_stack() {
   supabase status >/dev/null 2>&1 || wt_die \
-    "Main's local Supabase stack is not running. Start it with: (cd $(wt_primary_path) && supabase start)"
+    "Main's local Supabase stack is not running. Start it with: (cd $(wt_primary_path) && pnpm exec supabase start)"
 }
 
 # `branches get -o json` returns the branch's CREDENTIALS, not metadata:
@@ -391,7 +391,7 @@ print(", ".join(sorted(d)) if isinstance(d, dict) else type(d).__name__)
 # printed, so callers never see a half-table.
 wt_branch_table() {
   local json
-  json=$(supabase branches list --project-ref "$WT_PROJECT_REF" -o json 2>/dev/null) || return 1
+  json=$(supabase branches list --remote="$WT_PROJECT_REF" -o json 2>/dev/null) || return 1
   [ -n "$json" ] || return 1
   printf '%s' "$json" | python3 -c '
 import json, sys

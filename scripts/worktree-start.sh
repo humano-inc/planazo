@@ -105,9 +105,9 @@ if [ -n "$db_url" ]; then
     echo
     echo "WARNING: this checkout has migrations its database has not applied: $missing"
     if [ "$db_mode" = "shared" ]; then
-      echo "Apply them to main's local stack:  (cd $primary && supabase migration up)"
+      echo "Apply them to main's local stack:  (cd $primary && pnpm exec supabase migration up)"
     else
-      echo "Apply them to this branch's database:  supabase db push --db-url \"\$SUPABASE_DB_URL\""
+      echo "Apply them to this branch's database:  pnpm exec supabase db push --remote=\"\$SUPABASE_DB_URL\" --yes"
     fi
     echo
   fi
