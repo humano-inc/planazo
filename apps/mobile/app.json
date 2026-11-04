@@ -7,11 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "planazo",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FCF8F4"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.planazo.app",
@@ -64,7 +59,17 @@
           "project": "planazo"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FCF8F4",
+          "imageWidth": 200,
+          "enableFullScreenImage_legacy": true
+        }
+      ]
     ],
     "extra": {
       "router": {},

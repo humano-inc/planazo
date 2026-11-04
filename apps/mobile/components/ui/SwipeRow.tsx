@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   actions: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
