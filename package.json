@@ -23,6 +23,7 @@
     "walkthrough": "node scripts/walkthrough/build.mjs",
     "test": "turbo test",
     "test:integration": "pnpm --filter @planazo/integration-tests test:integration",
+    "test:scripts": "node --test \"scripts/__tests__/*.test.mjs\"",
     "wt:new": "bash scripts/worktree-create.sh",
     "wt:db:reset": "bash scripts/worktree-db-reset.sh",
     "wt:setup": "bash scripts/worktree-setup.sh",

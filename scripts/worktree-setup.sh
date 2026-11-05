@@ -287,8 +287,9 @@ else
 wt_step "Simulator"
 sim_udid=$(wt_sim_udid_for_name "$sim_name")
 if [ -z "$sim_udid" ]; then
-  sim_udid=$(xcrun simctl create "$sim_name" "$WT_SIM_DEVICE_TYPE" "$WT_SIM_RUNTIME")
-  wt_info "created $sim_name ($sim_udid)"
+  sim_runtime=$(wt_sim_runtime "$primary/apps/mobile/.env")
+  sim_udid=$(xcrun simctl create "$sim_name" "$WT_SIM_DEVICE_TYPE" "$sim_runtime")
+  wt_info "created $sim_name ($sim_udid) on ${sim_runtime##*.}"
 else
   wt_info "reusing $sim_name ($sim_udid)"
 fi

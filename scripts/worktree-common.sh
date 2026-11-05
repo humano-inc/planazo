@@ -15,8 +15,8 @@ set -euo pipefail
 WT_PROJECT_REF="leszgvpjonzjclhbgzju"
 
 # Match main's simulator so QA differences are never an iOS-version artifact.
+# The runtime is deliberately not a constant: wt_sim_runtime asks main's simulator.
 WT_SIM_DEVICE_TYPE="com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro"
-WT_SIM_RUNTIME="com.apple.CoreSimulator.SimRuntime.iOS-18-5"
 
 # Main's local stack, from supabase/config.toml.
 WT_LOCAL_API_URL="http://127.0.0.1:55321"
@@ -290,11 +290,77 @@ print("no")
 ' "$1" 2>/dev/null)" = "yes" ]
 }
 
+# The runtime identifier a simulator runs: by UDID, else by name, empty if neither
+# matches. A simulator whose runtime was uninstalled is still listed, under the
+# runtime it no longer has, so only available ones count.
+wt_sim_runtime_of() {
+  xcrun simctl list devices -j 2>/dev/null | python3 -c '
+import json,sys
+udid, name = sys.argv[1:3]
+listed = [
+    (runtime, d)
+    for runtime, devices in json.load(sys.stdin).get("devices", {}).items()
+    for d in devices
+    if d.get("isAvailable")
+]
+for field, wanted in (("udid", udid), ("name", name)):
+    for runtime, d in listed:
+        if wanted and d.get(field) == wanted:
+            print(runtime); sys.exit(0)
+' "$1" "$2" 2>/dev/null || true
+}
+
+# Available runtimes that can run a device type, newest first. Availability alone
+# is not enough: Xcode also ships device-specific runtimes such as
+# iOS-27-2-iPhone19-4, which share a version with the general one and run nothing
+# but their own device.
+wt_sim_runtimes_hosting() {
+  xcrun simctl list runtimes -j 2>/dev/null | python3 -c '
+import json,sys
+device_type = sys.argv[1]
+hosting = [
+    r for r in json.load(sys.stdin).get("runtimes", [])
+    if r.get("isAvailable")
+    and any(t.get("identifier") == device_type for t in r.get("supportedDeviceTypes", []))
+]
+hosting.sort(key=lambda r: [int(part) for part in r["version"].split(".")], reverse=True)
+for r in hosting:
+    print(r["identifier"])
+' "$1" 2>/dev/null || true
+}
+
+# The runtime for a new worktree simulator: whatever main's simulator runs, named
+# in the given env file. When main's cannot be used, the newest that can run the
+# device type, since a worktree should still come up on a machine with no main
+# simulator. The note goes to stderr because callers capture stdout.
+wt_sim_runtime() {
+  local env_file=$1 udid name main hosting newest
+  udid=$(wt_read_value "$env_file" "IOS_SIMULATOR_UDID" 2>/dev/null || true)
+  name=$(wt_read_value "$env_file" "IOS_SIMULATOR" 2>/dev/null || true)
+  main=$(wt_sim_runtime_of "$udid" "$name")
+  hosting=$(wt_sim_runtimes_hosting "$WT_SIM_DEVICE_TYPE")
+
+  if [ -n "$main" ] && printf '%s\n' "$hosting" | grep -Fxq -- "$main"; then
+    printf '%s\n' "$main"
+    return 0
+  fi
+
+  newest=$(printf '%s\n' "$hosting" | head -1)
+  [ -n "$newest" ] || wt_die \
+    "No available iOS simulator runtime can run ${WT_SIM_DEVICE_TYPE##*.}. Install one in Xcode (Settings > Components), then re-run wt:setup."
+  wt_info "main's simulator gave no usable runtime, so using the newest: ${newest##*.}" >&2
+  printf '%s\n' "$newest"
+}
+
 # The Dev Client is a generic shell: it holds no JS, and EXPO_PUBLIC_* is inlined
 # by Metro at bundle time. So one build serves every worktree, and a worktree
 # only needs a rebuild when app.json or the native dep set changes.
+#
+# Empty output means nothing is built. `|| true` is what lets a caller see that:
+# ls exits 1 on no match, and under pipefail that would end the calling script
+# before it could say what to do about it.
 wt_devclient_app() {
-  ls -dt ~/Library/Developer/Xcode/DerivedData/Planazo-*/Build/Products/Debug-iphonesimulator/Planazo.app 2>/dev/null | head -1
+  ls -dt ~/Library/Developer/Xcode/DerivedData/Planazo-*/Build/Products/Debug-iphonesimulator/Planazo.app 2>/dev/null | head -1 || true
 }
 
 # A brand-new simulator shows two one-time gates before the app is reachable:

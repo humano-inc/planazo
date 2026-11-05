@@ -179,6 +179,9 @@ environment over it.
 - Integration: `pnpm test:integration` from any checkout against that checkout's
   own DB. Suite refuses unknown DBs, shared-mode worktrees with new migrations,
   and unapplied migrations (fix is in the message).
+- Shell helpers: `pnpm test:scripts` runs `scripts/__tests__/` with `node:test`
+  and a fake `xcrun` on PATH. No database, no Xcode. `pnpm turbo test` does not
+  run it; CI does.
 - Merged migrations are immutable; fix forward. Edited-but-applied branch
   migrations need `pnpm wt:db:reset`.
 - Deploy pushes migrations on merge to main. Never by hand to production.
