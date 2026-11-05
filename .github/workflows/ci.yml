@@ -53,6 +53,9 @@ jobs:
       - name: Unit tests (shared)
         run: pnpm --filter @planazo/shared test
 
+      - name: Unit tests (worktree scripts)
+        run: pnpm test:scripts
+
       # Leave --maxWorkers alone: the package script's 3 is load-bearing.
       # Overriding it to 100% here looked like free speed on a dedicated runner
       # and cost a red main instead — jest's worker count already excludes the
