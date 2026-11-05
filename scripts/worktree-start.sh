@@ -149,7 +149,10 @@ Stop that process, or re-run 'pnpm wt:setup' to get a different port." ;;
 esac
 
 wt_step "Connecting the app"
-url="com.planazo.app://expo-development-client/?url=http%3A%2F%2Flocalhost%3A${port}"
+# The link Expo CLI itself opens a dev client with. The __expo_disable_* params
+# keep the dev menu closed, including the floating dev-tools button that
+# otherwise sits on top of the app's own buttons.
+url="exp+planazo://?__expo_url=http%3A%2F%2Flocalhost%3A${port}&__expo_disable_fab=1&__expo_disable_auto_launch=1&__expo_disable_onboarding=1"
 xcrun simctl openurl "$udid" "$url"
 sleep 2
 wt_dismiss_first_run_gates "$udid"
