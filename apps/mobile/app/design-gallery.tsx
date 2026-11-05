@@ -19,7 +19,7 @@ import {
 import { colors, groupColors, spacing } from '../theme/tokens';
 
 // Dev-only component gallery. Open with:
-//   xcrun simctl openurl <UDID> "com.planazo.app://expo-development-client/?url=<metro>"
+//   xcrun simctl openurl <UDID> "exp+planazo://?__expo_url=<url-encoded metro>&__expo_disable_fab=1"
 // then navigate to planazo://design-gallery
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {

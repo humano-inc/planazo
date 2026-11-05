@@ -190,7 +190,7 @@ for scheme in planazo com.planazo.app exp+planazo; do
     "com.apple.CoreSimulator.CoreSimulatorBridge-->$scheme"
 done
 xcrun simctl terminate "$UDID" com.planazo.app; sleep 2
-xcrun simctl openurl "$UDID" "com.planazo.app://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081"
+xcrun simctl openurl "$UDID" "exp+planazo://?__expo_url=http%3A%2F%2Flocalhost%3A8081&__expo_disable_fab=1&__expo_disable_auto_launch=1&__expo_disable_onboarding=1"
 ```
 
 No reboot is needed for the deletion to take effect. **Write the approvals back
@@ -237,7 +237,7 @@ icon, or `xcrun simctl launch`) before deep linking, and keep `unblock` in the
 loop:
 
 ```bash
-xcrun simctl openurl "$UDID" "com.planazo.app://expo-development-client/?url=..."
+xcrun simctl openurl "$UDID" "exp+planazo://?__expo_url=...&__expo_disable_fab=1&__expo_disable_auto_launch=1&__expo_disable_onboarding=1"
 python3 .claude/skills/simulator-driving/sim.py unblock
 ```
 
