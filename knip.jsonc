@@ -40,9 +40,10 @@
       "ignoreDependencies": ["npm"],
 
       // The `appstore:*` scripts shell out to the EAS CLI, which is installed
-      // globally and authenticated per machine rather than per checkout.
-      // Declaring eas-cli here would pin a build tool nothing imports into
-      // every install, including CI, which never runs those scripts.
+      // globally and authenticated per machine rather than per checkout. The
+      // Ship workflow installs its own pinned copy. Declaring eas-cli here would
+      // pin a build tool nothing imports into every install, including the CI
+      // jobs that never run it.
       "ignoreBinaries": ["eas"]
     },
 
@@ -52,7 +53,9 @@
       // everywhere else. knip only follows the import graph, so the platform
       // variant reads as a dead file. Listing it as an entry keeps it analysed
       // (its own imports and dependencies still count) instead of ignored.
-      "entry": ["**/*.{ios,android,native}.{ts,tsx}"],
+      //
+      // fingerprint.config.js is the same story: expo-updates finds it by name.
+      "entry": ["**/*.{ios,android,native}.{ts,tsx}", "fingerprint.config.js"],
 
       "ignoreDependencies": [
         // Declared on purpose in c5f9be9 ("so production builds embed the JS

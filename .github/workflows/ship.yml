@@ -1,0 +1,89 @@
+name: Ship
+
+# Pressing this sends main's JavaScript to people's phones. Merging never does:
+# what goes out is a person's decision, while migrations still deploy on merge
+# (ci.yml), so they always arrive first. See store-assets/UPDATES.md.
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Who receives it. production is everyone on a store build.
+        type: choice
+        options: [production, preview]
+        default: production
+
+# Queue a second press rather than cancelling the first halfway through a publish.
+concurrency:
+  group: ship
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  ship:
+    name: Publish to ${{ inputs.channel }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CHANNEL: ${{ inputs.channel }}
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      # The source map upload runs after the publish, so a missing token has to
+      # stop the run here. Afterwards the update would already be on phones.
+      - name: Both secrets are set
+        run: |
+          : "${EXPO_TOKEN:?Add the EXPO_TOKEN repository secret. See store-assets/UPDATES.md.}"
+          : "${SENTRY_AUTH_TOKEN:?Add the SENTRY_AUTH_TOKEN repository secret. See store-assets/UPDATES.md.}"
+
+      - uses: actions/checkout@v4
+
+      - name: CI passed for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/ship-require-green-ci.sh "$GITHUB_SHA"
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Pinned here rather than in package.json: only this job needs it, and
+      # eas-cli is a heavy install for every other checkout and CI job.
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: 27.5.0
+          packager: npm
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Find the platforms that can run this
+        id: platforms
+        working-directory: apps/mobile
+        run: |
+          platforms=$(pnpm exec bash ../../scripts/ship-platforms.sh "$CHANNEL")
+          echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
+
+      - name: Publish
+        working-directory: apps/mobile
+        env:
+          PLATFORMS: ${{ steps.platforms.outputs.platforms }}
+        run: |
+          eas update \
+            --channel "$CHANNEL" \
+            --environment "$CHANNEL" \
+            --platform "$PLATFORMS" \
+            --message "$(git log -1 --pretty=%s)" \
+            --non-interactive
+
+      # A red run from here on means the update is live but its crashes are
+      # unreadable. Re-running the workflow publishes again and retries this.
+      - name: Upload source maps to Sentry
+        working-directory: apps/mobile
+        run: pnpm exec sentry-expo-upload-sourcemaps dist
