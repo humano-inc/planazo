@@ -110,6 +110,9 @@
   flex-direction: column;
   align-items: center;
   gap: 11px;
+  width: 100%;
+  /* The nav button jumps here, and the buttons should not land on the edge. */
+  scroll-margin-top: 40px;
 }
 
 .btnInk {
@@ -453,10 +456,7 @@
 }
 
 .closeActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 11px;
-  justify-content: center;
+  width: 100%;
   padding-top: 6px;
 }
 
