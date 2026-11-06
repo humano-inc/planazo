@@ -1,12 +1,17 @@
-import { useContext, useState, type ReactNode } from 'react';
+import { useContext, useState, type ReactNode, type Ref } from 'react';
 import {
   StyleSheet,
   type LayoutChangeEvent,
+  type ScrollViewProps,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
 import { SafeAreaView, SafeAreaInsetsContext } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
+import {
+  KeyboardAwareScrollView,
+  KeyboardStickyView,
+  type KeyboardAwareScrollViewRef,
+} from 'react-native-keyboard-controller';
 import { FooterBar, indicatorPadding } from './FooterBar';
 import { colors, spacing } from '../../theme/tokens';
 
@@ -36,6 +41,22 @@ type Props = {
   contentContainerStyle?: StyleProp<ViewStyle>;
   /** Restores a scroll position, for deep-link QA (`?y=`). */
   contentOffset?: { x: number; y: number };
+  /**
+   * These two are for a screen whose scroll position is part of what it shows,
+   * like a list that opens at its end (see `useStickToNewest`).
+   */
+  scrollRef?: Ref<KeyboardAwareScrollViewRef>;
+  scrollProps?: Pick<
+    ScrollViewProps,
+    'onContentSizeChange' | 'onLayout' | 'onScroll' | 'onScrollBeginDrag'
+  >;
+  /**
+   * The text field is in the `footer` rather than the scroll, as on a comment
+   * composer. Nothing in the scroll needs lifting clear of the bar then, so it
+   * only makes room for the bar's raised position, and the end of the content
+   * sits right above it instead of a bar's height further up.
+   */
+  inputInFooter?: boolean;
   /** Required: the scroll, the sticky wrapper and the bar each derive theirs. */
   testID: string;
   children: ReactNode;
@@ -69,6 +90,9 @@ export function FormScreen({
   footer,
   contentContainerStyle,
   contentOffset,
+  scrollRef,
+  scrollProps,
+  inputInFooter = false,
   testID,
   children,
 }: Props) {
@@ -88,6 +112,8 @@ export function FormScreen({
       {header}
 
       <KeyboardAwareScrollView
+        ref={scrollRef}
+        {...scrollProps}
         style={styles.flex}
         contentContainerStyle={[
           styles.content,
@@ -104,8 +130,11 @@ export function FormScreen({
         // the scroll, and a form shorter than the screen has no slack to scroll
         // out from under it. Without this, `plan/[id]/cancel` autofocused an
         // input that sat half-hidden behind its own "Call it off" button.
+        //
+        // With the field in the footer the scroll has nothing to lift, and what
+        // covers it is the keyboard minus the indicator inset `opened` gives back.
         bottomOffset={focusClearance(footerHeight)}
-        extraKeyboardSpace={footerHeight}
+        extraKeyboardSpace={inputInFooter ? -(insets?.bottom ?? 0) : footerHeight}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         testID={`${testID}-scroll`}

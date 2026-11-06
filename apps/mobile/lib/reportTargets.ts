@@ -10,8 +10,9 @@ import type { ReportSubject } from './moderation';
  * is the argument for pinning them:
  *
  * - **The dismiss target.** A cold deep link has nothing behind this sheet, so
- *   leaving falls back to the thing being reported. A profile or a photo has
- *   no route of its own, and the feed is the honest answer for both.
+ *   leaving falls back to the thing being reported. A profile, a photo or a
+ *   comment has no route of its own, and the feed is the honest answer for all
+ *   three.
  * - **The self-block guard.** Reporting your own plan by accident is a real
  *   thing people do, and offering to block yourself in that moment is
  *   nonsense. `personId` goes null rather than the toggle being hidden

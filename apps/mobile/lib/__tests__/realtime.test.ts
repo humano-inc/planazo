@@ -87,6 +87,18 @@ describe('keysForChange', () => {
       [['plan', 'p3'], ['home-plans'], ['group'], ['groups'], ['cancel-notices']],
     ],
     [
+      'comment with a plan id',
+      'plan_comments',
+      { id: 'c1', plan_id: 'p5', author_id: 'u1' },
+      [['plan-comments', 'p5']],
+    ],
+    [
+      'comment delete (old row is only the primary key)',
+      'plan_comments',
+      { id: 'c1' },
+      [['plan-comments']],
+    ],
+    [
       'poll vote with a plan id (denormalised on all three poll tables)',
       'plan_poll_votes',
       { plan_id: 'p4', poll_id: 'q1', user_id: 'u1' },

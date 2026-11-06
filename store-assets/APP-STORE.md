@@ -130,7 +130,7 @@ Notes for each, if asked:
 - **Photos** — only the profile photo you choose, and screenshots you attach to
   feedback. The library is read only at the moment you pick something.
 - **Other User Content** — group names, plan titles, descriptions, locations
-  you type.
+  and comments you type.
 - **Customer Support** — feedback messages you send us, and the reason and note
   on any content you report.
 - **User ID** — the account id (`auth.users.id`).
@@ -191,9 +191,11 @@ What to try
 Moderation (Guideline 1.2)
   - Posting is filtered: slurs and explicit terms are refused in any field
     other members see — plan titles and descriptions, locations, group
-    names, display names.
+    names, display names, comments.
   - Report a plan: open any plan, scroll to the bottom, "Report this plan".
   - Report a group: open a group, Manage, "Report this group".
+  - Report a comment: open a plan's comments, long-press someone else's,
+    "Report comment".
   - Block someone: open a group, Manage, "Block" beside any member. Their
     plans disappear from your feed immediately. Tap again to undo.
   - The rules are published at planazo.me/terms.
@@ -245,14 +247,14 @@ contact details — and all four exist, plus the terms that back them:
 
 | Apple asks for | Where it is |
 | --- | --- |
-| A method for filtering objectionable material from being posted | `lib/moderation.ts` (`contentViolation`): every free-text field other members see — plan titles, descriptions, locations, group names, display names — is checked at posting time and refused with a message pointing at the terms. The word list is normalised against lookalike characters (F4GG0T is still caught) and matched on word boundaries, so Scunthorpe keeps its name |
-| A mechanism to report offensive content | "Report this plan" on the plan sheet; "Report this group" in group → Manage |
+| A method for filtering objectionable material from being posted | `lib/moderation.ts` (`contentViolation`): every free-text field other members see (plan titles, descriptions, locations, group names, display names, comments) is checked at posting time and refused with a message pointing at the terms. The word list is normalised against lookalike characters (F4GG0T is still caught) and matched on word boundaries, so Scunthorpe keeps its name |
+| A mechanism to report offensive content | "Report this plan" on the plan sheet; "Report this group" in group → Manage; long-press someone else's comment → "Report comment" |
 | The ability to block abusive users | group → Manage → **Block** beside any member, and a "Block them too" toggle on the report screen |
 | Published contact details | `planazo.me/support` and `hola@planazo.me` |
 | Published terms with no tolerance for objectionable content | `planazo.me/terms`, "What you agree not to post" |
 
 Blocking is enforced in the database, not in the client, and it points at the
-blocked person: block someone and your plans and photos stop existing for
+blocked person: block someone and your plans, photos and comments stop existing for
 them — in the feed, in the group and by direct link alike, because
 `is_blocked_by()` is part of the SELECT policies and it is the row that
 disappears, not a filter a client could forget. They can no longer find you
@@ -422,7 +424,7 @@ The IARC questionnaire, answered honestly:
 - Violence, sexuality, language, controlled substances, gambling — none.
 - **Users interact** — yes. Planazo is user-to-user inside private groups.
 - **Users share content** — yes: plan titles, descriptions, locations, group
-  names, photos.
+  names, comments, photos.
 - **Shares location** — no. `plans.location` is free text a user types, not a
   device location; the app requests no location permission.
 - **Digital purchases** — no.

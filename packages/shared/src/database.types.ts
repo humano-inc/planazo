@@ -237,6 +237,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"plan_comments": {
+                  Row: {
+                    "author_id": string,"body": string,"created_at": string,"id": string,"plan_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id": string,"body": string,"created_at"?: string,"id"?: string,"plan_id": string
+                  }
+                  Update: {
+                    "author_id"?: string,"body"?: string,"created_at"?: string,"id"?: string,"plan_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "plan_comments_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "plan_comments_plan_id_fkey"
+      columns: ["plan_id"]
+isOneToOne: false
+      referencedRelation: "plans"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"plan_date_options": {
                   Row: {
                     "created_at": string | null,"date": string,"id": string,"plan_id": string
@@ -462,6 +488,9 @@ isOneToOne: false
             "can_add_plan_photo":
 { Args: { "p_plan_id": string }; Returns: boolean
                            },
+"can_comment_on_plan":
+{ Args: { "p_plan_id": string }; Returns: boolean
+                           },
 "can_manage_plan_poll":
 { Args: { "p_plan_id": string }; Returns: boolean
                            },
@@ -469,6 +498,9 @@ isOneToOne: false
 { Args: { "p_plan_id": string }; Returns: boolean
                            } |
 { Args: { "p_audience": string,"p_created_by": string,"p_group_id": string,"p_plan_id": string }; Returns: boolean
+                           },
+"can_view_plan_as":
+{ Args: { "p_audience": string,"p_created_by": string,"p_group_id": string,"p_plan_id": string,"p_viewer": string }; Returns: boolean
                            },
 "can_view_plan_photos":
 { Args: { "p_plan_id": string }; Returns: boolean
@@ -546,9 +578,6 @@ isOneToOne: false
 { Args: { "p_other": string }; Returns: boolean
                            },
 "is_friend":
-{ Args: { "p_other": string }; Returns: boolean
-                           },
-"is_friend_of_friend":
 { Args: { "p_other": string }; Returns: boolean
                            },
 "is_group_admin":

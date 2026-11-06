@@ -5,6 +5,7 @@ import { groupDetailKey, groupManageKey } from '../groupManageQuery';
 import { groupsKey } from '../useGroupRows';
 import { invitesKey } from '../usePendingInvites';
 import { planPhotosKey } from '../planPhotosKey';
+import { planCommentsKey } from '../usePlanComments';
 import { planPollKey } from '../usePlanPoll';
 import {
   planAvailabilitiesKey,
@@ -33,6 +34,7 @@ const KEYS: [name: string, factory: (id?: string) => readonly unknown[], prefix:
   ['planGroupMemberIdsKey', planGroupMemberIdsKey, 'plan-group-member-ids'],
   ['planPollKey', planPollKey, 'plan-poll'],
   ['planPhotosKey', planPhotosKey, 'plan-photos'],
+  ['planCommentsKey', planCommentsKey, 'plan-comments'],
   ['friendsKey', friendsKey, 'friends'],
   ['invitesKey', invitesKey, 'invites'],
   ['cancelNoticesKey', cancelNoticesKey, 'cancel-notices'],

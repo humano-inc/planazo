@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { canVoteOnPolls, pollPeopleIn } from '@planazo/shared';
 import { PhotoAlbumCard } from '../../../../components/plan/PhotoAlbumCard';
+import { PlanCommentsCard } from '../../../../components/plan/PlanCommentsCard';
 import { PlanPolls } from '../../../../components/plan/PlanPolls';
 import { PlanTopBar } from '../../../../components/plan/PlanTopBar';
 import { PlanTitleBlock } from '../../../../components/plan/PlanTitleBlock';
@@ -244,6 +245,10 @@ export default function PlanDetailScreen() {
         ) : null}
         {!d.isCancelled && !d.isExpired && !d.confirmed ? (
           <Button label="Nudge the rest" variant="outline" onPress={nudge} haptic={false} />
+        ) : null}
+
+        {user ? (
+          <PlanCommentsCard planId={String(id)} userId={user.id} isCancelled={d.isCancelled} />
         ) : null}
 
         {/* PLA-32. Last thing on the screen, under everything the plan is
