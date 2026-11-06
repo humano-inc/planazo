@@ -56,7 +56,11 @@ export function PlanFactsCard({ plan, d }: { plan: PlanDetailRow; d: PlanDerived
           <ListRow
             title={plan.location}
             divider={!!plan.event_date || !!lockedDate}
-            onPress={mapPlace ? () => openInMaps(mapPlace, mapCenter) : undefined}
+            onPress={
+              mapPlace
+                ? () => openInMaps(mapPlace, mapCenter, plan.location_place_id ?? null)
+                : undefined
+            }
             testID="plan-map-row"
             right={
               mapPlace ? (

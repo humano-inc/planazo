@@ -92,7 +92,7 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
           {
             term: 'No location access',
             detail:
-              'Planazo never reads your location. Where a plan is happening is free text somebody typed.',
+              'Planazo never reads your location. Where a plan is happening is text somebody typed, and it can point to a place they picked.',
           },
         ],
       },
@@ -104,7 +104,7 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
       },
       {
         heading: 'Who else handles it',
-        paras: ['Planazo uses three processors, and no others.'],
+        paras: ['Planazo uses four processors, and no others.'],
         bullets: [
           {
             term: 'Supabase',
@@ -120,6 +120,11 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
             term: 'Sentry',
             detail:
               'Crash reporting, hosted in the United States. It receives the crash reports described above and nothing else.',
+          },
+          {
+            term: 'Google Maps',
+            detail:
+              'Suggests real places while you type where a plan is happening. It receives what you type in that field, sent through our server, and nothing about your account or your device. Planazo keeps only an identifier for a place you pick. Google’s privacy policy applies: https://policies.google.com/privacy.',
           },
         ],
       },
@@ -223,7 +228,7 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
           {
             term: 'Sin acceso a tu ubicación',
             detail:
-              'Planazo nunca lee tu ubicación. Dónde es un plan es un texto que alguien escribió.',
+              'Planazo nunca lee tu ubicación. Dónde es un plan es un texto que alguien escribió, y puede apuntar a un lugar que eligió.',
           },
         ],
       },
@@ -235,7 +240,7 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
       },
       {
         heading: 'Quién más los procesa',
-        paras: ['Planazo usa tres proveedores, y ninguno más.'],
+        paras: ['Planazo usa cuatro proveedores, y ninguno más.'],
         bullets: [
           {
             term: 'Supabase',
@@ -251,6 +256,11 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
             term: 'Sentry',
             detail:
               'Reporte de fallos, alojado en Estados Unidos. Recibe los reportes de fallos de arriba y nada más.',
+          },
+          {
+            term: 'Google Maps',
+            detail:
+              'Sugiere lugares reales mientras escribís dónde es un plan. Recibe lo que escribís en ese campo, enviado a través de nuestro servidor, y nada sobre tu cuenta o tu dispositivo. Planazo guarda solo un identificador del lugar que elijas. Se aplica la política de privacidad de Google: https://policies.google.com/privacy.',
           },
         ],
       },
@@ -385,6 +395,12 @@ export const TERMS: Record<Lang, LegalDoc> = {
         ],
       },
       {
+        heading: 'Places from Google Maps',
+        paras: [
+          'When you set where a plan is happening, Planazo can suggest real places from Google Maps. Using those suggestions means you also agree to the Google Maps Additional Terms of Service (https://maps.google.com/help/terms_maps/) and the Google Privacy Policy (https://policies.google.com/privacy).',
+        ],
+      },
+      {
         heading: 'The boring part',
         paras: [
           'Planazo is provided as it is. We work to keep it running and correct, but we do not guarantee it will be uninterrupted or error-free, and we are not liable for a plan that fell through. Nothing here limits liability that cannot be limited by law.',
@@ -474,6 +490,12 @@ export const TERMS: Record<Lang, LegalDoc> = {
         paras: [
           'Podés borrar tu cuenta cuando quieras desde la app, en tu perfil. Es inmediato. Qué pasa con tus grupos y planes está en la política de privacidad.',
           'Nosotros podemos suspender o cerrar una cuenta que viole estos términos, o si tenemos que dejar de operar Planazo. Avisamos siempre que razonablemente podamos.',
+        ],
+      },
+      {
+        heading: 'Lugares de Google Maps',
+        paras: [
+          'Cuando indicás dónde es un plan, Planazo puede sugerirte lugares reales de Google Maps. Al usar esas sugerencias también aceptás los Términos Adicionales del Servicio de Google Maps (https://maps.google.com/help/terms_maps/) y la Política de Privacidad de Google (https://policies.google.com/privacy).',
         ],
       },
       {

@@ -45,7 +45,10 @@ let planUpdate: jest.Mock;
  * the fields and the write that saves them. Which one it resolves as is
  * decided by whether `.update()` was called on it.
  */
-function primeSupabase(updateResult: unknown = { data: [{ id: 'plan-1' }], error: null }) {
+function primeSupabase(
+  updateResult: unknown = { data: [{ id: 'plan-1' }], error: null },
+  plan: Record<string, unknown> = {}
+) {
   planUpdate = jest.fn();
   mockFrom.mockImplementation(() => {
     const c: any = {};
@@ -59,7 +62,7 @@ function primeSupabase(updateResult: unknown = { data: [{ id: 'plan-1' }], error
       return c;
     });
     c.then = (resolve: (v: unknown) => void) =>
-      Promise.resolve(writing ? updateResult : { data: PLAN, error: null }).then(resolve);
+      Promise.resolve(writing ? updateResult : { data: { ...PLAN, ...plan }, error: null }).then(resolve);
     return c;
   });
 }
@@ -122,9 +125,60 @@ describe('EditPlanScreen', () => {
       expect(planUpdate).toHaveBeenCalledWith({
         title: 'Padel at the club',
         location: null,
+        location_place_id: null,
         description: 'Bring cash',
       });
       expect(mockBack).toHaveBeenCalled();
+    });
+  });
+
+  describe('a place picked earlier', () => {
+    beforeEach(() => {
+      primeSupabase({ data: [{ id: 'plan-1' }], error: null }, { location: 'Arena', location_place_id: 'p1' });
+    });
+
+    it('says so, and is not a change until someone changes it', async () => {
+      await renderEdit();
+
+      expect(screen.getByText('Exact place saved')).toBeTruthy();
+      await fireEvent.press(screen.getByTestId('save'));
+      expect(planUpdate).not.toHaveBeenCalled();
+    });
+
+    it('survives finishing the sentence', async () => {
+      await renderEdit();
+      await fireEvent.changeText(screen.getByTestId('location-input'), 'Arena Padel');
+      await fireEvent.press(screen.getByTestId('save'));
+
+      await waitFor(() =>
+        expect(planUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({ location: 'Arena Padel', location_place_id: 'p1' })
+        )
+      );
+    });
+
+    it('goes when the venue moves, so nobody is sent to the old one', async () => {
+      await renderEdit();
+      await fireEvent.changeText(screen.getByTestId('location-input'), 'Club Libertad');
+      await fireEvent.press(screen.getByTestId('save'));
+
+      await waitFor(() =>
+        expect(planUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({ location: 'Club Libertad', location_place_id: null })
+        )
+      );
+    });
+
+    it('removing it alone is enough to save', async () => {
+      await renderEdit();
+      await fireEvent.press(screen.getByTestId('place-remove'));
+      await fireEvent.press(screen.getByTestId('save'));
+
+      await waitFor(() =>
+        expect(planUpdate).toHaveBeenCalledWith(
+          expect.objectContaining({ location: 'Arena', location_place_id: null })
+        )
+      );
     });
   });
 

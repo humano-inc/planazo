@@ -49,6 +49,8 @@ export interface PlanDetailRow extends PlanAlbumData {
   title: string;
   description: string | null;
   location: string | null;
+  /** The real place the host picked, if they picked one (PLA-156). */
+  location_place_id?: string | null;
   /** Who it is for (PLA-140). Only a group plan carries its group. */
   audience: PlanAudience;
   groups: { name: string; color: string | null; city?: MapCenter | null } | null;

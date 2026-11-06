@@ -432,8 +432,10 @@ The IARC questionnaire, answered honestly:
 - **Users interact** — yes. Planazo is user-to-user inside private groups.
 - **Users share content** — yes: plan titles, descriptions, locations, group
   names, comments, photos.
-- **Shares location** — no. `plans.location` is free text a user types, not a
-  device location; the app requests no location permission.
+- **Shares location** — no. `plans.location` is free text a user types, with an
+  optional Google place id for a place they picked, not a device location; the
+  app requests no location permission. What someone types in that field goes to
+  Google Places through our server to suggest places.
 - **Digital purchases** — no.
 
 That lands around PEGI 3 / ESRB Everyone with an interactive-elements notice.

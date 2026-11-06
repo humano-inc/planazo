@@ -883,6 +883,23 @@ describe('PlanDetailScreen — the map', () => {
     openSpy.mockRestore();
   });
 
+  it('a picked place opens exactly in Google Maps, and Apple only ever gets the words', async () => {
+    const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+    await renderPlan({ ...openPlan, location_place_id: 'ChIJ_abc' });
+
+    await fireEvent.press(screen.getByTestId('plan-map-row'));
+    await chooseFromSheet(1);
+    expect(openSpy).toHaveBeenLastCalledWith(
+      'https://www.google.com/maps/search/?api=1&query=Padel%20Indoor%20Gr%C3%A0cia&query_place_id=ChIJ_abc'
+    );
+
+    await chooseFromSheet(0);
+    expect(openSpy).toHaveBeenLastCalledWith(
+      'https://maps.apple.com/?q=Padel%20Indoor%20Gr%C3%A0cia'
+    );
+    openSpy.mockRestore();
+  });
+
   it('cancelling the sheet opens nothing', async () => {
     const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
     await renderPlan(openPlan);

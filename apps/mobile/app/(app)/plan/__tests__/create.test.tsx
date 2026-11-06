@@ -518,8 +518,29 @@ describe('CreatePlanScreen', () => {
     expect(plansChain.insert).toHaveBeenCalledWith(
       expect.objectContaining({
         location: 'Padel Indoor Gràcia',
+        location_place_id: null,
         description: 'Bring cash',
       })
+    );
+  });
+
+  // "Try again" on a called-off plan comes back with the same place.
+  it('a preseeded place comes with the pick behind it', async () => {
+    mockParams = { groupId: 'g1', location: 'Arena', placeId: 'p1', details: '1' };
+    await renderWithQuery(<CreatePlanScreen />);
+    await screen.findByTestId('group-g1');
+
+    expect(screen.getByTestId('location-input').props.value).toBe('Arena');
+    expect(screen.getByText('Exact place saved')).toBeTruthy();
+
+    await fireEvent.changeText(screen.getByTestId('title-input'), 'Padel');
+    await fireEvent.press(screen.getByTestId('cal-day-2026-08-07'));
+    await fireEvent.press(screen.getByTestId('post-cta'));
+
+    await waitFor(() =>
+      expect(plansChain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({ location: 'Arena', location_place_id: 'p1' })
+      )
     );
   });
 });

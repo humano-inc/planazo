@@ -9,8 +9,12 @@ import { openLink } from './openLink';
  * An iPhone can have either, so it asks. Android has no Apple Maps to offer, and
  * a sheet with one choice is only an extra tap.
  */
-export function openInMaps(location: string, near: MapCenter | null): void {
-  const google = () => openLink(googleMapsUrl(location));
+export function openInMaps(
+  location: string,
+  near: MapCenter | null,
+  placeId: string | null
+): void {
+  const google = () => openLink(googleMapsUrl(location, placeId));
   if (Platform.OS !== 'ios') {
     google();
     return;

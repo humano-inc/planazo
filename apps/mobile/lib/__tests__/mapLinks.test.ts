@@ -1,7 +1,11 @@
 import { appleMapsUrl, googleMapsUrl } from '../mapLinks';
 
 describe.each([
-  ['googleMapsUrl', googleMapsUrl, 'https://www.google.com/maps/search/?api=1&query='],
+  [
+    'googleMapsUrl',
+    (location: string) => googleMapsUrl(location, null),
+    'https://www.google.com/maps/search/?api=1&query=',
+  ],
   [
     'appleMapsUrl',
     (location: string) => appleMapsUrl(location, null),
@@ -23,6 +27,18 @@ describe.each([
 
   it('drops the whitespace around the words', () => {
     expect(mapUrl('  Parque \n')).toBe(`${prefix}Parque`);
+  });
+});
+
+describe('googleMapsUrl with a picked place', () => {
+  it('carries the id, with the words as the fallback Google asks for', () => {
+    expect(googleMapsUrl('Arena Pad', 'ChIJ_abc-1')).toBe(
+      'https://www.google.com/maps/search/?api=1&query=Arena%20Pad&query_place_id=ChIJ_abc-1'
+    );
+  });
+
+  it('encodes the id', () => {
+    expect(googleMapsUrl('Arena', 'a b&c')).toContain('&query_place_id=a%20b%26c');
   });
 });
 

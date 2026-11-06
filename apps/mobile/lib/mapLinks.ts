@@ -8,8 +8,9 @@ export interface MapCenter {
  * maps app. Both are plain https links, so they need no key and no native
  * config, and each app takes its own link when installed.
  */
-export function googleMapsUrl(location: string): string {
-  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.trim())}`;
+export function googleMapsUrl(location: string, placeId: string | null): string {
+  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.trim())}`;
+  return placeId ? `${url}&query_place_id=${encodeURIComponent(placeId)}` : url;
 }
 
 /**

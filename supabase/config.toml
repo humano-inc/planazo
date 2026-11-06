@@ -461,3 +461,7 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # 20260730000001 migration and supabase/functions/send-push/index.ts).
 [functions.send-push]
 verify_jwt = false
+
+# place-search spends our Google quota, so only a signed-in person may call it.
+[functions.place-search]
+verify_jwt = true

@@ -167,6 +167,7 @@ export default function PlanDetailScreen() {
         min: String(plan.min_people),
         ...(plan.max_people ? { cap: String(plan.max_people) } : {}),
         ...(plan.location ? { location: plan.location, details: '1' } : {}),
+        ...(plan.location_place_id ? { placeId: plan.location_place_id } : {}),
       },
     });
 

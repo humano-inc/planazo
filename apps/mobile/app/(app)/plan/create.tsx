@@ -18,6 +18,10 @@ import { PollComposer } from '../../../components/plan/PollComposer';
 import { WhoField } from '../../../components/plan/WhoField';
 import { WhenField } from '../../../components/plan/WhenField';
 import { HowManyField } from '../../../components/plan/HowManyField';
+import { PlaceField } from '../../../components/plan/PlaceField';
+import { placeDraftFrom, placeIdToSave } from '../../../lib/placeDraft';
+import { placeSearchCity } from '../../../lib/placeSearchCity';
+import { useRevealAtTop } from '../../../lib/useRevealAtTop';
 import { NEEDS_GROUP_COPY, NeedsGroupState } from '../../../components/group/NeedsGroupState';
 import { useDismissTo } from '../../../lib/navigation';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
@@ -47,6 +51,8 @@ export default function CreatePlanScreen() {
     cap?: string;
     details?: string;
     location?: string;
+    /** The picked place behind `location`, so "Try again" keeps it (PLA-156). */
+    placeId?: string;
     y?: string;
   }>();
 
@@ -63,7 +69,9 @@ export default function CreatePlanScreen() {
   );
   const [detailsOpen, setDetailsOpen] = useState(params.details === '1');
   // 19c "Try again with a new date" preseeds everything but the date
-  const [location, setLocation] = useState(params.location ?? '');
+  const [place, setPlace] = useState(() =>
+    placeDraftFrom(params.location ?? '', params.placeId ?? null)
+  );
   const [notes, setNotes] = useState('');
   // The one open question (PLA-47). Collapsed by default: most plans have no
   // question, and this flow must not grow for them.
@@ -108,6 +116,7 @@ export default function CreatePlanScreen() {
     !pollBlocks;
 
   const createPlan = useCreatePlan();
+  const { scrollRef, anchorRef, reveal } = useRevealAtTop();
 
   // `planazo://plan/create` opens this sheet with nothing behind it, and
   // back() is a no-op there: Cancel did nothing at all on a cold deep link.
@@ -147,6 +156,7 @@ export default function CreatePlanScreen() {
       header={header}
       contentContainerStyle={styles.content}
       contentOffset={params.y ? { x: 0, y: Number(params.y) } : undefined}
+      scrollRef={scrollRef}
       testID="create"
       footer={
         <Button
@@ -163,7 +173,8 @@ export default function CreatePlanScreen() {
               time,
               min,
               cap,
-              location,
+              location: place.words,
+              placeId: placeIdToSave(place),
               notes,
               pollDraft,
             })
@@ -172,6 +183,7 @@ export default function CreatePlanScreen() {
         />
       }
     >
+      <View ref={anchorRef} style={styles.anchor} />
       <View style={styles.titleBlock}>
         <TextInput
           style={styles.titleInput}
@@ -212,13 +224,11 @@ export default function CreatePlanScreen() {
         </Pressable>
         {detailsOpen ? (
           <Animated.View entering={FadeInDown} exiting={FadeOutUp} style={styles.detailsFields}>
-            <TextInput
-              style={styles.input}
-              placeholder="Where's it happening?"
-              placeholderTextColor={colors.textFaint}
-              value={location}
-              onChangeText={setLocation}
-              testID="location-input"
+            <PlaceField
+              draft={place}
+              onChange={setPlace}
+              cityId={placeSearchCity(groups, groupId)}
+              onSuggestionsOpen={reveal}
             />
             <TextInput
               style={[styles.input, styles.notes]}
@@ -267,6 +277,11 @@ const styles = StyleSheet.create({
   // The empty state fills the screen rather than sitting under the header.
   emptyContent: {
     flexGrow: 1,
+  },
+  // Out of the flow, so it marks the top of the content without taking a gap.
+  anchor: {
+    position: 'absolute',
+    top: 0,
   },
   titleBlock: {
     gap: 10,
