@@ -1,8 +1,9 @@
 import Link from 'next/link';
 
 import PlanDemo from '@/components/PlanDemo';
+import StoreButtons from '@/components/StoreButtons';
 import { BASE, CIRCLE_DOTS, CIRCLES, COPY, LANG, RESOLVED, THREAD } from '@/lib/copy';
-import { CONTACT_EMAIL, GET_APP_URL } from '@/lib/links';
+import { CONTACT_EMAIL } from '@/lib/links';
 import styles from './page.module.css';
 
 export default function Home() {
@@ -13,7 +14,7 @@ export default function Home() {
     <>
       <nav className={`shell ${styles.nav}`}>
         <span className={`serif ${styles.wordmark}`}>Planazo</span>
-        <a className={styles.navCta} href={GET_APP_URL}>
+        <a className={styles.navCta} href="#bajar">
           {t.navCta}
         </a>
       </nav>
@@ -35,10 +36,8 @@ export default function Home() {
       <section id="demo" className={styles.demoSection}>
         <PlanDemo lang={lang} />
 
-        <div className={styles.heroCtaBlock}>
-          <a className={styles.btnInk} href={GET_APP_URL}>
-            {t.heroCta}
-          </a>
+        <div id="bajar" className={styles.heroCtaBlock}>
+          <StoreButtons buttonClassName={styles.btnInk} />
           <p className={styles.heroCtaSub}>{t.heroCtaSub}</p>
         </div>
       </section>
@@ -136,9 +135,7 @@ export default function Home() {
           <h2 className={`serif ${styles.closeTitle}`}>{t.closeTitle}</h2>
           <p className={styles.closeSub}>{t.closeSub}</p>
           <div className={styles.closeActions}>
-            <a className={styles.btnOrange} href={GET_APP_URL}>
-              {t.closeCta}
-            </a>
+            <StoreButtons buttonClassName={styles.btnOrange} />
           </div>
         </div>
       </section>

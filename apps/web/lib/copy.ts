@@ -56,8 +56,7 @@ export const COPY = {
     waitNoteOff: 'Someone always drops out at the last minute.',
     waitNoteOn: "If a spot opens, it's yours. We'll tell you.",
 
-    heroCta: 'Get Planazo',
-    heroCtaSub: 'Free. For iPhone and Android.',
+    heroCtaSub: 'Free.',
 
     proofTitle: 'Good ideas die in WhatsApp.',
     before: 'WhatsApp',
@@ -72,7 +71,6 @@ export const COPY = {
 
     closeTitle: 'Throw it out there. Let it happen.',
     closeSub: "Twenty seconds to put it up. Planazo asks everyone, collects the answers and says when it's on.",
-    closeCta: 'Get Planazo',
 
     fPrivacy: 'Privacy',
     fTerms: 'Terms',
@@ -123,8 +121,7 @@ export const COPY = {
     waitNoteOff: 'Siempre se baja alguien a último momento.',
     waitNoteOn: 'Si se libera un lugar, es tuyo. Te avisamos.',
 
-    heroCta: 'Bajate Planazo',
-    heroCtaSub: 'Gratis. Para iPhone y Android.',
+    heroCtaSub: 'Gratis.',
 
     proofTitle: 'Las buenas ideas se mueren en WhatsApp.',
     before: 'WhatsApp',
@@ -139,7 +136,6 @@ export const COPY = {
 
     closeTitle: 'Tirá la idea. Que se arme sola.',
     closeSub: 'Veinte segundos para armarlo. Planazo pregunta, junta las respuestas y avisa cuando está.',
-    closeCta: 'Bajate Planazo',
 
     fPrivacy: 'Privacidad',
     fTerms: 'Términos',
@@ -168,8 +164,7 @@ export const JOIN = {
       'Come back to this link and tap it again.',
       "That's it, you're in the group.",
     ],
-    cta: 'Get Planazo',
-    ctaSub: 'Free. For iPhone and Android.',
+    ctaSub: 'Free.',
     codeLabel: 'Or paste this code into the app',
     backHome: 'What is Planazo?',
     metaTitle: "You've been invited to Planazo",
@@ -185,8 +180,7 @@ export const JOIN = {
       'Volvé a este link y tocalo de nuevo.',
       'Listo, ya estás en el grupo.',
     ],
-    cta: 'Bajate Planazo',
-    ctaSub: 'Gratis. Para iPhone y Android.',
+    ctaSub: 'Gratis.',
     codeLabel: 'O pegá este código en la app',
     backHome: '¿Qué es Planazo?',
     metaTitle: 'Te invitaron a Planazo',
@@ -218,8 +212,7 @@ export const PLAN = {
       'Come back to this link and tap it again.',
       "The plan opens, if it's a plan you're in.",
     ],
-    cta: 'Get Planazo',
-    ctaSub: 'Free. For iPhone and Android.',
+    ctaSub: 'Free.',
     backHome: 'What is Planazo?',
     metaTitle: 'Someone shared a plan with you on Planazo',
     metaDescription:
@@ -234,8 +227,7 @@ export const PLAN = {
       'Volvé a este link y tocalo de nuevo.',
       'El plan se abre, si es un plan del que ya formás parte.',
     ],
-    cta: 'Bajate Planazo',
-    ctaSub: 'Gratis. Para iPhone y Android.',
+    ctaSub: 'Gratis.',
     backHome: '¿Qué es Planazo?',
     metaTitle: 'Te compartieron un plan en Planazo',
     metaDescription:
@@ -243,25 +235,15 @@ export const PLAN = {
   },
 } as const;
 
-/** The chooser at /get, which only a browser that cannot install anything sees. */
-export const GET = {
+/** The two store buttons, wherever the site offers the app. */
+export const STORES = {
   en: {
-    title: 'Get Planazo',
-    lede: 'Free for iPhone and Android.',
-    appStore: 'Download on the App Store',
-    googlePlay: 'Get it on Google Play',
-    backHome: 'What is Planazo?',
-    metaTitle: 'Get Planazo',
-    metaDescription: 'Get Planazo for iPhone or Android. It is free.',
+    appStore: 'Get it for iPhone',
+    googlePlay: 'Get it for Android',
   },
   es: {
-    title: 'Bajate Planazo',
-    lede: 'Gratis para iPhone y Android.',
-    appStore: 'Bajala en App Store',
-    googlePlay: 'Bajala en Google Play',
-    backHome: '¿Qué es Planazo?',
-    metaTitle: 'Bajate Planazo',
-    metaDescription: 'Bajate Planazo para iPhone o Android. Es gratis.',
+    appStore: 'Bajala para iPhone',
+    googlePlay: 'Bajala para Android',
   },
 } as const;
 

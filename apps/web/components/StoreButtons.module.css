@@ -1,0 +1,16 @@
+/* Full width, or the row shrinks to its text and the buttons wrap on a desktop. */
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 11px;
+  width: 100%;
+}
+
+/* One width for both, so the pair lines up side by side and stacked. */
+.button {
+  flex: 0 1 230px;
+  box-sizing: border-box;
+  padding-inline: 16px;
+  text-align: center;
+}

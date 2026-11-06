@@ -1,14 +1,13 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 
-import { GET_APP_URL } from '@/lib/links';
+import StoreButtons from '@/components/StoreButtons';
 import styles from '@/app/applink.module.css';
 
 interface AppLinkCopy {
   eyebrow: string;
   title: string;
   lede: string;
-  cta: string;
   ctaSub: string;
   steps: readonly string[];
   backHome: string;
@@ -45,9 +44,7 @@ export default function AppLinkPage({ copy, children }: AppLinkPageProps) {
       <p className={styles.lede}>{copy.lede}</p>
 
       <div className={styles.ctaBlock}>
-        <a className={styles.btnInk} href={GET_APP_URL}>
-          {copy.cta}
-        </a>
+        <StoreButtons buttonClassName={styles.btnInk} />
         <p className={styles.ctaSub}>{copy.ctaSub}</p>
       </div>
 
