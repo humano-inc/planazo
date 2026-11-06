@@ -39,6 +39,7 @@ export * from './plan/dates';
 export * from './plan/capacity';
 export * from './plan/confirmation';
 export * from './plan/album';
+export * from './plan/comments';
 export * from './plan/polls';
 
 /**

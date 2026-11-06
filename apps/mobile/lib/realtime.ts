@@ -8,6 +8,7 @@ import { feedKey } from './useFeed';
 import { groupDetailKey } from './groupManageQuery';
 import { groupsKey } from './useGroupRows';
 import { planPhotosKey } from './planPhotosKey';
+import { planCommentsKey } from './usePlanComments';
 import { planPollKey } from './usePlanPoll';
 import {
   planAvailabilitiesKey,
@@ -30,6 +31,7 @@ export const SUBSCRIBED_TABLES = [
   'plans',
   'group_members',
   'plan_photos',
+  'plan_comments',
   'plan_polls',
   'plan_poll_options',
   'plan_poll_votes',
@@ -74,6 +76,10 @@ export function keysForChange(
       // the album is the whole point of this table being here. A delete
       // carries only its id, so it falls back to the bare prefix.
       return [planPhotosKey(planId)];
+    case 'plan_comments':
+      // The list and the plan-detail card both sit under this key. A delete
+      // carries only its id, so it falls back to the bare prefix.
+      return [planCommentsKey(planId)];
     case 'plan_polls':
     case 'plan_poll_options':
     case 'plan_poll_votes':

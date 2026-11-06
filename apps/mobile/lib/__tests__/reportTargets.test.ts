@@ -20,6 +20,7 @@ describe('reportTargets: where Cancel lands', () => {
     // Neither has a route of its own, so the feed is the honest answer.
     ['profile', { type: 'profile' as const, id: 'u9' }, '/(app)/(tabs)'],
     ['photo', { type: 'photo' as const, id: 'ph1' }, '/(app)/(tabs)'],
+    ['comment', { type: 'comment' as const, id: 'c1' }, '/(app)/(tabs)'],
     // A link with a type but no id cannot address the thing it names.
     ['plan with no id', { type: 'plan' as const }, '/(app)/(tabs)'],
     ['group with no id', { type: 'group' as const }, '/(app)/(tabs)'],

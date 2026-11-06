@@ -31,6 +31,7 @@ const SUBJECT_NOUN: Record<ReportSubject, string> = {
   group: 'group',
   profile: 'person',
   photo: 'photo',
+  comment: 'comment',
 };
 
 /**
