@@ -25,7 +25,9 @@ gh workflow run ship.yml --ref main -f channel=production
 
 Phones do not change at once. An app checks on launch, downloads in the
 background, and runs the update the next time it cold starts. Only phones on a
-store build carrying `expo-updates` (1.1.0 onwards) receive anything.
+store build carrying `expo-updates` (1.1.0 onwards) receive anything. A phone
+only takes an update newer than the code it is running, so a store build made
+after the last Ship ignores that update and waits for the next one.
 
 Migrations go live on merge, before any Ship, so they must keep working with
 every version of the app still in use.
@@ -62,14 +64,17 @@ Find the last good update, then publish it again:
 ```bash
 cd apps/mobile
 eas update:list --branch production --non-interactive
-eas update:republish --group <update group id> --non-interactive
+eas update:republish --group <update group id> --message "Back to <what>" --non-interactive
 ```
 
+Its source maps are already in Sentry, because the JavaScript is the same.
+
 To go back to the JavaScript inside the store build instead, which also drops
-every update shipped since that build:
+every update shipped since that build. `eas update:list` prints the runtime
+version:
 
 ```bash
-eas update:roll-back-to-embedded --channel production --non-interactive
+eas update:roll-back-to-embedded --channel production --runtime-version <runtime version> --message "Back to the store build" --non-interactive
 ```
 
 Either way, a phone picks it up the same way as any update: on launch, running
