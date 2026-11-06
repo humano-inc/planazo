@@ -15,7 +15,7 @@ const copy = STORES[LANG];
 export default function StoreButtons() {
   return (
     <div className={styles.badges}>
-      <a className={styles.badge} href={APP_STORE_URL}>
+      <a className={styles.badge} href={APP_STORE_URL} target="_blank" rel="noopener">
         <Image
           className={styles.appStore}
           src={`/badges/app-store-${LANG}.svg`}
@@ -25,7 +25,7 @@ export default function StoreButtons() {
           unoptimized
         />
       </a>
-      <a className={styles.badge} href={PLAY_STORE_URL}>
+      <a className={styles.badge} href={PLAY_STORE_URL} target="_blank" rel="noopener">
         <Image
           className={styles.googlePlay}
           src={`/badges/google-play-${LANG}.png`}
