@@ -10,7 +10,7 @@ Add two repository secrets in GitHub → Settings → Secrets and variables → 
 | Secret | Where it comes from |
 | --- | --- |
 | `EXPO_TOKEN` | expo.dev → Account settings → Access tokens |
-| `SENTRY_AUTH_TOKEN` | Sentry → Settings → Auth Tokens, with the `project:releases` and `org:read` scopes |
+| `SENTRY_AUTH_TOKEN` | Sentry → Settings → Organization Tokens. Its `org:ci` scope covers source map upload |
 
 The Sentry token already on EAS has secret visibility, so it can be used by EAS
 builds but never read back. GitHub needs its own.
