@@ -67,27 +67,6 @@
   margin-top: 36px;
 }
 
-.btnInk {
-  padding: 17px 34px;
-  border-radius: 15px;
-  background: var(--ink);
-  color: var(--on-ink);
-  font-size: 17px;
-  font-weight: 700;
-  transition: background-color 150ms ease;
-}
-
-.btnInk:hover {
-  background: var(--ink-hover);
-  color: var(--on-ink);
-}
-
-.ctaSub {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--muted-2);
-}
-
 .steps {
   margin: 44px 0 0;
   padding: 0;

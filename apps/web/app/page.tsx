@@ -37,8 +37,7 @@ export default function Home() {
         <PlanDemo lang={lang} />
 
         <div id="bajar" className={styles.heroCtaBlock}>
-          <StoreButtons buttonClassName={styles.btnInk} />
-          <p className={styles.heroCtaSub}>{t.heroCtaSub}</p>
+          <StoreButtons />
         </div>
       </section>
 
@@ -135,7 +134,7 @@ export default function Home() {
           <h2 className={`serif ${styles.closeTitle}`}>{t.closeTitle}</h2>
           <p className={styles.closeSub}>{t.closeSub}</p>
           <div className={styles.closeActions}>
-            <StoreButtons buttonClassName={styles.btnOrange} />
+            <StoreButtons />
           </div>
         </div>
       </section>

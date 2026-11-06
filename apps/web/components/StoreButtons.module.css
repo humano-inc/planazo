@@ -1,16 +1,39 @@
-/* Full width, or the row shrinks to its text and the buttons wrap on a desktop. */
-.buttons {
+/* Apple asks for a quarter of the badge height clear around it, hence the gap. */
+.badges {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
-  gap: 11px;
+  gap: 12px;
   width: 100%;
 }
 
-/* One width for both, so the pair lines up side by side and stacked. */
-.button {
-  flex: 0 1 230px;
-  box-sizing: border-box;
-  padding-inline: 16px;
-  text-align: center;
+.badge {
+  display: block;
+  line-height: 0;
+  border-radius: 8px;
+}
+
+.badge:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 3px;
+}
+
+/* Apple's onscreen minimum is 40px, so 48px has room to spare. */
+.appStore {
+  display: block;
+  width: auto;
+  height: 48px;
+}
+
+/*
+ * Google's PNG carries transparent space above and below the badge: 29 of its
+ * 250 rows at each end. Sizing the image so the visible part is 48px, then
+ * pulling that space back out, makes the two badges the same height.
+ */
+.googlePlay {
+  display: block;
+  width: auto;
+  height: 62.5px;
+  margin-block: -7.25px;
 }
