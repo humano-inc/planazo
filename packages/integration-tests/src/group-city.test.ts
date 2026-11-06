@@ -47,6 +47,30 @@ describe('the cities table', () => {
     expect(rows.map((c) => c.slug)).toContain('buenos-aires');
   });
 
+  // Named rather than counted, for the reason above. One from each kind of row
+  // the list stopped carrying, and the non-capitals that stayed on it, because
+  // those are the ones a slip in a removal list would take out unnoticed.
+  it('lists cities, not the partidos, departments and towns around them', async () => {
+    const rows = ok(await member.client.from('cities').select('slug'));
+    const slugs = rows.map((c) => c.slug);
+
+    for (const gone of ['quilmes', 'pilar', 'godoy-cruz', 'lujan-de-cuyo', 'yerba-buena', 'goya']) {
+      expect(slugs).not.toContain(gone);
+    }
+    for (const kept of [
+      'rosario',
+      'mar-del-plata',
+      'bahia-blanca',
+      'san-carlos-de-bariloche',
+      'rio-cuarto',
+      'san-rafael',
+      'tandil',
+      'comodoro-rivadavia',
+    ]) {
+      expect(slugs).toContain(kept);
+    }
+  });
+
   it('carries coordinates and an IANA zone on every row, which the idea engine needs', async () => {
     const rows = ok(await member.client.from('cities').select('slug, lat, lon, timezone'));
 
