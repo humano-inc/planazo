@@ -2,11 +2,18 @@
   "expo": {
     "name": "Planazo",
     "slug": "planazo",
-    "version": "1.0.1",
+    "version": "1.1.0",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/39c24636-0b8b-4ffb-b3a4-f5f40eb32ac2"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "planazo",
+    "platforms": ["ios", "android"],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.planazo.app",
