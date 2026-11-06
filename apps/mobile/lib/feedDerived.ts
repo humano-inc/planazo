@@ -33,6 +33,7 @@ export interface FeedPlanSource {
   created_by: string | null;
   event_date?: string | null;
   locked_date?: string | null;
+  ends_at?: string | null;
   rsvps: (RsvpLike & { user_id: string })[];
   plan_date_options?: NestedDateOption[] | null;
 }
@@ -82,7 +83,7 @@ export function deriveFeedItems<T extends FeedPlanSource>(
       plan.locked_date ?? plan.event_date ?? earliestViableDate(countByDate, plan.min_people);
 
     // 19e: Plans only ever holds things that still need you — expired and
-    // past-confirmed plans leave silently at the end of their day.
+    // past-confirmed plans leave silently once they end.
     const isPast = isPlanPast(plan, dateOptions.map((o) => o.date));
 
     // Every place taken (PLA-20). Only asked while a yes is what the plan

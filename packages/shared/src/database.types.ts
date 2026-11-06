@@ -409,14 +409,14 @@ isOneToOne: false
                   ]
                 },"plans": {
                   Row: {
-                    "audience": string,"cancel_reason": string | null,"cancelled_at": string | null,"cancelled_by": string | null,"created_at": string | null,"created_by": string | null,"deadline": string | null,"description": string | null,"event_date": string | null,"group_id": string | null,"id": string,"location": string | null,"locked_at": string | null,"locked_date": string | null,"max_people": number | null,"min_people": number,"plan_type": string,"status": string,"title": string,"updated_at": string | null,"plan_bridge": string | null
+                    "audience": string,"cancel_reason": string | null,"cancelled_at": string | null,"cancelled_by": string | null,"created_at": string | null,"created_by": string | null,"deadline": string | null,"description": string | null,"ends_at": string | null,"event_date": string | null,"group_id": string | null,"id": string,"location": string | null,"locked_at": string | null,"locked_date": string | null,"max_people": number | null,"min_people": number,"plan_type": string,"status": string,"title": string,"updated_at": string | null,"plan_bridge": string | null
                   }
                   ComputedFields: "plan_bridge"
                   Insert: {
-                    "audience"?: string,"cancel_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"created_at"?: string | null,"created_by"?: string | null,"deadline"?: string | null,"description"?: string | null,"event_date"?: string | null,"group_id"?: string | null,"id"?: string,"location"?: string | null,"locked_at"?: string | null,"locked_date"?: string | null,"max_people"?: number | null,"min_people"?: number,"plan_type": string,"status"?: string,"title": string,"updated_at"?: string | null
+                    "audience"?: string,"cancel_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"created_at"?: string | null,"created_by"?: string | null,"deadline"?: string | null,"description"?: string | null,"ends_at"?: string | null,"event_date"?: string | null,"group_id"?: string | null,"id"?: string,"location"?: string | null,"locked_at"?: string | null,"locked_date"?: string | null,"max_people"?: number | null,"min_people"?: number,"plan_type": string,"status"?: string,"title": string,"updated_at"?: string | null
                   }
                   Update: {
-                    "audience"?: string,"cancel_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"created_at"?: string | null,"created_by"?: string | null,"deadline"?: string | null,"description"?: string | null,"event_date"?: string | null,"group_id"?: string | null,"id"?: string,"location"?: string | null,"locked_at"?: string | null,"locked_date"?: string | null,"max_people"?: number | null,"min_people"?: number,"plan_type"?: string,"status"?: string,"title"?: string,"updated_at"?: string | null
+                    "audience"?: string,"cancel_reason"?: string | null,"cancelled_at"?: string | null,"cancelled_by"?: string | null,"created_at"?: string | null,"created_by"?: string | null,"deadline"?: string | null,"description"?: string | null,"ends_at"?: string | null,"event_date"?: string | null,"group_id"?: string | null,"id"?: string,"location"?: string | null,"locked_at"?: string | null,"locked_date"?: string | null,"max_people"?: number | null,"min_people"?: number,"plan_type"?: string,"status"?: string,"title"?: string,"updated_at"?: string | null
                   }
                   Relationships: [
                     {
@@ -599,7 +599,7 @@ isOneToOne: false
 { Args: { "p_group_id": string }; Returns: Json
                            },
 "lock_plan":
-{ Args: { "p_date_option_id"?: string,"p_plan_id": string }; Returns: Json
+{ Args: { "p_date_option_id"?: string,"p_ends_at"?: string,"p_plan_id": string,"p_starts_at"?: string }; Returns: Json
                            },
 "mint_invite_code":
 { Args: { "p_group_id": string }; Returns: string
@@ -614,6 +614,9 @@ isOneToOne: false
                            },
 "plan_bridge":
 { Args: { "": Database["public"]['Tables']["plans"]['Row'] }; Returns: { error: true } & "the function public.plan_bridge with parameter or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache"
+                           },
+"plan_is_over":
+{ Args: { "p_ends_at": string,"p_start": string }; Returns: boolean
                            },
 "plan_photo_plan_id":
 { Args: { "p_name": string }; Returns: string

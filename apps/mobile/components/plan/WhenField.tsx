@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { View, StyleSheet, Pressable, Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { View, StyleSheet, Pressable } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
+import type { PlanEndDraft } from '../../lib/planEnd';
 import { CloseGlyph, ThemedText, MonthCalendar } from '../ui';
-import { colors, fonts, radii, spacing } from '../../theme/tokens';
+import { PlanTimesCard } from './PlanTimesCard';
+import { colors, radii, spacing } from '../../theme/tokens';
 
 const fmtShort = (iso: string) =>
   new Date(`${iso}T12:00:00`).toLocaleDateString('en-GB', {
@@ -26,37 +26,16 @@ interface Props {
   /** HH:MM. Only asked for once the plan is down to a single day. */
   time: string;
   onTimeChange: (time: string) => void;
+  /** When it ends, or null for no end. Also only offered on a single day. */
+  end: PlanEndDraft | null;
+  onEndChange: (end: PlanEndDraft | null) => void;
 }
 
 /**
- * "When": the calendar, the chips for what was picked, and the start time that
- * only a single-date plan needs.
- *
- * The picker's open state stays here — nothing outside this section can tell
- * whether the wheel is showing.
+ * "When": the calendar, the chips for what was picked, and the times that only
+ * a single-date plan needs.
  */
-export function WhenField({ dates, onToggleDay, time, onTimeChange }: Props) {
-  const [showTimePicker, setShowTimePicker] = useState(false);
-
-  // Build Dates from components, never by parsing strings: Hermes and the
-  // native picker can disagree on the UTC offset of a parsed date-time,
-  // which showed up as the wheel sitting an hour off the pill.
-  const timeAsDate = () => {
-    const [h = 0, m = 0] = time.split(':').map(Number);
-    const d = new Date();
-    d.setHours(h, m, 0, 0);
-    return d;
-  };
-
-  const onPickerChange = (_event: unknown, picked?: Date) => {
-    if (Platform.OS !== 'ios') setShowTimePicker(false);
-    if (picked) {
-      onTimeChange(
-        `${String(picked.getHours()).padStart(2, '0')}:${String(picked.getMinutes()).padStart(2, '0')}`
-      );
-    }
-  };
-
+export function WhenField({ dates, onToggleDay, time, onTimeChange, end, onEndChange }: Props) {
   const summary =
     dates.length === 0
       ? 'Pick a date, or a few, and let them vote.'
@@ -104,26 +83,14 @@ export function WhenField({ dates, onToggleDay, time, onTimeChange }: Props) {
       ) : null}
 
       {dates.length === 1 ? (
-        <Animated.View entering={FadeInDown} exiting={FadeOutUp} style={styles.timeCard}>
-          <View style={styles.timeRow}>
-            <ThemedText variant="bodyStrong">Starts at</ThemedText>
-            <Pressable
-              onPress={() => setShowTimePicker((s) => !s)}
-              accessibilityRole="button"
-              testID="time-pill"
-              style={styles.timePill}
-            >
-              <ThemedText style={styles.timeValue}>{time}</ThemedText>
-            </Pressable>
-          </View>
-          {showTimePicker ? (
-            <DateTimePicker
-              value={timeAsDate()}
-              mode="time"
-              display="spinner"
-              onChange={onPickerChange}
-            />
-          ) : null}
+        <Animated.View entering={FadeInDown} exiting={FadeOutUp}>
+          <PlanTimesCard
+            startDay={dates[0]!}
+            startTime={time}
+            onStartTimeChange={onTimeChange}
+            end={end}
+            onEndChange={onEndChange}
+          />
         </Animated.View>
       ) : null}
 
@@ -175,34 +142,5 @@ const styles = StyleSheet.create({
   },
   chipX: {
     opacity: 0.6,
-  },
-  timeCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 22,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    gap: spacing.sm,
-  },
-  timeRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  timePill: {
-    backgroundColor: colors.surfaceSunken,
-    borderWidth: 1.5,
-    borderColor: colors.borderStrong,
-    borderRadius: 14,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  timeValue: {
-    fontFamily: fonts.display,
-    fontSize: 22,
-    lineHeight: 26,
-    color: colors.textPrimary,
   },
 });

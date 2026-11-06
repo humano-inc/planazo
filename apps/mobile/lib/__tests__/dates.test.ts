@@ -1,4 +1,13 @@
-import { fmtDay, fmtTime, isoDate, isoOfDate, timeAgo } from '../dates';
+import {
+  dayTimeToIso,
+  fmtDay,
+  fmtTime,
+  isoDate,
+  isoOfDate,
+  localDate,
+  timeAgo,
+  timeOfDate,
+} from '../dates';
 
 /**
  * fmtDay is "the one shape a date takes on cards, rows and notices", so this is
@@ -83,5 +92,30 @@ describe('timeAgo', () => {
    */
   it('clamps a timestamp from the future to "just now"', () => {
     expect(timeAgo(new Date(Date.now() + 5 * MIN).toISOString())).toBe('just now');
+  });
+});
+
+describe('timeOfDate', () => {
+  it('pads both parts so the result compares correctly as a string', () => {
+    expect(timeOfDate(new Date(2026, 0, 1, 7, 5))).toBe('07:05');
+    expect(timeOfDate(new Date(2026, 0, 1, 23, 45))).toBe('23:45');
+  });
+});
+
+describe('localDate', () => {
+  it('reads a day as local midnight, not UTC', () => {
+    const d = localDate('2026-11-14');
+    expect([d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()]).toEqual([2026, 10, 14, 0]);
+  });
+
+  it('takes an optional time', () => {
+    const d = localDate('2026-11-14', 20, 30);
+    expect([d.getHours(), d.getMinutes()]).toEqual([20, 30]);
+  });
+});
+
+describe('dayTimeToIso', () => {
+  it('names the instant that day and time mean on this phone', () => {
+    expect(dayTimeToIso('2026-11-14', '20:30')).toBe(new Date(2026, 10, 14, 20, 30).toISOString());
   });
 });

@@ -52,7 +52,7 @@ export default function GroupDetailScreen() {
           `id, name, description, color, image_url, who_can_invite,
           city:cities(name),
           group_members(user_id, role, profile:profiles(id, display_name, avatar_url)),
-          plans(id, title, plan_type, status, event_date, locked_date, min_people, created_at,
+          plans(id, title, plan_type, status, event_date, locked_date, ends_at, min_people, created_at,
             cancelled_at, cancelled_by, cancel_reason,
             canceller:profiles!plans_cancelled_by_fkey(display_name),
             rsvps(user_id, response, profile:profiles(display_name)),

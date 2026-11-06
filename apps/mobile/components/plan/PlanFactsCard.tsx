@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 import Animated, { FadeInDown, LinearTransition } from 'react-native-reanimated';
-import { fmtDay, fmtTime } from '../../lib/dates';
 import type { PlanDerived, PlanDetailRow } from '../../lib/planDerived';
+import { planWhenRows } from '../../lib/planWhen';
 import { Card, ListRow, ThemedText } from '../ui';
 import { colors } from '../../theme/tokens';
 
@@ -29,20 +29,16 @@ export function PlanFactsCard({ plan, d }: { plan: PlanDetailRow; d: PlanDerived
       <Card padded={false} style={d.isEnded ? styles.endedDetails : null}>
         {lockedDate ? (
           <Animated.View entering={FadeInDown}>
-            <ListRow
-              title={fmtDay(lockedDate)}
-              value={fmtTime(lockedDate)}
-              struck={d.isCancelled}
-            />
+            {planWhenRows(lockedDate, plan.ends_at).map((row, i) => (
+              <ListRow key={row.title} {...row} divider={i > 0} struck={d.isCancelled} />
+            ))}
           </Animated.View>
         ) : null}
-        {plan.event_date ? (
-          <ListRow
-            title={fmtDay(plan.event_date)}
-            value={fmtTime(plan.event_date)}
-            struck={d.isCancelled}
-          />
-        ) : null}
+        {plan.event_date
+          ? planWhenRows(plan.event_date, plan.ends_at).map((row, i) => (
+              <ListRow key={row.title} {...row} divider={i > 0} struck={d.isCancelled} />
+            ))
+          : null}
         {plan.location ? (
           <ListRow
             title={plan.location}

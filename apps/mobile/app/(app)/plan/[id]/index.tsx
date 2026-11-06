@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Pressable, Alert, RefreshControl, Share } from 'react-native';
+import { ScrollView, StyleSheet, Pressable, RefreshControl, Share } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { canVoteOnPolls, pollPeopleIn } from '@planazo/shared';
@@ -66,7 +66,6 @@ export default function PlanDetailScreen() {
     clearRsvp,
     sendDates,
     declineAll,
-    lockPlan,
     reopenPlan,
     restorePlan,
   } = usePlanDetail(id, { onDatesCommitted: () => setEditingPicks(null) });
@@ -223,14 +222,10 @@ export default function PlanDetailScreen() {
             label={`Lock in ${fmtDay(d.viableLead.date)}`}
             variant="outline"
             onPress={() =>
-              Alert.alert(
-                `Lock in ${fmtDay(d.viableLead!.date)}?`,
-                'This ends the vote and notifies everyone who can make it.',
-                [
-                  { text: 'Not yet', style: 'cancel' },
-                  { text: 'Lock in', onPress: () => lockPlan.mutate(d.viableLead!.id) },
-                ]
-              )
+              router.push({
+                pathname: `/plan/${id}/lock`,
+                params: { optionId: d.viableLead!.id, date: d.viableLead!.date },
+              })
             }
             testID="lock-in"
           />

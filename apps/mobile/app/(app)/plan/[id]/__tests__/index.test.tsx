@@ -5,7 +5,7 @@ import PlanDetailScreen from '../index';
 import { useAuthStore } from '../../../../../stores/authStore';
 import { takePendingPlan } from '../../../../../lib/pendingPlan';
 import { supabase } from '../../../../../lib/supabase';
-import { fmtDay } from '../../../../../lib/dates';
+import { fmtDay, fmtTime } from '../../../../../lib/dates';
 import { iso } from '../../../../../lib/testing/dates';
 import { chooseFromSheet, mockActionSheet, sheetOptions } from '../../../../../lib/testing/actionSheet';
 import { chain } from '../../../../../lib/testing/supabase';
@@ -405,7 +405,7 @@ describe('PlanDetailScreen — flexible plans', () => {
     expect(screen.queryByText('4 in · room for 6 more')).toBeNull();
   });
 
-  it('lets the host lock in the viable leading date via the RPC', async () => {
+  it('sends the host to the lock sheet with the viable leading date', async () => {
     prime({
       plan: {
         ...basePlan,
@@ -426,17 +426,30 @@ describe('PlanDetailScreen — flexible plans', () => {
     await waitFor(() => expect(screen.getByTestId('lock-in')).toBeTruthy());
     await fireEvent.press(screen.getByTestId('lock-in'));
 
-    // Confirm dialog → press "Lock in"
-    const alertCall = (Alert.alert as jest.Mock).mock.calls.at(-1);
-    const lockButton = alertCall[2].find((b: any) => b.text === 'Lock in');
-    lockButton.onPress();
+    expect(mockPush).toHaveBeenCalledWith({
+      pathname: '/plan/plan-1/lock',
+      params: { optionId: 'd1', date: options.find((o) => o.id === 'd1')!.date },
+    });
+    expect(mockRpc).not.toHaveBeenCalledWith('lock_plan', expect.anything());
+  });
 
-    await waitFor(() =>
-      expect(mockRpc).toHaveBeenCalledWith('lock_plan', {
-        p_plan_id: 'plan-1',
-        p_date_option_id: 'd1',
-      })
-    );
+  it('shows when a plan ends beside when it starts', async () => {
+    const start = iso(7, 20);
+    const end = iso(7, 22);
+    prime({ plan: { ...basePlan, plan_type: 'fixed', status: 'open', event_date: start, ends_at: end } });
+    await renderDetail();
+
+    expect(await screen.findByText(`${fmtTime(start)} – ${fmtTime(end)}`)).toBeTruthy();
+  });
+
+  it('gives a plan over several days a row for each end', async () => {
+    const start = iso(7, 18);
+    const end = iso(9, 12);
+    prime({ plan: { ...basePlan, plan_type: 'fixed', status: 'open', event_date: start, ends_at: end } });
+    await renderDetail();
+
+    expect(await screen.findByText(`Until ${fmtDay(end)}`)).toBeTruthy();
+    expect(screen.getByText(fmtTime(end))).toBeTruthy();
   });
 
   // PLA-17 regression: on a declined flexible plan the rows kept toggling

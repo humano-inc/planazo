@@ -32,4 +32,6 @@ export interface RsvpLike {
 export interface PlanDates {
   event_date?: string | null;
   locked_date?: string | null;
+  /** Null on a vote nobody has locked, and on plans from before PLA-157. */
+  ends_at?: string | null;
 }
