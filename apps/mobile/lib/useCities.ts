@@ -14,8 +14,10 @@ const citiesKey = keyFactory('cities');
  * list is bounded by a migration and small enough to hold, and a filter that
  * runs in memory answers while the keyboard is still moving.
  *
- * It never goes stale inside a session, because the only thing that adds a
- * city is a migration, and a migration arrives with a new build. No order
+ * It is held for the whole session, because only a migration changes the list
+ * and that is too rare to refetch for. A session that loaded the list before a
+ * migration removed a city still offers that city until the next launch: the
+ * foreign key refuses it, and the caller reports a failed write. No order
  * clause either: `filterCities` sorts what it returns, and a second opinion
  * about the order here would just be one that never wins.
  */
