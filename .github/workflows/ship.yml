@@ -67,7 +67,7 @@ jobs:
         id: platforms
         working-directory: apps/mobile
         run: |
-          platforms=$(pnpm exec bash ../../scripts/ship-platforms.sh "$CHANNEL")
+          platforms=$(bash ../../scripts/ship-platforms.sh "$CHANNEL")
           echo "platforms=$platforms" >> "$GITHUB_OUTPUT"
 
       - name: Publish

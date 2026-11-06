@@ -25,7 +25,7 @@ hand-edit the PNGs.
 | Report content, block users | done | plan sheet, group → Manage (1.2) |
 | Objectionable-content filter at posting | done | `lib/moderation.ts`, every shared free-text field (1.2) |
 | Terms with an objectionable-content clause | done | `https://planazo.me/terms` |
-| Production Supabase in release builds | done | `eas.json` → `preview` / `production` env |
+| Production Supabase in release builds | done | EAS environment variables (`eas env:list production`), selected by `environment` in `eas.json` |
 | iPhone-only (`supportsTablet: false`) | done | `app.json` |
 | `ITSAppUsesNonExemptEncryption: false` | done | `app.json` |
 | Deploy planazo.me with the new pages | **you** | `/privacy`, `/terms` and `/support` must all be live before submitting — the app links to each of them |
@@ -44,6 +44,8 @@ eas submit --platform ios --latest
 `appVersionSource: remote` with `autoIncrement` means EAS owns the build
 number. Bump the marketing version in `app.json` (`expo.version`) for each
 release; leave the build number alone.
+
+A change with no native code does not need any of this. See `UPDATES.md`.
 
 ---
 
@@ -411,7 +413,7 @@ for the app's core purpose beyond the account itself.
 
 **Crash logs and Diagnostics are Sentry, not the feedback form.** `initSentry()`
 runs before anything else in `app/_layout.tsx` and the production DSN is live in
-`eas.json`, so crashes are reported automatically in release builds. The
+the EAS `production` environment, so crashes are reported automatically in release builds. The
 feedback form's app version and device model are the smaller, separate half of
 those two rows.
 

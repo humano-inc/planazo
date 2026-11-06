@@ -18,7 +18,8 @@ function stripQuery(url: unknown): unknown {
  * Dev clients never report: dev noise would drown the production feed, and
  * `captureError` still prints to the console there. Release and dist come from
  * the native bundle (versionName@build), so EAS's autoIncrement is what ties
- * an event to a build — nothing to set here.
+ * an event to a build — nothing to set here. An update keeps its binary's
+ * release, and the SDK tags its events with `expo.updates.update_id`.
  */
 export function initSentry() {
   Sentry.init({

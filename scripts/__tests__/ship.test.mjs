@@ -1,5 +1,5 @@
 // The two refusals in front of the Ship workflow, run for real under bash with fake
-// `gh`, `eas` and `expo-updates` on PATH. No network and no Expo account.
+// `gh` and `eas` on PATH. No network and no Expo account.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -105,14 +105,28 @@ describe('ship-require-green-ci', () => {
 });
 
 describe('ship-platforms', () => {
-  /** `eas build:list` answers for the platforms named here, with one build. */
+  /**
+   * A fake `eas`: each platform's fingerprint is rt-<platform>, printed after the
+   * line the real CLI puts ahead of its JSON, and `build:list` finds one build for
+   * the platforms named here.
+   */
   function fakeBuilds(...platforms) {
+    const builds = platforms
+      .map((p) => `*"build:list --platform ${p} "*) echo '[{"id":"b"}]' ;;`)
+      .join('\n');
     fakeBin(
-      'expo-updates',
-      'for a in "$@"; do last=$p; p=$a; done; echo "{\\"runtimeVersion\\":\\"rt-$p\\",\\"workflow\\":\\"managed\\"}"',
+      'eas',
+      `case "$*" in
+*"fingerprint:generate --platform ios "*)
+  echo 'Environment variables loaded: EXPO_PUBLIC_SENTRY_ENV'
+  echo '{"hash":"rt-ios","sources":[]}' ;;
+*"fingerprint:generate --platform android "*)
+  echo 'Environment variables loaded: EXPO_PUBLIC_SENTRY_ENV'
+  echo '{"hash":"rt-android","sources":[]}' ;;
+${builds}
+*) echo '[]' ;;
+esac`,
     );
-    const cases = platforms.map((p) => `*"--platform ${p} "*) echo '[{"id":"b"}]' ;;`).join('\n');
-    fakeBin('eas', `case "$*" in\n${cases}\n*) echo '[]' ;;\nesac`);
   }
 
   test('answers all when both platforms have a build', () => {
@@ -154,17 +168,36 @@ describe('ship-platforms', () => {
     assert.match(calls, /build:list --platform android --channel preview --runtime-version rt-android --status finished/);
   });
 
-  test('refuses when the runtime version cannot be resolved', () => {
+  test('computes the fingerprint in the environment the update publishes from', () => {
     fakeBuilds('ios', 'android');
-    fakeBin('expo-updates', 'echo "boom" >&2; exit 1');
+    run(PLATFORMS, 'preview');
+    const calls = spawnSync('cat', [join(dir, 'calls')], { encoding: 'utf8' }).stdout;
+    assert.match(calls, /fingerprint:generate --platform ios --environment preview/);
+    assert.match(calls, /fingerprint:generate --platform android --environment preview/);
+  });
+
+  test('refuses when the fingerprint cannot be computed', () => {
+    fakeBin('eas', 'echo "boom" >&2; exit 1');
+    const result = run(PLATFORMS, 'production');
+    assert.notEqual(result.status, 0);
+    assert.equal(result.stdout, '');
+  });
+
+  test('refuses when the fingerprint output carries no JSON', () => {
+    fakeBin('eas', 'echo "Something unexpected"');
     const result = run(PLATFORMS, 'production');
     assert.notEqual(result.status, 0);
     assert.equal(result.stdout, '');
   });
 
   test('refuses when eas cannot list builds, rather than reading it as no builds', () => {
-    fakeBuilds('ios', 'android');
-    fakeBin('eas', 'echo "not logged in" >&2; exit 1');
+    fakeBin(
+      'eas',
+      `case "$*" in
+*fingerprint:generate*) echo '{"hash":"rt"}' ;;
+*) echo "not logged in" >&2; exit 1 ;;
+esac`,
+    );
     const result = run(PLATFORMS, 'production');
     assert.notEqual(result.status, 0);
     assert.equal(result.stdout, '');

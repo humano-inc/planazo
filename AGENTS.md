@@ -180,11 +180,14 @@ environment over it.
   own DB. Suite refuses unknown DBs, shared-mode worktrees with new migrations,
   and unapplied migrations (fix is in the message).
 - Shell helpers: `pnpm test:scripts` runs `scripts/__tests__/` with `node:test`
-  and a fake `xcrun` on PATH. No database, no Xcode. `pnpm turbo test` does not
-  run it; CI does.
+  and fake CLIs on PATH. No database, no Xcode. `pnpm turbo test` does not run
+  it; CI does.
 - Merged migrations are immutable; fix forward. Edited-but-applied branch
   migrations need `pnpm wt:db:reset`.
 - Deploy pushes migrations on merge to main. Never by hand to production.
+- Merging never reaches a phone. The `Ship` workflow publishes main's JavaScript
+  to users when a person presses it (`store-assets/UPDATES.md`). Run it only
+  when told to, and never `eas update` to `production` by hand.
 - The Supabase CLI is the root `supabase` devDependency, pinned to one exact
   version that CI runs too. pnpm scripts get it on PATH; typed by hand, it is
   `pnpm exec supabase …`. A bare `supabase` in your shell may be another

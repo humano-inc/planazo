@@ -8,6 +8,11 @@
 //
 // Changing this list changes the fingerprint, which has the same effect as a
 // native change: installed apps stop receiving updates until the next store build.
+//
+// `platforms` in app.json guards the same thing. Left out, Expo infers it from
+// whether `react-dom` resolves, and pnpm's bin shims make it resolve through
+// NODE_PATH. The same code then had one fingerprint in a local build and another
+// from `eas update`, so the update never reached the build.
 module.exports = {
   sourceSkips: [
     'ExpoConfigVersions',

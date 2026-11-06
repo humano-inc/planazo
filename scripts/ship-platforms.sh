@@ -5,7 +5,8 @@
 # until its next build. Warns about a platform left behind, and refuses when the
 # update would reach nobody.
 #
-# Run from apps/mobile, where `expo-updates` resolves.
+# Run from apps/mobile. The runtime version comes from `eas`, the same CLI that
+# publishes, so this answers for the update `eas update` is about to make.
 #
 #   ship-platforms.sh <channel>
 
@@ -13,10 +14,13 @@ set -euo pipefail
 
 channel=${1:?usage: ship-platforms.sh <channel>}
 
+# eas prints a line about the variables it loaded ahead of the JSON, even with
+# --json, so parsing starts at the first brace.
 runtime_version() {
-  expo-updates runtimeversion:resolve --platform "$1" | python3 -c '
+  eas fingerprint:generate --platform "$1" --environment "$channel" --json --non-interactive | python3 -c '
 import json, sys
-print(json.load(sys.stdin)["runtimeVersion"])
+raw = sys.stdin.read()
+print(json.loads(raw[raw.index("{"):])["hash"])
 '
 }
 
