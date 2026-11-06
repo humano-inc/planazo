@@ -56,7 +56,6 @@ export const COPY = {
     waitNoteOff: 'Someone always drops out at the last minute.',
     waitNoteOn: "If a spot opens, it's yours. We'll tell you.",
 
-    heroCtaSub: 'Free.',
 
     proofTitle: 'Good ideas die in WhatsApp.',
     before: 'WhatsApp',
@@ -121,7 +120,6 @@ export const COPY = {
     waitNoteOff: 'Siempre se baja alguien a último momento.',
     waitNoteOn: 'Si se libera un lugar, es tuyo. Te avisamos.',
 
-    heroCtaSub: 'Gratis.',
 
     proofTitle: 'Las buenas ideas se mueren en WhatsApp.',
     before: 'WhatsApp',
@@ -164,7 +162,6 @@ export const JOIN = {
       'Come back to this link and tap it again.',
       "That's it, you're in the group.",
     ],
-    ctaSub: 'Free.',
     codeLabel: 'Or paste this code into the app',
     backHome: 'What is Planazo?',
     metaTitle: "You've been invited to Planazo",
@@ -180,7 +177,6 @@ export const JOIN = {
       'Volvé a este link y tocalo de nuevo.',
       'Listo, ya estás en el grupo.',
     ],
-    ctaSub: 'Gratis.',
     codeLabel: 'O pegá este código en la app',
     backHome: '¿Qué es Planazo?',
     metaTitle: 'Te invitaron a Planazo',
@@ -212,7 +208,6 @@ export const PLAN = {
       'Come back to this link and tap it again.',
       "The plan opens, if it's a plan you're in.",
     ],
-    ctaSub: 'Free.',
     backHome: 'What is Planazo?',
     metaTitle: 'Someone shared a plan with you on Planazo',
     metaDescription:
@@ -227,7 +222,6 @@ export const PLAN = {
       'Volvé a este link y tocalo de nuevo.',
       'El plan se abre, si es un plan del que ya formás parte.',
     ],
-    ctaSub: 'Gratis.',
     backHome: '¿Qué es Planazo?',
     metaTitle: 'Te compartieron un plan en Planazo',
     metaDescription:
@@ -235,15 +229,15 @@ export const PLAN = {
   },
 } as const;
 
-/** The two store buttons, wherever the site offers the app. */
+/** What a screen reader says for each store badge, matching the words on it. */
 export const STORES = {
   en: {
-    appStore: 'Get it for iPhone',
-    googlePlay: 'Get it for Android',
+    appStore: 'Download on the App Store',
+    googlePlay: 'Get it on Google Play',
   },
   es: {
-    appStore: 'Bajala para iPhone',
-    googlePlay: 'Bajala para Android',
+    appStore: 'Descárgalo en el App Store',
+    googlePlay: 'Descargar en Google Play',
   },
 } as const;
 
@@ -252,12 +246,12 @@ export const META = {
   en: {
     title: 'Planazo: Plans with friends that actually happen',
     description:
-      'Throw out the idea even without a date. Everyone marks the days they can do, and Planazo finds the one that works. Free for iPhone and Android.',
+      'Throw out the idea even without a date. Everyone marks the days they can do, and Planazo finds the one that works. For iPhone and Android.',
   },
   es: {
     title: 'Planazo: Planes con amigos que sí pasan',
     description:
-      'Tirá la idea aunque no tengas fecha. Cada uno marca los días que puede y Planazo encuentra el que sirve. Gratis para iPhone y Android.',
+      'Tirá la idea aunque no tengas fecha. Cada uno marca los días que puede y Planazo encuentra el que sirve. Para iPhone y Android.',
   },
 } as const;
 

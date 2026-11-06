@@ -8,7 +8,6 @@ interface AppLinkCopy {
   eyebrow: string;
   title: string;
   lede: string;
-  ctaSub: string;
   steps: readonly string[];
   backHome: string;
 }
@@ -44,8 +43,7 @@ export default function AppLinkPage({ copy, children }: AppLinkPageProps) {
       <p className={styles.lede}>{copy.lede}</p>
 
       <div className={styles.ctaBlock}>
-        <StoreButtons buttonClassName={styles.btnInk} />
-        <p className={styles.ctaSub}>{copy.ctaSub}</p>
+        <StoreButtons />
       </div>
 
       <ol className={styles.steps}>
