@@ -139,8 +139,11 @@ check is listed as **not verified** — never assumed.
 | CI on main green, `deploy` included | Phase 4's run |
 | Issue is Done | Phase 5's response |
 
-Two follow-ups belong here and nowhere else:
+Three follow-ups belong here and nowhere else:
 
+- **A PR that changed the app.** Say that it is merged but not on phones. The
+  `Ship` workflow sends it (`store-assets/UPDATES.md`), and running it is the
+  user's call, not part of this skill.
 - **A refused reclaim.** Fix the reason (usually commit or stash), then
   `pnpm wt:rm <branch>` from the primary checkout. A `branch`-mode DB bills until
   that runs.
