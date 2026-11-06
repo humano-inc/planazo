@@ -24,8 +24,8 @@ interface AppLinkPageProps {
  * Shell shared by /join/<code> and /plan/<id>: nav, title block, get-the-app
  * call to action, steps.
  *
- * Both pages exist for the same reader, the one iOS did not hand over to the
- * app because they do not have it. Only the words differ, and one code block on
+ * Both pages exist for the same reader, the one their phone did not hand over to
+ * the app because they do not have it. Only the words differ, and one code block on
  * the invite, so the layout lives here and each page brings its copy.
  */
 export default function AppLinkPage({ copy, children }: AppLinkPageProps) {

@@ -1,5 +1,10 @@
-import { ActionSheetIOS, Alert, Platform } from 'react-native';
-import { openActionSheet, type SheetOptions, type SheetRow } from '../actionSheet';
+import { ActionSheetIOS, Platform } from 'react-native';
+import {
+  openActionSheet,
+  setActionSheetPresenter,
+  type SheetOptions,
+  type SheetRow,
+} from '../actionSheet';
 
 /**
  * `lib/testing/actionSheet` reads the same spy for screen suites, but it
@@ -10,15 +15,6 @@ import { openActionSheet, type SheetOptions, type SheetRow } from '../actionShee
 const iosSheet = () => {
   const call = (ActionSheetIOS.showActionSheetWithOptions as jest.Mock).mock.calls.at(-1)!;
   return { config: call[0] as Record<string, unknown>, pick: call[1] as (i: number) => void };
-};
-
-const androidAlert = () => {
-  const call = (Alert.alert as jest.Mock).mock.calls.at(-1)!;
-  return {
-    title: call[0] as string,
-    message: call[1] as string | undefined,
-    buttons: call[2] as { text: string; style?: string; onPress?: () => void }[],
-  };
 };
 
 const originalOS = Platform.OS;
@@ -36,7 +32,6 @@ beforeEach(() => {
   takePhoto.mockClear();
   remove.mockClear();
   jest.spyOn(ActionSheetIOS, 'showActionSheetWithOptions').mockImplementation(() => {});
-  jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 });
 
 // Platform.OS is a plain property, so each suite sets it and this puts it back.
@@ -115,35 +110,49 @@ describe('openActionSheet on Android', () => {
     Platform.OS = 'android';
   });
 
-  it('titles the dialog and puts the message under it', () => {
-    open({ message: 'A photo makes the group easier to spot.' });
+  it('hands the whole sheet to whatever registered to draw it', () => {
+    const present = jest.fn();
+    const unregister = setActionSheetPresenter(present);
+    const sheet: SheetOptions = {
+      androidTitle: 'Group photo',
+      message: 'A photo makes the group easier to spot.',
+      cancelLabel: 'Close',
+      rows: rows(),
+    };
 
-    expect(androidAlert().title).toBe('Group photo');
-    expect(androidAlert().message).toBe('A photo makes the group easier to spot.');
+    openActionSheet(sheet);
+
+    expect(present).toHaveBeenCalledWith(sheet);
+    expect(ActionSheetIOS.showActionSheetWithOptions).not.toHaveBeenCalled();
+    unregister();
   });
 
-  // The styles reach the button objects and no further: RN's Android Alert
-  // forwards only each button's text to the native dialog.
-  it('turns each row into a button, marks the destructive one, and puts cancel last', () => {
-    open();
-
-    expect(androidAlert().buttons.map((b) => b.text)).toEqual([
-      'Take a photo',
-      'Use the letter instead',
-      'Cancel',
-    ]);
-    expect(androidAlert().buttons.map((b) => b.style)).toEqual([
-      undefined,
-      'destructive',
-      'cancel',
-    ]);
+  it('does not throw when nothing has registered', () => {
+    expect(() => open()).not.toThrow();
   });
 
-  it('runs the row that was pressed', () => {
+  it('stops presenting once the presenter unregisters', () => {
+    const present = jest.fn();
+    setActionSheetPresenter(present)();
+
     open();
 
-    androidAlert().buttons[0]!.onPress!();
+    expect(present).not.toHaveBeenCalled();
+  });
 
-    expect(takePhoto).toHaveBeenCalledTimes(1);
+  // A remount registers the new host before the old one's cleanup runs, so a
+  // late cleanup must not take the new host down with it.
+  it('keeps a newer presenter when an older one unregisters late', () => {
+    const older = jest.fn();
+    const newer = jest.fn();
+    const unregisterOlder = setActionSheetPresenter(older);
+    const unregisterNewer = setActionSheetPresenter(newer);
+
+    unregisterOlder();
+    open();
+
+    expect(newer).toHaveBeenCalledTimes(1);
+    expect(older).not.toHaveBeenCalled();
+    unregisterNewer();
   });
 });

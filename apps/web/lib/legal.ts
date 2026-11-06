@@ -13,7 +13,7 @@ import { CONTACT_EMAIL } from './links';
  * file changes in the same commit.
  */
 
-export const LAST_UPDATED = { en: '9 September 2026', es: '9 de septiembre de 2026' };
+export const LAST_UPDATED = { en: '6 November 2026', es: '6 de noviembre de 2026' };
 
 export interface Section {
   heading: string;
@@ -112,7 +112,7 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
               'Database, authentication and file storage, hosted in the United States. This is where your account, profile, groups, plans and answers live.',
           },
           {
-            term: 'Expo and Apple push notification services',
+            term: 'Expo, Apple and Google push notification services',
             detail:
               'They deliver notifications to your device. They receive a device token and the text of the notification, for example that a plan you are in has reached its minimum.',
           },
@@ -243,7 +243,7 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
               'Base de datos, autenticación y almacenamiento de archivos, alojados en Estados Unidos. Ahí viven tu cuenta, tu perfil, tus grupos, tus planes y tus respuestas.',
           },
           {
-            term: 'Servicios de notificaciones de Expo y Apple',
+            term: 'Servicios de notificaciones de Expo, Apple y Google',
             detail:
               'Entregan los avisos a tu teléfono. Reciben un token del dispositivo y el texto del aviso: por ejemplo, que un plan tuyo llegó al mínimo.',
           },

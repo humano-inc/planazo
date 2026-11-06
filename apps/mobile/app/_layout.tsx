@@ -23,7 +23,7 @@ import { signOutOfAccount } from '../lib/signOut';
 import { initNotificationPresentation, registerPushToken } from '../lib/push';
 import { initSentry, captureError } from '../lib/sentry';
 import { errorCopy, isInvalidSessionError, isOfflineError, retryQuery } from '../lib/queryErrors';
-import { BrandSplash, ErrorState } from '../components/ui';
+import { ActionSheetHost, BrandSplash, ErrorState } from '../components/ui';
 import { useAuthStore } from '../stores/authStore';
 import { useNeedsOnboarding } from '../lib/useOnboarding';
 import { colors } from '../theme/tokens';
@@ -363,6 +363,7 @@ function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <StatusBar style="dark" />
           <InitialLayout />
+          <ActionSheetHost />
         </QueryClientProvider>
       </KeyboardProvider>
     </Sentry.ErrorBoundary>
