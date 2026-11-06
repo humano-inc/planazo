@@ -1,12 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from './supabase';
 import { groupsKey } from './useGroupRows';
+import type { MapCenter } from './mapLinks';
 import { useAuthStore } from '../stores/authStore';
 
 export interface MyGroup {
   id: string;
   name: string;
   color: string | null;
+  city_id?: string | null;
+  /** Where this person probably is, for a place on a plan with no group to ask. */
+  city?: MapCenter | null;
 }
 
 /**
@@ -69,7 +73,7 @@ export function useMyGroups() {
     queryFn: async (): Promise<MyGroup[]> => {
       const { data: rows, error } = await supabase
         .from('group_members')
-        .select('groups:group_id (id, name, color)')
+        .select('groups:group_id (id, name, color, city_id, city:cities(lat, lon))')
         .eq('user_id', user!.id);
       if (error) throw error;
       return rows

@@ -1,9 +1,10 @@
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import { useProfile } from '../../../lib/useProfile';
 import { PRIVACY_URL, SUPPORT_URL, TERMS_URL } from '../../../lib/links';
+import { openLink } from '../../../lib/openLink';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
 import { Avatar, Card, ForwardGlyph, ListRow, ThemedText } from '../../../components/ui';
 import { colors, fonts, spacing } from '../../../theme/tokens';
@@ -46,12 +47,6 @@ export default function ProfileSheet() {
             ]),
         },
       ],
-    );
-  };
-
-  const openLink = (url: string) => {
-    Linking.openURL(url).catch(() =>
-      Alert.alert("Couldn't open that", 'Check your connection and try again.'),
     );
   };
 

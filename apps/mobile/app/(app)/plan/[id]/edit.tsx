@@ -8,6 +8,11 @@ import { useDismissTo } from '../../../../lib/navigation';
 import { planDetailKey, planDetailQuery } from '../../../../lib/usePlanDetail';
 import { feedKey } from '../../../../lib/useFeed';
 import { contentViolation } from '../../../../lib/moderation';
+import { type PlaceDraft, placeDraftFrom, placeIdToSave } from '../../../../lib/placeDraft';
+import { placeSearchCity } from '../../../../lib/placeSearchCity';
+import { useMyGroups } from '../../../../lib/useMyGroups';
+import { useRevealAtTop } from '../../../../lib/useRevealAtTop';
+import { PlaceField } from '../../../../components/plan/PlaceField';
 import { FormScreen, HeaderAction, HeaderRow, ThemedText } from '../../../../components/ui';
 import { colors, fonts, radii, spacing, type } from '../../../../theme/tokens';
 
@@ -22,7 +27,8 @@ import { colors, fonts, radii, spacing, type } from '../../../../theme/tokens';
  * still need calling it off and starting again.
  *
  * The database agrees rather than trusting this screen: after 20260802000002
- * `authenticated` holds UPDATE on exactly title, location and description.
+ * `authenticated` holds UPDATE on exactly title, location, location_place_id
+ * and description.
  */
 export default function EditPlanScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,7 +38,7 @@ export default function EditPlanScreen() {
   // null means "untouched, show what's stored" — so a field the host never
   // visits can't overwrite a value that changed under them.
   const [title, setTitle] = useState<string | null>(null);
-  const [place, setPlace] = useState<string | null>(null);
+  const [place, setPlace] = useState<PlaceDraft | null>(null);
   const [notes, setNotes] = useState<string | null>(null);
 
   // Warm from the detail screen's cache: one shared descriptor, because same
@@ -40,9 +46,12 @@ export default function EditPlanScreen() {
   // would clobber the joins the detail screen renders from (creator,
   // canceller, groups).
   const { data: plan } = useQuery(planDetailQuery(id));
+  const { groups } = useMyGroups();
+  const { scrollRef, anchorRef, reveal } = useRevealAtTop();
 
   const draftTitle = title ?? plan?.title ?? '';
-  const draftPlace = place ?? plan?.location ?? '';
+  const draftPlace = place ?? placeDraftFrom(plan?.location ?? '', plan?.location_place_id ?? null);
+  const placeId = placeIdToSave(draftPlace);
   const draftNotes = notes ?? plan?.description ?? '';
 
   // Place and notes are nullable columns but always strings up here, so both
@@ -50,7 +59,8 @@ export default function EditPlanScreen() {
   const dirty =
     !!plan &&
     (draftTitle.trim() !== plan.title ||
-      draftPlace.trim() !== (plan.location ?? '') ||
+      draftPlace.words.trim() !== (plan.location ?? '') ||
+      placeId !== (plan.location_place_id ?? null) ||
       draftNotes.trim() !== (plan.description ?? ''));
   const valid = draftTitle.trim().length > 0;
 
@@ -62,7 +72,7 @@ export default function EditPlanScreen() {
       const violation = contentViolation({
         'plan title': draftTitle,
         'plan description': draftNotes,
-        location: draftPlace,
+        location: draftPlace.words,
       });
       if (violation) throw new UserFacingError(violation);
 
@@ -70,7 +80,8 @@ export default function EditPlanScreen() {
         .from('plans')
         .update({
           title: draftTitle.trim(),
-          location: draftPlace.trim() || null,
+          location: draftPlace.words.trim() || null,
+          location_place_id: placeId,
           description: draftNotes.trim() || null,
         })
         .eq('id', id)
@@ -116,7 +127,13 @@ export default function EditPlanScreen() {
   );
 
   return (
-    <FormScreen header={header} contentContainerStyle={styles.content} testID="plan-edit">
+    <FormScreen
+      header={header}
+      contentContainerStyle={styles.content}
+      scrollRef={scrollRef}
+      testID="plan-edit"
+    >
+      <View ref={anchorRef} style={styles.anchor} />
       <View style={styles.titleBlock}>
         <TextInput
           style={styles.titleInput}
@@ -131,13 +148,11 @@ export default function EditPlanScreen() {
 
       <View style={styles.section}>
         <ThemedText variant="sectionLabel">Where</ThemedText>
-        <TextInput
-          style={styles.input}
-          placeholder="Where's it happening?"
-          placeholderTextColor={colors.textFaint}
-          value={draftPlace}
-          onChangeText={setPlace}
-          testID="location-input"
+        <PlaceField
+          draft={draftPlace}
+          onChange={setPlace}
+          cityId={placeSearchCity(groups, plan?.group_id)}
+          onSuggestionsOpen={reveal}
         />
       </View>
 
@@ -168,6 +183,11 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: spacing.lg,
     gap: 22,
+  },
+  // Out of the flow, so it marks the top of the content without taking a gap.
+  anchor: {
+    position: 'absolute',
+    top: 0,
   },
   titleBlock: {
     gap: 10,

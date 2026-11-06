@@ -21,6 +21,8 @@ export interface CreatePlanInput {
   min: number;
   cap: number | null;
   location: string;
+  /** The real place the host picked, which only exists alongside `location` (PLA-156). */
+  placeId: string | null;
   notes: string;
   pollDraft: PollDraft;
 }
@@ -50,7 +52,7 @@ export function useCreatePlan() {
 
   return useMutation({
     mutationFn: async (input: CreatePlanInput) => {
-      const { audience, title, dates, time, min, cap, location, notes, pollDraft } = input;
+      const { audience, title, dates, time, min, cap, location, placeId, notes, pollDraft } = input;
       if (!user) throw new Error('Sign in first');
       // The database refuses the mismatch too (plans_audience_matches_group);
       // this is the same rule said before the round trip.
@@ -75,6 +77,7 @@ export function useCreatePlan() {
           title: title.trim(),
           description: notes.trim() || null,
           location: location.trim() || null,
+          location_place_id: placeId,
           plan_type: fixed ? 'fixed' : 'flexible',
           event_date: fixed ? localDate(dates[0]!, h, m).toISOString() : null,
           min_people: min,
