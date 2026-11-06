@@ -306,7 +306,7 @@ describe('CreatePlanScreen', () => {
     expect(screen.getByText('September 2026')).toBeTruthy();
   });
 
-  it('steppers respect the floor of 2 and the cap dropping back to No limit', async () => {
+  it('steps the cap up from the floor and drops it back to No limit', async () => {
     await renderCreate();
     await screen.findByTestId('group-g1');
 
@@ -314,7 +314,6 @@ describe('CreatePlanScreen', () => {
     expect(screen.getByTestId('cap-value')).toHaveTextContent('—');
     expect(screen.getByText('No limit')).toBeTruthy();
 
-    await fireEvent.press(screen.getByTestId('min-down'));
     await fireEvent.press(screen.getByTestId('min-down'));
     await fireEvent.press(screen.getByTestId('min-down'));
     expect(screen.getByTestId('min-value')).toHaveTextContent('2');
@@ -325,6 +324,66 @@ describe('CreatePlanScreen', () => {
     await fireEvent.press(screen.getByTestId('cap-down'));
     expect(screen.getByTestId('cap-value')).toHaveTextContent('—');
     expect(screen.getByText('No limit')).toBeTruthy();
+  });
+
+  it('steps the floor below 2 into no minimum and back up to 2', async () => {
+    mockParams = { min: '2' };
+    await renderCreate();
+    await screen.findByTestId('group-g1');
+    expect(screen.queryByText('No minimum.')).toBeNull();
+
+    await fireEvent.press(screen.getByTestId('min-down'));
+    expect(screen.getByTestId('min-value')).toHaveTextContent('—');
+    expect(screen.getByText('No minimum.')).toBeTruthy();
+    expect(screen.queryByText(/Only happens if/)).toBeNull();
+
+    await fireEvent.press(screen.getByTestId('min-up'));
+    expect(screen.getByTestId('min-value')).toHaveTextContent('2');
+    expect(screen.getByText(/Only happens if/)).toBeTruthy();
+  });
+
+  it('starts the cap at 2 when there is no minimum to start it from', async () => {
+    mockParams = { min: '0' };
+    await renderCreate();
+    await screen.findByTestId('group-g1');
+    expect(screen.getByTestId('min-value')).toHaveTextContent('—');
+
+    await fireEvent.press(screen.getByTestId('cap-up'));
+    expect(screen.getByTestId('cap-value')).toHaveTextContent('2');
+
+    await fireEvent.press(screen.getByTestId('cap-down'));
+    expect(screen.getByTestId('cap-value')).toHaveTextContent('—');
+  });
+
+  it('posts a one-date plan with no minimum', async () => {
+    mockParams = { min: '0' };
+    await renderCreate();
+    await screen.findByTestId('group-g1');
+
+    await fireEvent.changeText(screen.getByTestId('title-input'), 'Run by the river');
+    await fireEvent.press(screen.getByTestId('cal-day-2026-08-07'));
+    await fireEvent.press(screen.getByTestId('post-cta'));
+
+    await waitFor(() => expect(mockBack).toHaveBeenCalled());
+    expect(plansChain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ plan_type: 'fixed', min_people: 0, max_people: null })
+    );
+  });
+
+  it('posts a several-date plan with no minimum', async () => {
+    mockParams = { min: '0' };
+    await renderCreate();
+    await screen.findByTestId('group-g1');
+
+    await fireEvent.changeText(screen.getByTestId('title-input'), 'Run by the river');
+    await fireEvent.press(screen.getByTestId('cal-day-2026-08-07'));
+    await fireEvent.press(screen.getByTestId('cal-day-2026-08-09'));
+    await fireEvent.press(screen.getByTestId('post-cta'));
+
+    await waitFor(() => expect(mockBack).toHaveBeenCalled());
+    expect(plansChain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ plan_type: 'flexible', min_people: 0 })
+    );
   });
 
   it('cap can equal the min for an exact-headcount plan', async () => {

@@ -1,6 +1,7 @@
 // Plan lifecycle RPCs: lock_plan, reopen_plan, cancel_plan, restore_plan.
 // All four are SECURITY DEFINER host actions — creator or group admin only.
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { NO_MINIMUM } from '@planazo/shared';
 import { TestBed, TestUser, ok, daysFromNow } from './testbed';
 
 const bed = new TestBed();
@@ -196,6 +197,47 @@ describe('lock_plan on a flexible plan', () => {
 
     const res = await host.client.rpc('reopen_plan', { p_plan_id: planId });
     expect(res.error?.message).toMatch(/Only flexible plans/);
+  });
+});
+
+describe('lock_plan on a plan with no minimum', () => {
+  async function createWithNoMinimum(planType: 'fixed' | 'flexible', title: string) {
+    return ok(
+      await host.client
+        .from('plans')
+        .insert({
+          group_id: groupId,
+          created_by: host.id,
+          title,
+          plan_type: planType,
+          event_date: planType === 'fixed' ? daysFromNow(7) : null,
+          min_people: NO_MINIMUM,
+        })
+        .select('id')
+        .single(),
+    ).id;
+  }
+
+  it('locks a fixed plan nobody has answered', async () => {
+    const planId = await createWithNoMinimum('fixed', 'Run with whoever');
+
+    const res = ok(await host.client.rpc('lock_plan', { p_plan_id: planId })) as {
+      locked: boolean;
+    };
+    expect(res.locked).toBe(true);
+  });
+
+  it('locks a flexible plan onto any date the host picks, free or not', async () => {
+    const planId = await createWithNoMinimum('flexible', 'Swim one of these days');
+    const empty = daysFromNow(5);
+    const emptyOption = await addOption(planId, empty);
+    await markAvailable(host, planId, await addOption(planId, daysFromNow(6)));
+
+    const res = ok(
+      await host.client.rpc('lock_plan', { p_plan_id: planId, p_date_option_id: emptyOption }),
+    ) as { locked: boolean; locked_date: string };
+    expect(res.locked).toBe(true);
+    expect(new Date(res.locked_date).getTime()).toBe(new Date(empty).getTime());
   });
 });
 

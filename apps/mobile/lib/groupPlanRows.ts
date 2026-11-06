@@ -1,4 +1,5 @@
 import {
+  NO_MINIMUM,
   flattenNestedOptions,
   goingLabel,
   isPlanConfirmed,
@@ -31,7 +32,7 @@ export interface GroupPlanRow {
   title: string;
   when: string;
   meta: string;
-  open: boolean;
+  waiting: boolean;
   past: boolean;
   ending: 'cancelled' | 'expired' | 'happened' | null;
   endingLine: string;
@@ -92,6 +93,16 @@ function endingOf({
   return { ending: 'expired', endingLine: `Didn't happen · ${going} of ${plan.min_people}` };
 }
 
+/**
+ * Whether the group should read this plan as still waiting on answers. A fixed
+ * plan with no minimum has its date and happens regardless, so no answer can
+ * change anything about it. With several dates there is still a vote to settle.
+ */
+function isWaitingOnAnswers(plan: GroupPlan): boolean {
+  if (plan.status !== 'open') return false;
+  return plan.plan_type !== 'fixed' || plan.min_people !== NO_MINIMUM;
+}
+
 function toRow(plan: GroupPlan, userId: string | undefined): GroupPlanRow {
   // The row already carries plan_type, status, min_people and rsvps; the
   // options only need flattening out of their nested select shape.
@@ -112,7 +123,7 @@ function toRow(plan: GroupPlan, userId: string | undefined): GroupPlanRow {
     title: plan.title,
     when: planWhenLabel(plan, dateOptions),
     meta: goingLabel(going, plan.min_people),
-    open: plan.status === 'open',
+    waiting: isWaitingOnAnswers(plan),
     past,
     ...endingOf({ plan, past, confirmed: isPlanConfirmed(planData), going, userId }),
     ...whoWent(plan.rsvps, userId, going),
@@ -143,8 +154,8 @@ export function deriveGroupPlanRows({
 
   return {
     live,
-    waiting: live.filter((p) => p.open),
-    locked: live.filter((p) => !p.open),
+    waiting: live.filter((p) => p.waiting),
+    locked: live.filter((p) => !p.waiting),
     past: rows.filter((p) => p.past).sort((a, b) => b.sortKey - a.sortKey),
   };
 }

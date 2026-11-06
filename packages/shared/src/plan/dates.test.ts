@@ -205,6 +205,15 @@ describe('earliestViableDate', () => {
     ).toBeNull();
     expect(earliestViableDate({}, 1)).toBeNull();
   });
+
+  it('counts a date nobody is free on as viable when there is no minimum', () => {
+    const countByDate = {
+      'date-1': { count: 2, date: '2025-01-20' },
+      'date-2': { count: 0, date: '2025-01-15' },
+    };
+
+    expect(earliestViableDate(countByDate, 0)).toBe('2025-01-15');
+  });
 });
 
 describe('bestViableOption', () => {
@@ -234,6 +243,14 @@ describe('bestViableOption', () => {
     expect(
       bestViableOption({ 'date-1': { count: 1, date: '2025-01-15' } }, 3)
     ).toBeNull();
+  });
+
+  it('offers a date nobody is free on when there is no minimum', () => {
+    expect(bestViableOption({ 'date-1': { count: 0, date: '2025-01-15' } }, 0)).toEqual({
+      id: 'date-1',
+      date: '2025-01-15',
+      count: 0,
+    });
   });
 });
 

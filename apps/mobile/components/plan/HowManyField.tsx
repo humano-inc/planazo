@@ -1,10 +1,12 @@
 import { View, StyleSheet, Pressable } from 'react-native';
+import { NO_MINIMUM } from '@planazo/shared';
 import { MIN_TOUCH_TARGET } from '../../lib/a11y';
+import { lowerCap, raiseCap, stepMin } from '../../lib/howMany';
 import { MinusGlyph, PlusGlyph, ThemedText } from '../ui';
 import { colors, fonts, spacing } from '../../theme/tokens';
 
 interface Props {
-  /** How many people it takes for the plan to happen at all. */
+  /** How many people it takes for the plan to happen at all, or NO_MINIMUM. */
   min: number;
   /** The ceiling, or null for no limit. */
   cap: number | null;
@@ -14,31 +16,39 @@ interface Props {
 
 /** "How many": the floor and the ceiling, as a pair of steppers. */
 export function HowManyField({ min, cap, onMinChange, onCapChange }: Props) {
-  const stepMin = (delta: 1 | -1) => {
-    const next = Math.min(20, Math.max(2, min + delta));
+  const noMinimum = min === NO_MINIMUM;
+  const changeMin = (delta: 1 | -1) => {
+    const next = stepMin(min, delta);
     // The ceiling may equal the floor ("exactly N people" is a valid plan),
     // so a climbing floor drags the cap along to match, never past it
     if (cap !== null && cap < next) onCapChange(next);
     onMinChange(next);
   };
-  const capUp = () => onCapChange(cap === null ? min : Math.min(40, cap + 1));
-  const capDown = () => onCapChange(cap === null || cap - 1 < min ? null : cap - 1);
 
   return (
     <View style={styles.section}>
       <ThemedText variant="sectionLabel">How many</ThemedText>
       <View style={styles.howManyCard}>
         <View style={styles.stepperRow}>
-          <ThemedText variant="body" style={styles.stepperCopy}>
-            Only happens if{'\n'}
-            <ThemedText variant="body" style={styles.strong}>
-              {min} people
-            </ThemedText>{' '}
-            are in
-          </ThemedText>
+          {noMinimum ? (
+            <ThemedText variant="body" style={styles.stepperCopy}>
+              <ThemedText variant="body" style={styles.strong}>
+                No minimum.
+              </ThemedText>
+              {'\n'}Happens either way.
+            </ThemedText>
+          ) : (
+            <ThemedText variant="body" style={styles.stepperCopy}>
+              Only happens if{'\n'}
+              <ThemedText variant="body" style={styles.strong}>
+                {min} people
+              </ThemedText>{' '}
+              are in
+            </ThemedText>
+          )}
           <View style={styles.stepper}>
             <Pressable
-              onPress={() => stepMin(-1)}
+              onPress={() => changeMin(-1)}
               accessibilityRole="button"
               accessibilityLabel="Fewer people needed"
               testID="min-down"
@@ -46,11 +56,15 @@ export function HowManyField({ min, cap, onMinChange, onCapChange }: Props) {
             >
               <MinusGlyph color={colors.textSecondary} />
             </Pressable>
-            <ThemedText style={styles.stepValue} testID="min-value">
-              {min}
+            <ThemedText
+              style={styles.stepValue}
+              color={noMinimum ? colors.textFaint : colors.textPrimary}
+              testID="min-value"
+            >
+              {noMinimum ? '—' : min}
             </ThemedText>
             <Pressable
-              onPress={() => stepMin(1)}
+              onPress={() => changeMin(1)}
               accessibilityRole="button"
               accessibilityLabel="More people needed"
               testID="min-up"
@@ -74,7 +88,7 @@ export function HowManyField({ min, cap, onMinChange, onCapChange }: Props) {
           </ThemedText>
           <View style={styles.stepper}>
             <Pressable
-              onPress={capDown}
+              onPress={() => onCapChange(lowerCap(cap, min))}
               accessibilityRole="button"
               accessibilityLabel="Lower the cap"
               testID="cap-down"
@@ -90,7 +104,7 @@ export function HowManyField({ min, cap, onMinChange, onCapChange }: Props) {
               {cap ?? '—'}
             </ThemedText>
             <Pressable
-              onPress={capUp}
+              onPress={() => onCapChange(raiseCap(cap, min))}
               accessibilityRole="button"
               accessibilityLabel="Raise the cap"
               testID="cap-up"

@@ -1,3 +1,4 @@
+import { NO_MINIMUM } from '@planazo/shared';
 import { deriveGroupPlanRows, type GroupPlan, type GroupPlanRow } from '../groupPlanRows';
 import { iso } from '../testing/dates';
 import { yes } from '../testing/rsvps';
@@ -55,6 +56,27 @@ describe('deriveGroupPlanRows', () => {
       expect(waiting.map((p) => p.id)).toEqual(['open-one']);
       expect(locked.map((p) => p.id)).toEqual(['locked-one']);
       expect(past).toEqual([]);
+    });
+
+    it('files a fixed plan with no minimum as locked in, since no answer can change it', () => {
+      const { waiting, locked } = rows([plan({ min_people: NO_MINIMUM })]);
+
+      expect(waiting).toEqual([]);
+      expect(locked.map((p) => p.id)).toEqual(['p1']);
+    });
+
+    it('keeps a flexible plan with no minimum waiting while its vote runs', () => {
+      const flexible = {
+        plan_type: 'flexible' as const,
+        event_date: null,
+        min_people: NO_MINIMUM,
+        plan_date_options: [{ id: 'o1', date: iso(3) }],
+      };
+
+      expect(rows([plan(flexible)]).waiting.map((p) => p.id)).toEqual(['p1']);
+      expect(
+        rows([plan({ ...flexible, status: 'locked', locked_date: iso(3) })]).locked.map((p) => p.id)
+      ).toEqual(['p1']);
     });
 
     it('keeps a plan whose day has gone out of every live section', () => {
@@ -126,6 +148,11 @@ describe('deriveGroupPlanRows', () => {
       );
     });
 
+    it('only ever says going when there is no minimum to count toward', () => {
+      expect(liveRow({ min_people: NO_MINIMUM }).meta).toBe('0 going');
+      expect(liveRow({ min_people: NO_MINIMUM, rsvps: [yes('me', 'Rocío')] }).meta).toBe('1 going');
+    });
+
     it('says going once the plan has the people it needs', () => {
       expect(
         liveRow({ min_people: 2, rsvps: [yes('me', 'Rocío'), yes('u2', 'Aina')] }).meta
@@ -163,6 +190,13 @@ describe('deriveGroupPlanRows', () => {
   });
 
   describe('the three endings', () => {
+    it('counts a plan with no minimum as having happened however few came', () => {
+      const row = pastRow({ min_people: NO_MINIMUM, event_date: iso(-1), rsvps: [yes('me', 'Rocío')] });
+
+      expect(row.ending).toBe('happened');
+      expect(row.wentLabel).toBe('You went');
+    });
+
     it('names whoever called a plan off', () => {
       const row = pastRow({
         status: 'cancelled',

@@ -83,9 +83,11 @@ export function PlanStatusCard({ plan, d }: Props) {
           {d.going} in
         </ThemedText>
       </View>
-      <View style={styles.slotWrap}>
-        <SlotBar going={d.going} min={plan.min_people} cap={plan.max_people} />
-      </View>
+      {d.hasSlots ? (
+        <View style={styles.slotWrap}>
+          <SlotBar going={d.going} min={plan.min_people} cap={plan.max_people} />
+        </View>
+      ) : null}
       <ThemedText variant="caption" color={d.confirmed ? colors.confirmed : colors.textMuted}>
         {d.capLine}
       </ThemedText>

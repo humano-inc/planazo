@@ -20,6 +20,7 @@ import { WhenField } from '../../../components/plan/WhenField';
 import { HowManyField } from '../../../components/plan/HowManyField';
 import { NEEDS_GROUP_COPY, NeedsGroupState } from '../../../components/group/NeedsGroupState';
 import { useDismissTo } from '../../../lib/navigation';
+import { initialMin } from '../../../lib/howMany';
 import { MIN_TOUCH_TARGET } from '../../../lib/a11y';
 import {
   ThemedText,
@@ -57,7 +58,7 @@ export default function CreatePlanScreen() {
     params.dates ? params.dates.split(',').filter(Boolean).sort() : []
   );
   const [time, setTime] = useState(params.time ?? '20:30');
-  const [min, setMin] = useState(() => Math.min(20, Math.max(2, Number(params.min) || 4)));
+  const [min, setMin] = useState(() => initialMin(params.min));
   const [cap, setCap] = useState<number | null>(() =>
     Number(params.cap) > 0 ? Number(params.cap) : null
   );

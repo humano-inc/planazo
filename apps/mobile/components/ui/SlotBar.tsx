@@ -1,10 +1,11 @@
 import { View, StyleSheet } from 'react-native';
+import { NO_MINIMUM } from '@planazo/shared';
 import { colors, radii } from '../../theme/tokens';
 
 interface SlotBarProps {
   /** People in (yes-RSVPs or best-date availability) */
   going: number;
-  /** The floor — plan happens at this many */
+  /** The floor — plan happens at this many, or NO_MINIMUM when it just happens */
   min: number;
   /** The ceiling — optional cap; defaults to min when absent */
   cap?: number | null;
@@ -28,7 +29,7 @@ export function SlotBar({ going, min, cap, frozen = false, testID }: SlotBarProp
     <View
       style={styles.row}
       testID={testID}
-      accessibilityLabel={`${going} in, minimum ${min}${cap ? `, room for ${total}` : ''}`}
+      accessibilityLabel={`${going} in, ${min === NO_MINIMUM ? 'no minimum' : `minimum ${min}`}${cap ? `, room for ${total}` : ''}`}
     >
       {Array.from({ length: total }, (_, i) => {
         const filled = i < going;

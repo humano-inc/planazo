@@ -1,4 +1,4 @@
-import type { Availability, DateOption } from '@planazo/shared';
+import { NO_MINIMUM, type Availability, type DateOption } from '@planazo/shared';
 import { fmtDay } from '../dates';
 import { derivePlanDetail, type PlanDetailRow } from '../planDerived';
 import { iso } from '../testing/dates';
@@ -496,6 +496,77 @@ describe('endings', () => {
   it('takes the locked date over the fixed one', () => {
     const d = derive({ plan: flexible({ locked_date: iso(2), event_date: iso(6) }) });
     expect(d.lastDate).toBe(iso(2));
+  });
+});
+
+describe('a plan with no minimum', () => {
+  const happening = (over: Partial<PlanDetailRow> = {}) =>
+    plan({ min_people: NO_MINIMUM, ...over });
+
+  it('is on from the start, with nobody in', () => {
+    const d = derive({ plan: happening(), rsvps: [] });
+    expect(d.confirmed).toBe(true);
+    expect(d.headline).toBe("It's on");
+    expect(d.statusBadge).toEqual({ label: 'Confirmed', tone: 'confirmed' });
+  });
+
+  it('stays on if the host drops out', () => {
+    const d = derive({ plan: happening(), rsvps: [no(HOST)] });
+    expect(d.going).toBe(0);
+    expect(d.headline).toBe("It's on");
+  });
+
+  it('says it happens either way instead of naming a number', () => {
+    expect(derive({ plan: happening() }).capLine).toBe('Happens either way');
+  });
+
+  it('counts the room left when it has a cap', () => {
+    const d = derive({ plan: happening({ max_people: 4 }), rsvps: [yes(HOST)] });
+    expect(d.capLine).toBe('1 in · room for 3 more');
+  });
+
+  it('shuts the door in words when the cap fills', () => {
+    const d = derive({ plan: happening({ max_people: 2 }), rsvps: [yes(HOST), yes('u1')] });
+    expect(d.capLine).toBe("2 in · that's everyone");
+    expect(d.isFull).toBe(true);
+  });
+
+  it('draws the slot bar only when it has a cap', () => {
+    expect(derive({ plan: happening() }).hasSlots).toBe(false);
+    expect(derive({ plan: happening({ max_people: 4 }) }).hasSlots).toBe(true);
+  });
+
+  it('happened once its date passes, however few came', () => {
+    const d = derive({ plan: happening({ event_date: iso(-1) }), rsvps: [] });
+    expect(d.isPast).toBe(true);
+    expect(d.isExpired).toBe(false);
+    expect(d.isEnded).toBe(false);
+  });
+
+  it('can still be called off', () => {
+    const d = derive({ plan: happening({ status: 'cancelled' }) });
+    expect(d.isEnded).toBe(true);
+    expect(d.headline).toBe('Called off');
+  });
+
+  it('keeps the vote running on several dates, with one ready to lock', () => {
+    const early = opt('o-early', 2);
+    const late = opt('o-late', 4);
+    const d = derive({
+      plan: flexible({ min_people: NO_MINIMUM }),
+      dateOptions: [early, late],
+      availabilities: [avail(late, HOST)],
+    });
+    expect(d.isOpenFlexible).toBe(true);
+    expect(d.headline).toBe("It's on");
+    expect(d.viableLead?.id).toBe('o-late');
+  });
+});
+
+describe('the slot bar', () => {
+  it('is always drawn on a plan with a minimum, cap or no cap', () => {
+    expect(derive({ plan: plan({ min_people: 3 }) }).hasSlots).toBe(true);
+    expect(derive({ plan: plan({ min_people: 3, max_people: 6 }) }).hasSlots).toBe(true);
   });
 });
 

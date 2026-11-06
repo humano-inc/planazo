@@ -7,6 +7,14 @@ import { getYesCount } from './capacity';
 import { countAvailabilityByDate } from './dates';
 import type { Availability, DateOption, ProfileLike, RsvpLike } from './types';
 
+/**
+ * The `min_people` of a plan that happens however many people are in. Zero
+ * rather than null because the math then needs no special case, here or in
+ * lock_plan(): nobody can ever be below a floor of zero. What does need telling
+ * apart is the copy, since "Happens with 0" is not a sentence.
+ */
+export const NO_MINIMUM = 0;
+
 export interface PlanConfirmationData {
   plan_type: 'fixed' | 'flexible';
   status?: string | null;
