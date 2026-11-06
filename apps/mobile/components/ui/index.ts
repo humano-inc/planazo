@@ -22,6 +22,7 @@ export { BrandMark } from './BrandMark';
 export { BrandSplash } from './BrandSplash';
 export { ConfirmCard } from './ConfirmCard';
 export { ConfirmSheet } from './ConfirmSheet';
+export { ActionSheetHost } from './ActionSheetHost';
 export { SwipeRow } from './SwipeRow';
 export type { SwipeAction } from './SwipeRow';
 export { FormField } from './FormField';

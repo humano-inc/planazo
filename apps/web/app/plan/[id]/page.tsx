@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 /**
  * Where a shared plan link lands for someone without the app (PLA-81).
  *
- * Anyone who has Planazo never sees this: iOS matches the URL against the
+ * Anyone who has Planazo never sees this: the phone matches the URL against the
  * associated domain and opens the app instead, which is the entire reason the
  * shared link is https rather than `planazo://`.
  *

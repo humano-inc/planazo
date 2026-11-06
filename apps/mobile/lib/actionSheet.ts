@@ -1,4 +1,16 @@
-import { ActionSheetIOS, Alert, Platform } from 'react-native';
+import { ActionSheetIOS, Platform } from 'react-native';
+
+type SheetPresenter = (sheet: SheetOptions) => void;
+
+let presentOnAndroid: SheetPresenter | null = null;
+
+/** Register what draws the Android sheet. Returns the call that unregisters it. */
+export function setActionSheetPresenter(presenter: SheetPresenter): () => void {
+  presentOnAndroid = presenter;
+  return () => {
+    if (presentOnAndroid === presenter) presentOnAndroid = null;
+  };
+}
 
 export interface SheetRow {
   label: string;
@@ -10,11 +22,11 @@ export interface SheetRow {
 export interface SheetOptions {
   /**
    * The sentence above the choices. iOS shows it as the sheet's title, Android
-   * as the dialog's message under `androidTitle`. Omit for a bare menu.
+   * under `androidTitle`. Omit for a bare menu.
    */
   message?: string;
   /**
-   * The short line Android's dialog wants above the message. iOS gets no
+   * The short line Android's sheet shows above the message. iOS gets no
    * equivalent: a sheet here carries one line of context, and on iOS that line
    * is `message`.
    */
@@ -38,22 +50,18 @@ export interface SheetOptions {
  * "remove" with nothing to remove) is a filtered array rather than a position
  * anybody has to remember.
  *
- * The platforms are not equivalent past that, and this does not pretend they
- * are. RN's Android `Alert` keeps `buttons.slice(0, 3)` and forwards only
- * their text to the native dialog, so a fourth row takes the cancel behind it
- * off the screen, and `style` reaches nothing. Both were already true of the
- * three sheets this replaced, and the plan menu is the one that can build
- * five.
+ * iOS has a native sheet with no ceiling on its rows. Android has none, and
+ * RN's `Alert` is not a substitute: it keeps `buttons.slice(0, 3)`, so a fourth
+ * row and the cancel behind it never reach the screen, and its dialog cannot be
+ * dismissed by tapping outside it. So Android draws its own, in
+ * `components/ui/ActionSheetHost`, which registers itself here because `lib/`
+ * does not reach up into components.
  */
-export function openActionSheet({
-  message,
-  androidTitle,
-  cancelLabel = 'Cancel',
-  rows,
-}: SheetOptions): void {
+export function openActionSheet(sheet: SheetOptions): void {
   if (Platform.OS === 'ios') {
-    // iOS reddens one row, Android every row that asks. No sheet has two, so
-    // the platforms agree; a second destructive row is what would part them.
+    const { message, cancelLabel = 'Cancel', rows } = sheet;
+    // iOS reddens one row, the Android sheet every row that asks. No sheet has
+    // two, so the platforms agree; a second destructive row would part them.
     const destructive = rows.findIndex((r) => r.destructive);
     ActionSheetIOS.showActionSheetWithOptions(
       {
@@ -68,12 +76,5 @@ export function openActionSheet({
     return;
   }
 
-  Alert.alert(androidTitle, message, [
-    ...rows.map((r) => ({
-      text: r.label,
-      style: r.destructive ? ('destructive' as const) : undefined,
-      onPress: () => void r.run(),
-    })),
-    { text: cancelLabel, style: 'cancel' as const },
-  ]);
+  presentOnAndroid?.(sheet);
 }

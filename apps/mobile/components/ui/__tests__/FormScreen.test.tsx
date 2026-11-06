@@ -120,6 +120,14 @@ describe('FormScreen', () => {
 
       expect(scroll().props.extraKeyboardSpace).toBe(0);
     });
+
+    it('only clears the raised bar when the field is in the footer itself', async () => {
+      await renderScreen({ footer: <Text>Send</Text>, inputInFooter: true });
+      await measureFooter();
+
+      // What covers the scroll is the keyboard, less the inset `opened` gives back.
+      expect(scroll().props.extraKeyboardSpace).toBe(-34);
+    });
   });
 
   describe('the sticky footer', () => {

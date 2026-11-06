@@ -33,6 +33,28 @@
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.READ_MEDIA_IMAGES"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "scheme": "https",
+              "host": "planazo.me",
+              "pathPrefix": "/join/"
+            },
+            {
+              "scheme": "https",
+              "host": "planazo.me",
+              "pathPrefix": "/plan/"
+            }
+          ]
+        }
       ]
     },
     "web": {
@@ -77,7 +99,16 @@
           "enableFullScreenImage_legacy": true
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ]
     ],
     "extra": {
       "router": {},

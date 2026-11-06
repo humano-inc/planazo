@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react-native';
+import * as Notifications from 'expo-notifications';
 import RootLayout from '../_layout';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
@@ -20,13 +21,14 @@ jest.mock('../../lib/signOut', () => ({
 }));
 
 const mockReplace = jest.fn();
+const mockPush = jest.fn();
 
 jest.mock('expo-router', () => {
   const React = require('react');
   const { Text } = require('react-native');
   return {
     Slot: () => React.createElement(Text, { testID: 'slot' }, 'app'),
-    useRouter: () => ({ push: jest.fn(), replace: mockReplace, back: jest.fn() }),
+    useRouter: () => ({ push: mockPush, replace: mockReplace, back: jest.fn() }),
     useRootNavigationState: () => ({ key: 'root' }),
   };
 });
@@ -277,5 +279,40 @@ describe('the auth listener', () => {
       emitAuthEvent('SIGNED_OUT', null);
     });
     expect(useAuthStore.getState().session).toBeNull();
+  });
+});
+
+describe('tapping a push', () => {
+  async function launchAndTap(data: Record<string, unknown>) {
+    let tap: (response: unknown) => void = () => {};
+    (Notifications.addNotificationResponseReceivedListener as jest.Mock).mockImplementation(
+      (listener: typeof tap) => {
+        tap = listener;
+        return { remove: jest.fn() };
+      }
+    );
+    mockGetSession.mockResolvedValue({ data: { session: SESSION }, error: null });
+    mockFrom.mockReturnValue(profileQuery({ data: PROFILE, error: null }));
+
+    await render(<RootLayout />);
+    await screen.findByTestId('slot');
+    await act(async () => {
+      tap({ notification: { request: { content: { data } } } });
+    });
+  }
+
+  it('opens the plan it is about', async () => {
+    await launchAndTap({ plan_id: 'p1', group_id: 'g1' });
+    expect(mockPush).toHaveBeenCalledWith('/(app)/plan/p1');
+  });
+
+  it('opens the conversation for one about a comment', async () => {
+    await launchAndTap({ plan_id: 'p1', group_id: 'g1', comment_id: 'c1' });
+    expect(mockPush).toHaveBeenCalledWith('/(app)/plan/p1/comments');
+  });
+
+  it('goes nowhere for one that names no plan', async () => {
+    await launchAndTap({ group_id: 'g1' });
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });

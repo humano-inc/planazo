@@ -18,7 +18,7 @@ import { supabase } from './supabase';
 // for images reporting is not the backstop behind the content filter, it is
 // the entire mechanism. Reporting the plan instead would tell whoever reads
 // the report nothing about which of forty photos was the problem.
-export type ReportSubject = 'plan' | 'group' | 'profile' | 'photo';
+export type ReportSubject = 'plan' | 'group' | 'profile' | 'photo' | 'comment';
 
 export type ReportReason = 'harassment' | 'hate' | 'sexual' | 'violence' | 'spam' | 'other';
 
@@ -103,8 +103,8 @@ export const BLOCKED_QUERY_KEY = ['blocked-users'] as const;
 // ---------------------------------------------------------------------------
 // Content filter — Guideline 1.2's "method for filtering objectionable
 // material from being posted". Every free-text field another member will see
-// (plan titles, descriptions, locations, group names, display names) runs
-// through this before it is written.
+// (plan titles, descriptions, locations, group names, display names, comments)
+// runs through this before it is written.
 //
 // The list is deliberately short and unambiguous: slurs and explicit terms
 // only, matched on word boundaries so Scunthorpe can keep its name and a

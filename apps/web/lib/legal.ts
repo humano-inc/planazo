@@ -13,7 +13,7 @@ import { CONTACT_EMAIL } from './links';
  * file changes in the same commit.
  */
 
-export const LAST_UPDATED = { en: '9 September 2026', es: '9 de septiembre de 2026' };
+export const LAST_UPDATED = { en: '6 November 2026', es: '6 de noviembre de 2026' };
 
 export interface Section {
   heading: string;
@@ -52,7 +52,7 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
           {
             term: 'Groups and plans',
             detail:
-              'The groups you create or join, who else is in them, the plans posted to them, and your answers: whether you are in, whether you cannot make it, and which dates you marked as possible.',
+              'The groups you create or join, who else is in them, the plans posted to them, your answers (whether you are in, whether you cannot make it, and which dates you marked as possible), and the comments you write on plans.',
           },
           {
             term: 'Notifications',
@@ -112,7 +112,7 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
               'Database, authentication and file storage, hosted in the United States. This is where your account, profile, groups, plans and answers live.',
           },
           {
-            term: 'Expo and Apple push notification services',
+            term: 'Expo, Apple and Google push notification services',
             detail:
               'They deliver notifications to your device. They receive a device token and the text of the notification, for example that a plan you are in has reached its minimum.',
           },
@@ -127,7 +127,7 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
         heading: 'Deleting your account',
         paras: [
           'You can delete your account from inside the app, under your profile. It is immediate and it is not reversible.',
-          'Deleting removes your email address, display name, handle, profile photo, push tokens, preferences, every answer you gave, any feedback you sent, and every block you set. The photo and any screenshots are deleted from storage too, not just unlinked.',
+          'Deleting removes your email address, display name, handle, profile photo, push tokens, preferences, every answer you gave, every comment you wrote, any feedback you sent, and every block you set. The photo and any screenshots are deleted from storage too, not just unlinked.',
           'Reports you filed about somebody else are the one exception: the report stays so it can still be acted on, but it stops being linked to you. It is a record about their behaviour, not about you, and it should not disappear because you closed your account.',
           'Groups and plans other people are still using are not destroyed with you: a group you created passes to someone already in it (an existing admin where there is one, otherwise whoever has been there longest) and is deleted outright only if nobody else is left. Plans you posted stay in their group so the people who answered them keep their evening, but they stop carrying your name.',
         ],
@@ -243,7 +243,7 @@ export const PRIVACY: Record<Lang, LegalDoc> = {
               'Base de datos, autenticación y almacenamiento de archivos, alojados en Estados Unidos. Ahí viven tu cuenta, tu perfil, tus grupos, tus planes y tus respuestas.',
           },
           {
-            term: 'Servicios de notificaciones de Expo y Apple',
+            term: 'Servicios de notificaciones de Expo, Apple y Google',
             detail:
               'Entregan los avisos a tu teléfono. Reciben un token del dispositivo y el texto del aviso: por ejemplo, que un plan tuyo llegó al mínimo.',
           },
@@ -321,7 +321,7 @@ export const TERMS: Record<Lang, LegalDoc> = {
       {
         heading: 'What you agree not to post',
         paras: [
-          'Everything you type into Planazo (group names, plan titles, descriptions, locations, your display name, your photo) is seen by other people. There is zero tolerance for objectionable content or abusive behaviour. Specifically, do not post:',
+          'Everything you type into Planazo (group names, plan titles, descriptions, locations, comments, your display name, your photo) is seen by other people. There is zero tolerance for objectionable content or abusive behaviour. Specifically, do not post:',
         ],
         bullets: [
           {
@@ -542,7 +542,7 @@ export const DELETE_ACCOUNT: Record<Lang, LegalDoc> = {
           {
             term: 'Everything you answered',
             detail:
-              'Your yes, no, and maybe on every plan, the dates you marked, your notification preferences, your push tokens, and any feedback you sent.',
+              'Your yes, no, and maybe on every plan, the dates you marked, the comments you wrote, your notification preferences, your push tokens, and any feedback you sent.',
           },
           {
             term: 'Your blocks and pending invites',

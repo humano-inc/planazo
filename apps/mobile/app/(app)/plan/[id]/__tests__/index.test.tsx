@@ -100,6 +100,7 @@ function prime({
     }
     if (table === 'plan_date_options') return chain({ data: options, error: null });
     if (table === 'plan_polls') return chain({ data: polls, error: null });
+    if (table === 'plan_comments') return chain({ data: [], count: 0, error: null });
     if (table === 'date_availability') {
       const c = chain({ data: avail, error: null });
       c.upsert = availChain.upsert;
@@ -1022,7 +1023,8 @@ describe('PlanDetailScreen — who said no', () => {
     await renderDetail();
 
     await waitFor(() => expect(screen.getByText('Were in')).toBeTruthy());
-    expect(screen.getByText("2 never answered · 1 couldn't make it")).toBeTruthy();
+    // Counted off the member list, which is its own query and may land after.
+    expect(await screen.findByText("2 never answered · 1 couldn't make it")).toBeTruthy();
     expect(screen.queryByTestId('declined-section')).toBeNull();
     expect(screen.queryByText('Pau')).toBeNull();
   });

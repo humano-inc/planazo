@@ -21,9 +21,10 @@ import * as Sentry from '@sentry/react-native';
 import { supabase } from '../lib/supabase';
 import { signOutOfAccount } from '../lib/signOut';
 import { initNotificationPresentation, registerPushToken } from '../lib/push';
+import { pushRoute } from '../lib/pushRoute';
 import { initSentry, captureError } from '../lib/sentry';
 import { errorCopy, isInvalidSessionError, isOfflineError, retryQuery } from '../lib/queryErrors';
-import { BrandSplash, ErrorState } from '../components/ui';
+import { ActionSheetHost, BrandSplash, ErrorState } from '../components/ui';
 import { useAuthStore } from '../stores/authStore';
 import { useNeedsOnboarding } from '../lib/useOnboarding';
 import { colors } from '../theme/tokens';
@@ -64,8 +65,8 @@ function InitialLayout() {
   const [signOutFailed, setSignOutFailed] = useState(false);
   /** Held until the navigator exists to take us to the login screen. */
   const [leavingForLogin, setLeavingForLogin] = useState(false);
-  // Plan id from a tapped push, held until the navigator can take us there.
-  const [pushedPlanId, setPushedPlanId] = useState<string | null>(null);
+  // Where a tapped push goes, held until the navigator can take us there.
+  const [pushedRoute, setPushedRoute] = useState<ReturnType<typeof pushRoute>>(null);
   const router = useRouter();
   // expo-router types the state as always present, but it delegates to
   // react-navigation's getState(), which is undefined until the navigator
@@ -230,9 +231,9 @@ function InitialLayout() {
     // Both the warm-tap listener and the cold-start check land in state; the
     // effect below navigates once auth and the navigator are ready.
     const grab = (response: Notifications.NotificationResponse | null) => {
-      const planId = response?.notification.request.content.data?.plan_id;
-      if (typeof planId === 'string') {
-        setPushedPlanId(planId);
+      const route = pushRoute(response?.notification.request.content.data);
+      if (route) {
+        setPushedRoute(route);
       }
     };
     void Notifications.getLastNotificationResponseAsync().then(grab);
@@ -245,13 +246,13 @@ function InitialLayout() {
   // index's redirect and land the plan on top of it. Holding the intent rather
   // than dropping it means the plan opens the moment onboarding finishes.
   useEffect(() => {
-    if (!pushedPlanId || isLoading || !session || !navReady || needsOnboarding) return;
+    if (!pushedRoute || isLoading || !session || !navReady || needsOnboarding) return;
     // Consuming a one-shot intent: clearing it is what stops the navigation
     // firing twice, so the write is the point rather than a cascade.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setPushedPlanId(null);
-    router.push(`/(app)/plan/${pushedPlanId}`);
-  }, [pushedPlanId, isLoading, session, navReady, needsOnboarding, router]);
+    setPushedRoute(null);
+    router.push(pushedRoute);
+  }, [pushedRoute, isLoading, session, navReady, needsOnboarding, router]);
 
   // Signing out has to say where to go. (app)/_layout has no session guard, so
   // a cold deep link into a plan would otherwise still be sitting there behind
@@ -363,6 +364,7 @@ function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <StatusBar style="dark" />
           <InitialLayout />
+          <ActionSheetHost />
         </QueryClientProvider>
       </KeyboardProvider>
     </Sentry.ErrorBoundary>
