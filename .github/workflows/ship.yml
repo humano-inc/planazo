@@ -26,14 +26,17 @@ jobs:
     name: Publish to ${{ inputs.channel }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # The tokens go only on the steps that use them, so the install scripts of
+    # every dependency never see them.
     env:
       CHANNEL: ${{ inputs.channel }}
-      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
     steps:
       # The source map upload runs after the publish, so a missing token has to
       # stop the run here. Afterwards the update would already be on phones.
       - name: Both secrets are set
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           : "${EXPO_TOKEN:?Add the EXPO_TOKEN repository secret. See store-assets/UPDATES.md.}"
           : "${SENTRY_AUTH_TOKEN:?Add the SENTRY_AUTH_TOKEN repository secret. See store-assets/UPDATES.md.}"
@@ -86,4 +89,6 @@ jobs:
       # unreadable. Re-running the workflow publishes again and retries this.
       - name: Upload source maps to Sentry
         working-directory: apps/mobile
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: pnpm exec sentry-expo-upload-sourcemaps dist
