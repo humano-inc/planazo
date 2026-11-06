@@ -1,5 +1,5 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react-native';
-import { Alert, Share, StyleSheet, type ViewStyle } from 'react-native';
+import { ActionSheetIOS, Alert, Linking, Platform, Share, StyleSheet, type ViewStyle } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import PlanDetailScreen from '../index';
 import { useAuthStore } from '../../../../../stores/authStore';
@@ -808,6 +808,148 @@ describe('PlanDetailScreen — the 20a menu', () => {
     const options = await openMenu();
     expect(options).not.toContain('Edit the details');
     expect(options).not.toContain('Call it off');
+  });
+});
+
+describe('PlanDetailScreen — the map', () => {
+  const openPlan = { ...basePlan, plan_type: 'fixed', status: 'open', event_date: iso(7) };
+
+  async function renderPlan(plan: Record<string, unknown>) {
+    prime({ plan });
+    await renderDetail();
+    await waitFor(() => expect(screen.getByTestId('plan-map-row')).toBeTruthy());
+  }
+
+  it('offers both maps apps from anywhere on the row, and opens the one chosen', async () => {
+    const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+    await renderPlan(openPlan);
+
+    expect(screen.getByText('Map')).toBeTruthy();
+    await fireEvent.press(screen.getByTestId('plan-map-row'));
+
+    expect(sheetOptions()).toEqual(['Apple Maps', 'Google Maps', 'Cancel']);
+    expect(openSpy).not.toHaveBeenCalled();
+
+    await chooseFromSheet(0);
+    expect(openSpy).toHaveBeenLastCalledWith(
+      'https://maps.apple.com/?q=Padel%20Indoor%20Gr%C3%A0cia'
+    );
+
+    await chooseFromSheet(1);
+    expect(openSpy).toHaveBeenLastCalledWith(
+      'https://www.google.com/maps/search/?api=1&query=Padel%20Indoor%20Gr%C3%A0cia'
+    );
+    openSpy.mockRestore();
+  });
+
+  it('tells Apple Maps which city to search, from the plan\'s group', async () => {
+    const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+    await renderPlan({
+      ...openPlan,
+      groups: { id: 'g1', name: 'Domingueros', city: { lat: -32.8895, lon: -68.8458 } },
+    });
+
+    await fireEvent.press(screen.getByTestId('plan-map-row'));
+    await chooseFromSheet(0);
+
+    expect(openSpy).toHaveBeenLastCalledWith(
+      'https://maps.apple.com/?q=Padel%20Indoor%20Gr%C3%A0cia&sll=-32.8895,-68.8458'
+    );
+    openSpy.mockRestore();
+  });
+
+  it('a friends plan searches near the viewer\'s first group', async () => {
+    const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+    prime({ plan: { ...openPlan, group_id: null, audience: 'friends', groups: null } });
+    const primed = mockFrom.getMockImplementation()!;
+    mockFrom.mockImplementation((table: string) =>
+      table === 'group_members'
+        ? chain({
+            data: [{ groups: { id: 'g2', name: 'Cuyo', color: null, city: { lat: -33, lon: -68 } } }],
+            error: null,
+          })
+        : primed(table)
+    );
+    await renderDetail();
+    await waitFor(() => expect(screen.getByTestId('plan-map-row')).toBeTruthy());
+
+    await waitFor(async () => {
+      await fireEvent.press(screen.getByTestId('plan-map-row'));
+      await chooseFromSheet(0);
+      expect(openSpy).toHaveBeenLastCalledWith(
+        'https://maps.apple.com/?q=Padel%20Indoor%20Gr%C3%A0cia&sll=-33,-68'
+      );
+    });
+    openSpy.mockRestore();
+  });
+
+  it('cancelling the sheet opens nothing', async () => {
+    const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+    await renderPlan(openPlan);
+
+    await fireEvent.press(screen.getByTestId('plan-map-row'));
+    await chooseFromSheet(2);
+
+    expect(openSpy).not.toHaveBeenCalled();
+    openSpy.mockRestore();
+  });
+
+  it('goes straight to Google Maps on Android, where there is nothing to choose', async () => {
+    const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+    const originalOS = Platform.OS;
+    Platform.OS = 'android';
+    try {
+      await renderPlan(openPlan);
+      await fireEvent.press(screen.getByTestId('plan-map-row'));
+    } finally {
+      Platform.OS = originalOS;
+    }
+
+    expect(openSpy).toHaveBeenCalledWith(
+      'https://www.google.com/maps/search/?api=1&query=Padel%20Indoor%20Gr%C3%A0cia'
+    );
+    expect(ActionSheetIOS.showActionSheetWithOptions).not.toHaveBeenCalled();
+    openSpy.mockRestore();
+  });
+
+  it('says so when nothing can open the link', async () => {
+    const openSpy = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('no handler'));
+    await renderPlan(openPlan);
+
+    await fireEvent.press(screen.getByTestId('plan-map-row'));
+    await chooseFromSheet(1);
+
+    await waitFor(() =>
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Couldn't open that",
+        'Check your connection and try again.'
+      )
+    );
+    openSpy.mockRestore();
+  });
+
+  it.each([
+    ['called off', { status: 'cancelled', event_date: iso(8) }],
+    ['past its date and short of its minimum', { status: 'open', event_date: iso(-3) }],
+  ])('a plan %s shows the place with no map to open', async (_name, ending) => {
+    const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+    await renderPlan({ ...basePlan, plan_type: 'fixed', ...ending });
+
+    expect(screen.getByText('Padel Indoor Gràcia')).toBeTruthy();
+    expect(screen.queryByText('Map')).toBeNull();
+    await fireEvent.press(screen.getByTestId('plan-map-row'));
+
+    expect(ActionSheetIOS.showActionSheetWithOptions).not.toHaveBeenCalled();
+    expect(openSpy).not.toHaveBeenCalled();
+    openSpy.mockRestore();
+  });
+
+  it('a plan with no place has no row to tap', async () => {
+    prime({ plan: { ...openPlan, location: null } });
+    await renderDetail();
+    await waitFor(() => expect(screen.getByTestId('plan-menu')).toBeTruthy());
+
+    expect(screen.queryByTestId('plan-map-row')).toBeNull();
   });
 });
 

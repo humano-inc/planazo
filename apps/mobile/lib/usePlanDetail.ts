@@ -53,7 +53,7 @@ export function planDetailQuery(id: string | undefined) {
       const { data, error } = await supabase
         .from('plans')
         .select(
-          '*, plan_bridge, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups(id, name, color)'
+          '*, plan_bridge, creator:profiles!plans_created_by_fkey(display_name), canceller:profiles!plans_cancelled_by_fkey(display_name), groups(id, name, color, city:cities(lat, lon))'
         )
         .eq('id', id)
         .single();

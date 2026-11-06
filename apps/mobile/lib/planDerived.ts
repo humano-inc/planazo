@@ -23,6 +23,7 @@ import {
 } from '@planazo/shared';
 import { fmtDay } from './dates';
 import { spellCount } from './words';
+import type { MapCenter } from './mapLinks';
 
 // "Two short on the night" (19c) spells small counts out, capitalised because
 // it opens the sentence. The words themselves live in lib/words.ts.
@@ -50,7 +51,7 @@ export interface PlanDetailRow extends PlanAlbumData {
   location: string | null;
   /** Who it is for (PLA-140). Only a group plan carries its group. */
   audience: PlanAudience;
-  groups: { name: string; color: string | null } | null;
+  groups: { name: string; color: string | null; city?: MapCenter | null } | null;
   /** The mutual friend a friends-of-friends plan reaches you through, if you need one. */
   plan_bridge?: string | null;
   min_people: number;
