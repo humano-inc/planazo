@@ -300,10 +300,14 @@ submission, re-run `pnpm assets:screenshots`.
 
 ## 7. Google Play
 
-The app is a managed Expo prebuild — `apps/mobile/.gitignore` ignores both
+Live in production since 17 September 2026, as `com.somosplanazo.app` under the
+Humano Inc developer account, available in Argentina only. Releases after the
+first go through §7.3.
+
+The app is a managed Expo prebuild: `apps/mobile/.gitignore` ignores both
 `/ios` and `/android`, so EAS generates the Android project and there is no
-native folder to maintain. Expo SDK 54 targets API 35, which is current for
-Play's target-API requirement.
+native folder to maintain. Expo SDK 58 targets API 36, which is what Play has
+required of new apps and updates since 31 August 2026.
 
 ### 7.1 Before you build
 
@@ -316,7 +320,8 @@ Play's target-API requirement.
 | Feature graphic, 1024×500 | done | `store-assets/play/feature-graphic.png` |
 | Phone screenshots, 1290×2580 | done | `store-assets/screenshots/android-phone/` |
 | Package `com.somosplanazo.app` | done | `app.json`. Not `com.planazo.app`: that one was already taken on Play, and iOS keeps it |
-| Edge-to-edge (API 35) | done | `app.json` → `edgeToEdgeEnabled` |
+| App Links for `/join/` and `/plan/` | done | `app.json` → `android.intentFilters`, served by `apps/web/app/.well-known/assetlinks.json`, see §7.9 |
+| R8 and resource shrinking | done | `app.json` → `expo-build-properties`. Play flags a release whose code is under 25% obfuscated |
 | Only the permissions we use | done | see §7.8 |
 | Privacy / terms / support URLs | done | same three as §1 |
 | Play Console account, as the **organisation** | done | registered 2026-08-12; an org account is exempt from the closed-testing gate that personal accounts must clear |
@@ -356,11 +361,11 @@ cd apps/mobile
 eas build --platform android --profile production
 ```
 
-**The first release has to be uploaded by hand.** The Google Play Developer API
-cannot create an app that does not exist yet, so `eas submit` has nothing to
-target until the listing exists and has taken one AAB through the console.
-Download the AAB from the EAS build page and upload it in Play Console →
-Production → Create new release. Afterwards:
+The first release went through the console by hand, because the Google Play
+Developer API cannot create an app that does not exist yet. Later releases can
+do the same: download the AAB from the EAS build page and upload it in Play
+Console → Production → Create new release. Or, with a Play service account key
+uploaded to EAS:
 
 ```bash
 eas submit --platform android --latest
@@ -435,16 +440,14 @@ for the same four things Apple does.
 
 ### 7.7 Play-specific risks
 
-**The first upload is manual.** Covered in §7.3, and it is the single most
-common way a first Play release stalls — `eas submit` fails with a confusing
-"app not found" until the console has seen one AAB.
-
 **Data safety must match the privacy policy.** Play rejects on disagreement
 between the two, and unlike Apple it re-checks on later releases.
 
-**No Android device has ever run this build.** Every Android code path here is
-reasoned from the source, not observed. Push in particular cannot be verified on
-an emulator at all: `registerPushToken` returns early on `!Device.isDevice`.
+**Push cannot be verified on an emulator.** `registerPushToken` returns early on
+`!Device.isDevice`, so it takes a real phone.
+
+**R8 only runs in release variants.** A dev client cannot show a class it
+stripped, so test with the `preview` profile, which is a signed release APK.
 
 ### 7.8 The permission list is public
 
@@ -493,6 +496,22 @@ different routes:
 
 Each blocked one then appears in the main manifest as `tools:node="remove"`,
 which is the merger being told to drop it, not the app requesting it.
+
+### 7.9 App Links
+
+An invite or plan link opens the app only when both halves agree: the app claims
+the paths in `android.intentFilters`, and `planazo.me/.well-known/assetlinks.json`
+names the certificate that signed the installed APK.
+
+That file lists two fingerprints. Play-delivered installs carry Google's app
+signing key, from Play Console → Protected with Play → App signing. Preview APKs
+carry the upload key in §7.1. With only one listed, links on the other kind of
+build fail to verify and simply open the browser, with nothing logged.
+
+```bash
+adb shell pm verify-app-links --re-verify com.somosplanazo.app
+adb shell pm get-app-links com.somosplanazo.app    # want: planazo.me verified
+```
 
 ---
 

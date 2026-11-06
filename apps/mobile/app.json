@@ -2,7 +2,7 @@
   "expo": {
     "name": "Planazo",
     "slug": "planazo",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -26,6 +26,28 @@
       "blockedPermissions": [
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.READ_MEDIA_IMAGES"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "scheme": "https",
+              "host": "planazo.me",
+              "pathPrefix": "/join/"
+            },
+            {
+              "scheme": "https",
+              "host": "planazo.me",
+              "pathPrefix": "/plan/"
+            }
+          ]
+        }
       ]
     },
     "web": {
@@ -70,7 +92,16 @@
           "enableFullScreenImage_legacy": true
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ]
     ],
     "extra": {
       "router": {},

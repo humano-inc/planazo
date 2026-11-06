@@ -57,7 +57,7 @@ export const COPY = {
     waitNoteOn: "If a spot opens, it's yours. We'll tell you.",
 
     heroCta: 'Get Planazo',
-    heroCtaSub: 'Free. iOS beta.',
+    heroCtaSub: 'Free. For iPhone and Android.',
 
     proofTitle: 'Good ideas die in WhatsApp.',
     before: 'WhatsApp',
@@ -124,7 +124,7 @@ export const COPY = {
     waitNoteOn: 'Si se libera un lugar, es tuyo. Te avisamos.',
 
     heroCta: 'Bajate Planazo',
-    heroCtaSub: 'Gratis. En beta para iOS.',
+    heroCtaSub: 'Gratis. Para iPhone y Android.',
 
     proofTitle: 'Las buenas ideas se mueren en WhatsApp.',
     before: 'WhatsApp',
@@ -151,11 +151,11 @@ export const COPY = {
 /**
  * The invite page at /join/<code> (PLA-77).
  *
- * Only people *without* the app ever read this: iOS hands the link straight to
- * Planazo for everyone who has it. So the whole page is one instruction, and
- * step 2 is the honest part. iOS gives an app no way to recover a link that
- * was tapped before it was installed, so the second tap is what carries the
- * invite in. Saying so beats letting someone install, land on an empty signup
+ * Only people *without* the app ever read this: the phone hands the link straight
+ * to Planazo for everyone who has it. So the whole page is one instruction, and
+ * step 2 is the honest part. The app has no way to recover a link that was
+ * tapped before it was installed, so the second tap is what carries the invite
+ * in. Saying so beats letting someone install, land on an empty signup
  * and assume the link was broken.
  */
 export const JOIN = {
@@ -169,7 +169,7 @@ export const JOIN = {
       "That's it, you're in the group.",
     ],
     cta: 'Get Planazo',
-    ctaSub: 'Free. iOS beta.',
+    ctaSub: 'Free. For iPhone and Android.',
     codeLabel: 'Or paste this code into the app',
     backHome: 'What is Planazo?',
     metaTitle: "You've been invited to Planazo",
@@ -186,7 +186,7 @@ export const JOIN = {
       'Listo, ya estás en el grupo.',
     ],
     cta: 'Bajate Planazo',
-    ctaSub: 'Gratis. En beta para iOS.',
+    ctaSub: 'Gratis. Para iPhone y Android.',
     codeLabel: 'O pegá este código en la app',
     backHome: '¿Qué es Planazo?',
     metaTitle: 'Te invitaron a Planazo',
@@ -219,7 +219,7 @@ export const PLAN = {
       "The plan opens, if it's a plan you're in.",
     ],
     cta: 'Get Planazo',
-    ctaSub: 'Free. iOS beta.',
+    ctaSub: 'Free. For iPhone and Android.',
     backHome: 'What is Planazo?',
     metaTitle: 'Someone shared a plan with you on Planazo',
     metaDescription:
@@ -235,11 +235,33 @@ export const PLAN = {
       'El plan se abre, si es un plan del que ya formás parte.',
     ],
     cta: 'Bajate Planazo',
-    ctaSub: 'Gratis. En beta para iOS.',
+    ctaSub: 'Gratis. Para iPhone y Android.',
     backHome: '¿Qué es Planazo?',
     metaTitle: 'Te compartieron un plan en Planazo',
     metaDescription:
       'Alguien te compartió un plan en Planazo. Bajate la app y tocá el link de nuevo.',
+  },
+} as const;
+
+/** The chooser at /get, which only a browser that cannot install anything sees. */
+export const GET = {
+  en: {
+    title: 'Get Planazo',
+    lede: 'Free for iPhone and Android.',
+    appStore: 'Download on the App Store',
+    googlePlay: 'Get it on Google Play',
+    backHome: 'What is Planazo?',
+    metaTitle: 'Get Planazo',
+    metaDescription: 'Get Planazo for iPhone or Android. It is free.',
+  },
+  es: {
+    title: 'Bajate Planazo',
+    lede: 'Gratis para iPhone y Android.',
+    appStore: 'Bajala en App Store',
+    googlePlay: 'Bajala en Google Play',
+    backHome: '¿Qué es Planazo?',
+    metaTitle: 'Bajate Planazo',
+    metaDescription: 'Bajate Planazo para iPhone o Android. Es gratis.',
   },
 } as const;
 
@@ -248,12 +270,12 @@ export const META = {
   en: {
     title: 'Planazo: Plans with friends that actually happen',
     description:
-      'Throw out the idea even without a date. Everyone marks the days they can do, and Planazo finds the one that works. Free, in beta on iOS.',
+      'Throw out the idea even without a date. Everyone marks the days they can do, and Planazo finds the one that works. Free for iPhone and Android.',
   },
   es: {
     title: 'Planazo: Planes con amigos que sí pasan',
     description:
-      'Tirá la idea aunque no tengas fecha. Cada uno marca los días que puede y Planazo encuentra el que sirve. Gratis, en beta para iOS.',
+      'Tirá la idea aunque no tengas fecha. Cada uno marca los días que puede y Planazo encuentra el que sirve. Gratis para iPhone y Android.',
   },
 } as const;
 

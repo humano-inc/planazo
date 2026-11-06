@@ -22,9 +22,9 @@ function readableCode(raw: string): string | null {
 /**
  * Where an invite link lands for someone without the app (PLA-77).
  *
- * Anyone who has Planazo never sees this: iOS matches the URL against the
- * associated domain and opens the app instead, which is the entire reason the
- * shared link is https rather than `planazo://`.
+ * Anyone who has Planazo never sees this: the phone matches the URL against the
+ * domain the app claims and opens the app instead, which is the entire reason
+ * the shared link is https rather than `planazo://`.
  *
  * The group is deliberately not named here. Doing so would mean giving the
  * marketing site a database, and an invite code is passed around in group

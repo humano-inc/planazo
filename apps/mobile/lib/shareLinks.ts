@@ -3,10 +3,11 @@
  *
  * They are https links, not `planazo://`, for two reasons: WhatsApp and the rest
  * only turn https into something tappable, and only an https link can hand the
- * people without the app somewhere useful. iOS routes them straight into the app
- * for everyone who does have it, via the associated domain declared in
- * `app.json` — so this host and `applinks:` there must always name the same
- * site, and `apps/web` must serve an AASA file claiming every path built here.
+ * people without the app somewhere useful. The phone routes them straight into
+ * the app for everyone who does have it, via what `app.json` declares: `applinks:`
+ * on iOS, `intentFilters` on Android. This host must always match both, and
+ * `apps/web` must serve an AASA file and an assetlinks.json file for every path
+ * built here.
  */
 
 /**
