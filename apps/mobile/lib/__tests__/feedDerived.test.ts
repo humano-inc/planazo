@@ -165,6 +165,8 @@ describe('deriveFeedItems', () => {
   it('marks a plan past once its day has gone', () => {
     expect(derive(plan({ event_date: iso(-2) })).isPast).toBe(true);
     expect(derive(plan()).isPast).toBe(false);
+    // A weekend away stays in the feed until it ends, not until its first night.
+    expect(derive(plan({ event_date: iso(-2), ends_at: iso(1) })).isPast).toBe(false);
     // An undated flexible plan is past once its last option day has gone.
     const flexPast = derive(
       plan({

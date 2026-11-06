@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type { PlanAudience, PlanStatus, PlanType } from '@planazo/shared';
 import { supabase } from './supabase';
 import { deleteOwnRsvp, offerWaitingList } from './rsvp';
@@ -70,6 +70,21 @@ export function planDetailQuery(id: string | undefined) {
     },
     enabled: !!id,
   };
+}
+
+/** Every cache a write to a plan can leave stale. */
+export function invalidatePlanCaches(
+  queryClient: QueryClient,
+  planId: string,
+  groupId: string | null | undefined
+) {
+  queryClient.invalidateQueries({ queryKey: planDetailKey(planId) });
+  queryClient.invalidateQueries({ queryKey: planRsvpsKey(planId) });
+  queryClient.invalidateQueries({ queryKey: planAvailabilitiesKey(planId) });
+  queryClient.invalidateQueries({ queryKey: feedKey() });
+  if (groupId) {
+    queryClient.invalidateQueries({ queryKey: ['group-plans', groupId] });
+  }
 }
 
 /**
@@ -159,15 +174,7 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
     enabled: !!plan?.group_id,
   });
 
-  const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: planDetailKey(id) });
-    queryClient.invalidateQueries({ queryKey: planRsvpsKey(id) });
-    queryClient.invalidateQueries({ queryKey: planAvailabilitiesKey(id) });
-    queryClient.invalidateQueries({ queryKey: feedKey() });
-    if (plan?.group_id) {
-      queryClient.invalidateQueries({ queryKey: ['group-plans', plan.group_id] });
-    }
-  };
+  const invalidateAll = () => invalidatePlanCaches(queryClient, id, plan?.group_id);
 
   const answerRsvp = useMutation({
     mutationFn: async (response: 'yes' | 'no' | 'pending') => {
@@ -254,19 +261,6 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
     onError: alertActionError,
   });
 
-  const lockPlan = useMutation({
-    mutationFn: async (dateOptionId: string) => {
-      const { data, error } = await supabase.rpc('lock_plan', {
-        p_plan_id: id,
-        p_date_option_id: dateOptionId,
-      });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: invalidateAll,
-    onError: alertActionError,
-  });
-
   const reopenPlan = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.rpc('reopen_plan', { p_plan_id: id });
@@ -302,7 +296,6 @@ export function usePlanDetail(id: string, { onDatesCommitted }: { onDatesCommitt
     clearRsvp,
     sendDates,
     declineAll,
-    lockPlan,
     reopenPlan,
     restorePlan,
   };

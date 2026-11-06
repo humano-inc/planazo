@@ -605,3 +605,22 @@ describe('the album', () => {
     expect(d.canAddPhotos).toBe(false);
   });
 });
+
+describe('a plan with an end', () => {
+  const derive = (over: Partial<PlanDetailRow>) =>
+    derivePlanDetail({ plan: plan(over), rsvps: [], userId: ME })!;
+
+  it('is not past while it runs, even days after it started', () => {
+    expect(derive({ event_date: iso(-3), ends_at: iso(1) }).isPast).toBe(false);
+  });
+
+  it('is past once it ends, even if that was earlier today', () => {
+    const anHourAgo = new Date(Date.now() - 3_600_000).toISOString();
+    const threeHoursAgo = new Date(Date.now() - 3 * 3_600_000).toISOString();
+    expect(derive({ event_date: threeHoursAgo, ends_at: anHourAgo }).isPast).toBe(true);
+  });
+
+  it('reads its end as the last date, for the reopen footer', () => {
+    expect(derive({ event_date: iso(2), ends_at: iso(4) }).lastDate).toBe(iso(4));
+  });
+});

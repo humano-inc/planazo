@@ -8,21 +8,23 @@ import { useDismissTo } from '../../../../lib/navigation';
 import { planDetailKey, planDetailQuery } from '../../../../lib/usePlanDetail';
 import { feedKey } from '../../../../lib/useFeed';
 import { contentViolation } from '../../../../lib/moderation';
+import { deriveEndEdit, type PlanEndDraft } from '../../../../lib/planEnd';
+import { PlanTimesCard } from '../../../../components/plan/PlanTimesCard';
 import { FormScreen, HeaderAction, HeaderRow, ThemedText } from '../../../../components/ui';
 import { colors, fonts, radii, spacing, type } from '../../../../theme/tokens';
 
 /**
  * PLA-31 — the host menu's "Edit the details".
  *
- * Three fields and no more: a typo and a moved venue are the two reasons a
- * live plan needs touching, and neither of them should cost the RSVPs. What
- * is *not* here is the point — the group, the dates, the minimum and the cap
- * all decide what a yes already meant, so changing them under people who
+ * These fields and no more: a typo, a moved venue and a night that runs longer
+ * are the reasons a live plan needs touching, and none of them should cost the
+ * RSVPs. What is *not* here is the point — the group, the start, the minimum and
+ * the cap all decide what a yes already meant, so changing them under people who
  * answered would quietly turn their answer into one they never gave. Those
  * still need calling it off and starting again.
  *
- * The database agrees rather than trusting this screen: after 20260802000002
- * `authenticated` holds UPDATE on exactly title, location and description.
+ * The database agrees rather than trusting this screen: `authenticated` holds
+ * UPDATE on exactly title, location, description and ends_at.
  */
 export default function EditPlanScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,6 +36,9 @@ export default function EditPlanScreen() {
   const [title, setTitle] = useState<string | null>(null);
   const [place, setPlace] = useState<string | null>(null);
   const [notes, setNotes] = useState<string | null>(null);
+  // Undefined is untouched, the same job null does above: null here is an end
+  // the host removed, which saving has to write.
+  const [endDraft, setEndDraft] = useState<PlanEndDraft | null>();
 
   // Warm from the detail screen's cache: one shared descriptor, because same
   // key means the select has to match its shape exactly and a slimmer one here
@@ -45,14 +50,17 @@ export default function EditPlanScreen() {
   const draftPlace = place ?? plan?.location ?? '';
   const draftNotes = notes ?? plan?.description ?? '';
 
+  const endEdit = plan ? deriveEndEdit(plan, endDraft) : null;
+
   // Place and notes are nullable columns but always strings up here, so both
   // sides of the comparison are normalised before it means anything.
   const dirty =
     !!plan &&
     (draftTitle.trim() !== plan.title ||
       draftPlace.trim() !== (plan.location ?? '') ||
-      draftNotes.trim() !== (plan.description ?? ''));
-  const valid = draftTitle.trim().length > 0;
+      draftNotes.trim() !== (plan.description ?? '') ||
+      !!endEdit?.changed);
+  const valid = draftTitle.trim().length > 0 && !endEdit?.blocked;
 
   const save = useMutation({
     mutationFn: async () => {
@@ -72,6 +80,7 @@ export default function EditPlanScreen() {
           title: draftTitle.trim(),
           location: draftPlace.trim() || null,
           description: draftNotes.trim() || null,
+          ...(endEdit?.changed ? { ends_at: endEdit.endsAt } : {}),
         })
         .eq('id', id)
         .select('id');
@@ -129,6 +138,18 @@ export default function EditPlanScreen() {
         <View style={styles.rule} />
       </View>
 
+      {endEdit ? (
+        <View style={styles.section}>
+          <ThemedText variant="sectionLabel">When</ThemedText>
+          <PlanTimesCard
+            startDay={endEdit.startDay}
+            startTime={endEdit.startTime}
+            end={endEdit.draft}
+            onEndChange={setEndDraft}
+          />
+        </View>
+      ) : null}
+
       <View style={styles.section}>
         <ThemedText variant="sectionLabel">Where</ThemedText>
         <TextInput
@@ -157,8 +178,8 @@ export default function EditPlanScreen() {
       {/* Said out loud rather than left to be discovered: an edit is
           silent. Whoever is already in finds out by opening the plan. */}
       <ThemedText variant="caption" color={colors.textMuted} style={styles.hint}>
-        Nobody gets a notification. They'll see the change next time they open the plan. The
-        date, the group and the numbers stay as they are.
+        Nobody gets a notification. They'll see the change next time they open the plan.{' '}
+        {endEdit ? 'The start' : 'The dates'}, the group and the numbers stay as they are.
       </ThemedText>
     </FormScreen>
   );

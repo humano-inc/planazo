@@ -16,6 +16,15 @@ export default function PlanLayout() {
           sheetCornerRadius: 30,
         }}
       />
+      <Stack.Screen
+        name="lock"
+        options={{
+          presentation: 'formSheet',
+          headerShown: false,
+          sheetAllowedDetents: [0.72],
+          sheetCornerRadius: 30,
+        }}
+      />
     </Stack>
   );
 }

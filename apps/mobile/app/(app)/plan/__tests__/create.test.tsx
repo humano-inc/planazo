@@ -386,6 +386,116 @@ describe('CreatePlanScreen', () => {
     );
   });
 
+  describe('the end', () => {
+    it('is offered as soon as the plan is down to one day', async () => {
+      await renderCreate();
+      await screen.findByTestId('group-g1');
+      expect(screen.queryByTestId('end-add')).toBeNull();
+
+      await fireEvent.press(screen.getByTestId('cal-day-2026-08-07'));
+
+      expect(screen.getByTestId('end-add')).toBeTruthy();
+      expect(screen.queryByTestId('end-time-pill')).toBeNull();
+    });
+
+    it('is not offered while the dates are a vote', async () => {
+      await renderCreate();
+      await screen.findByTestId('group-g1');
+
+      await fireEvent.press(screen.getByTestId('cal-day-2026-08-07'));
+      await fireEvent.press(screen.getByTestId('cal-day-2026-08-09'));
+
+      expect(screen.queryByTestId('end-add')).toBeNull();
+    });
+
+    it('posts two hours after the start once the host adds it', async () => {
+      await renderCreate();
+      await screen.findByTestId('group-g1');
+
+      await fireEvent.changeText(screen.getByTestId('title-input'), 'Padel');
+      await fireEvent.press(screen.getByTestId('cal-day-2026-08-07'));
+      await fireEvent.press(screen.getByTestId('end-add'));
+      expect(screen.getByTestId('end-day-label')).toHaveTextContent('Same day');
+      expect(screen.getByText('22:30')).toBeTruthy();
+      await fireEvent.press(screen.getByTestId('post-cta'));
+
+      await waitFor(() => expect(mockBack).toHaveBeenCalled());
+      expect(plansChain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({ ends_at: new Date(2026, 7, 7, 22, 30).toISOString() })
+      );
+    });
+
+    it('posts no end after the host removes it', async () => {
+      mockParams = { endTime: '23:00' };
+      await renderCreate();
+      await screen.findByTestId('group-g1');
+
+      await fireEvent.changeText(screen.getByTestId('title-input'), 'Padel');
+      await fireEvent.press(screen.getByTestId('cal-day-2026-08-07'));
+      await fireEvent.press(screen.getByTestId('end-remove'));
+      await fireEvent.press(screen.getByTestId('post-cta'));
+
+      await waitFor(() => expect(mockBack).toHaveBeenCalled());
+      expect(plansChain.insert).toHaveBeenCalledWith(expect.objectContaining({ ends_at: null }));
+    });
+
+    it('posts an end past midnight on the next day', async () => {
+      mockParams = { time: '22:00', endTime: '02:00' };
+      await renderCreate();
+      await screen.findByTestId('group-g1');
+
+      await fireEvent.changeText(screen.getByTestId('title-input'), 'Poker');
+      await fireEvent.press(screen.getByTestId('cal-day-2026-08-07'));
+      expect(screen.getByTestId('end-rollover')).toBeTruthy();
+      await fireEvent.press(screen.getByTestId('post-cta'));
+
+      await waitFor(() => expect(mockBack).toHaveBeenCalled());
+      expect(plansChain.insert).toHaveBeenCalledWith(
+        expect.objectContaining({ ends_at: new Date(2026, 7, 8, 2, 0).toISOString() })
+      );
+    });
+
+    it('forgets a chosen end day when the plan moves to another day', async () => {
+      mockParams = { dates: '2026-08-07', endDay: '2026-08-20', endTime: '23:00' };
+      await renderCreate();
+      await screen.findByTestId('group-g1');
+      expect(screen.getByTestId('end-day-label')).toHaveTextContent('Thu 20 Aug');
+
+      await fireEvent.press(screen.getByTestId('chip-2026-08-07'));
+      await fireEvent.press(screen.getByTestId('cal-day-2026-08-09'));
+
+      expect(screen.getByTestId('end-day-label')).toHaveTextContent('Same day');
+    });
+
+    // Otherwise the plan counts as over the moment it lands and never shows up.
+    it('will not post a plan whose end has already gone by', async () => {
+      mockParams = { time: '05:00', endTime: '07:00' };
+      await renderCreate();
+      await screen.findByTestId('group-g1');
+
+      await fireEvent.changeText(screen.getByTestId('title-input'), 'Too late');
+      await fireEvent.press(screen.getByTestId('cal-day-2026-08-05'));
+
+      expect(screen.getByTestId('end-passed')).toBeTruthy();
+      await fireEvent.press(screen.getByTestId('post-cta'));
+      expect(plansChain.insert).not.toHaveBeenCalled();
+    });
+
+    // Starting earlier today is what it always was. Only an end can be over.
+    it('still posts a plan with no end that started earlier today', async () => {
+      mockParams = { time: '05:00' };
+      await renderCreate();
+      await screen.findByTestId('group-g1');
+
+      await fireEvent.changeText(screen.getByTestId('title-input'), 'Still on');
+      await fireEvent.press(screen.getByTestId('cal-day-2026-08-05'));
+      await fireEvent.press(screen.getByTestId('post-cta'));
+
+      await waitFor(() => expect(mockBack).toHaveBeenCalled());
+      expect(plansChain.insert).toHaveBeenCalled();
+    });
+  });
+
   it('cap can equal the min for an exact-headcount plan', async () => {
     await renderCreate();
     await screen.findByTestId('group-g1');
@@ -447,6 +557,7 @@ describe('CreatePlanScreen', () => {
         title: 'Padel + pizza',
         plan_type: 'fixed',
         event_date: new Date(2026, 7, 7, 20, 30).toISOString(),
+        ends_at: null,
         min_people: 4,
         max_people: null,
         status: 'open',
@@ -546,7 +657,7 @@ describe('CreatePlanScreen', () => {
 
     await waitFor(() => expect(mockBack).toHaveBeenCalled());
     expect(plansChain.insert).toHaveBeenCalledWith(
-      expect.objectContaining({ plan_type: 'flexible', event_date: null })
+      expect.objectContaining({ plan_type: 'flexible', event_date: null, ends_at: null })
     );
     expect(optionsChain.insert).toHaveBeenCalledWith([
       { plan_id: 'new-plan', date: new Date(2026, 7, 7).toISOString() },

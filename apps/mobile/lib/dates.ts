@@ -15,6 +15,24 @@ export const isoDate = (year: number, monthIndex: number, day: number) =>
 /** A local Date as YYYY-MM-DD. */
 export const isoOfDate = (d: Date) => isoDate(d.getFullYear(), d.getMonth(), d.getDate());
 
+/** A local Date as HH:MM. */
+export const timeOfDate = (d: Date) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+
+/**
+ * Local wall-clock Date from a YYYY-MM-DD day, plus an optional time. Built from
+ * components, never by parsing a string: Hermes reads a naive date-time as UTC.
+ */
+export const localDate = (iso: string, h = 0, m = 0) => {
+  const [y = 0, mo = 1, d = 1] = iso.split('-').map(Number);
+  return new Date(y, mo - 1, d, h, m);
+};
+
+/** The instant a YYYY-MM-DD day and an HH:MM time name on this phone. */
+export const dayTimeToIso = (day: string, time: string) => {
+  const [h = 0, m = 0] = time.split(':').map(Number);
+  return localDate(day, h, m).toISOString();
+};
+
 /**
  * How long ago something arrived, for a row where the exact time is noise:
  * "just now", "5m ago", "3h ago", "yesterday", "3 days ago", "2w ago".

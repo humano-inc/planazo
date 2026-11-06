@@ -14,6 +14,7 @@ import {
   postLabel,
 } from '../../../lib/planAudience';
 import { emptyPollDraft, pollDraftTouched, pollDraftValid } from '../../../lib/pollDraft';
+import { planEndHasPassed, planEndIso, type PlanEndDraft } from '../../../lib/planEnd';
 import { PollComposer } from '../../../components/plan/PollComposer';
 import { WhoField } from '../../../components/plan/WhoField';
 import { WhenField } from '../../../components/plan/WhenField';
@@ -44,6 +45,8 @@ export default function CreatePlanScreen() {
     title?: string;
     dates?: string;
     time?: string;
+    endDay?: string;
+    endTime?: string;
     min?: string;
     cap?: string;
     details?: string;
@@ -58,6 +61,11 @@ export default function CreatePlanScreen() {
     params.dates ? params.dates.split(',').filter(Boolean).sort() : []
   );
   const [time, setTime] = useState(params.time ?? '20:30');
+  const [end, setEnd] = useState<PlanEndDraft | null>(
+    params.endDay || params.endTime
+      ? { day: params.endDay ?? null, time: params.endTime ?? null }
+      : null
+  );
   const [min, setMin] = useState(() => initialMin(params.min));
   const [cap, setCap] = useState<number | null>(() =>
     Number(params.cap) > 0 ? Number(params.cap) : null
@@ -95,18 +103,24 @@ export default function CreatePlanScreen() {
   const group = choices.find((g) => g.id === groupId) ?? null;
   const helper = audienceHelper(audience);
 
-  const toggleDay = (iso: string) =>
+  const toggleDay = (iso: string) => {
     setDates((d) => (d.includes(iso) ? d.filter((x) => x !== iso) : [...d, iso].sort()));
+    // An end day was chosen relative to a start that is no longer the start.
+    setEnd((e) => e && { ...e, day: null });
+  };
 
   // A half-typed question blocks the post rather than being silently
   // dropped: posting "Which film?" with one option is a poll nobody can
   // answer, and discarding typed text is worse.
   const pollBlocks = pollDraftTouched(pollDraft) && !pollDraftValid(pollDraft);
+  const endBlocks =
+    dates.length === 1 && !!end && planEndHasPassed(planEndIso(dates[0]!, time, end));
   const isValid =
     title.trim().length > 0 &&
     dates.length > 0 &&
     (audience !== 'group' || !!groupId) &&
-    !pollBlocks;
+    !pollBlocks &&
+    !endBlocks;
 
   const createPlan = useCreatePlan();
 
@@ -162,6 +176,7 @@ export default function CreatePlanScreen() {
               title,
               dates,
               time,
+              end,
               min,
               cap,
               location,
@@ -194,7 +209,14 @@ export default function CreatePlanScreen() {
         helper={helper}
       />
 
-      <WhenField dates={dates} onToggleDay={toggleDay} time={time} onTimeChange={setTime} />
+      <WhenField
+        dates={dates}
+        onToggleDay={toggleDay}
+        time={time}
+        onTimeChange={setTime}
+        end={end}
+        onEndChange={setEnd}
+      />
 
       <HowManyField min={min} cap={cap} onMinChange={setMin} onCapChange={setCap} />
 

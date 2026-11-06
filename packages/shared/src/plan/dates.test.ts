@@ -301,5 +301,32 @@ describe('endings — planLastDate / endOfLocalDay / isPlanPast', () => {
     // Undated plans never expire
     expect(isPlanPast(plan, [], new Date(2030, 0, 1))).toBe(false);
   });
-});
 
+  it('a plan with an end is past at that exact moment, not at midnight', () => {
+    const plan = {
+      event_date: new Date(2026, 7, 8, 18, 0).toISOString(),
+      ends_at: new Date(2026, 7, 8, 19, 0).toISOString(),
+    };
+    expect(isPlanPast(plan, [], new Date(2026, 7, 8, 18, 59))).toBe(false);
+    expect(isPlanPast(plan, [], new Date(2026, 7, 8, 19, 0))).toBe(true);
+  });
+
+  it('a plan running past midnight stays live until it ends', () => {
+    const plan = {
+      event_date: new Date(2026, 7, 8, 23, 0).toISOString(),
+      ends_at: new Date(2026, 7, 9, 2, 0).toISOString(),
+    };
+    expect(isPlanPast(plan, [], new Date(2026, 7, 9, 0, 30))).toBe(false);
+    expect(isPlanPast(plan, [], new Date(2026, 7, 9, 2, 0))).toBe(true);
+  });
+
+  it('a locked vote uses its end ahead of its options', () => {
+    const plan = {
+      locked_date: new Date(2026, 7, 8, 18, 0).toISOString(),
+      ends_at: new Date(2026, 7, 10, 12, 0).toISOString(),
+    };
+    const opts = [new Date(2026, 7, 8).toISOString(), new Date(2026, 7, 20).toISOString()];
+    expect(isPlanPast(plan, opts, new Date(2026, 7, 10, 11, 0))).toBe(false);
+    expect(isPlanPast(plan, opts, new Date(2026, 7, 10, 13, 0))).toBe(true);
+  });
+});

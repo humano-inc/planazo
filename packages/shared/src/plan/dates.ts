@@ -141,16 +141,21 @@ export function endOfLocalDay(iso: string): Date {
 }
 
 /**
- * Endings rule (design 19c–19e): a plan is past once the end of its last
- * possible day has gone by, in the viewer's timezone. Undated plans never
- * expire. Whether a past plan "happened" or "didn't happen" is a separate
- * question answered by isPlanConfirmed.
+ * Endings rule (design 19c–19e): a plan is past once it has ended. An end time
+ * is that exact moment, the same in every timezone. Without one (a vote nobody
+ * has locked, or a plan from before PLA-157) it is the end of the plan's last
+ * possible day, in the viewer's timezone. Undated plans never expire. Whether a
+ * past plan "happened" or "didn't happen" is a separate question answered by
+ * isPlanConfirmed.
+ *
+ * Mirrors plan_is_over() in 20261107000000_plan_end_time.sql.
  */
 export function isPlanPast(
   plan: PlanDates,
   optionDates: string[] = [],
   now: Date = new Date()
 ): boolean {
+  if (plan.ends_at) return now.getTime() >= new Date(plan.ends_at).getTime();
   const last = planLastDate(plan, optionDates);
   if (!last) return false;
   return now.getTime() >= endOfLocalDay(last).getTime();

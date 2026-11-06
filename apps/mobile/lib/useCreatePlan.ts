@@ -7,6 +7,8 @@ import { contentViolation } from './moderation';
 import { submitPollDraft } from './usePlanPoll';
 import { feedKey } from './useFeed';
 import { pollDraftTouched, type PollDraft } from './pollDraft';
+import { dayTimeToIso, localDate } from './dates';
+import { planEndIso, type PlanEndDraft } from './planEnd';
 import { useAuthStore } from '../stores/authStore';
 
 export interface CreatePlanInput {
@@ -18,18 +20,14 @@ export interface CreatePlanInput {
   dates: string[];
   /** HH:MM, only used when the plan is fixed. */
   time: string;
+  /** Null is no end. Only used when the plan is fixed: a vote gets one when it locks. */
+  end: PlanEndDraft | null;
   min: number;
   cap: number | null;
   location: string;
   notes: string;
   pollDraft: PollDraft;
 }
-
-/** Local wall-clock date from a YYYY-MM-DD day (plus optional time). */
-const localDate = (iso: string, h = 0, m = 0) => {
-  const [y = 0, mo = 1, d = 1] = iso.split('-').map(Number);
-  return new Date(y, mo - 1, d, h, m);
-};
 
 /**
  * Posting a plan: the row, the host's own answer, and the optional question,
@@ -50,7 +48,7 @@ export function useCreatePlan() {
 
   return useMutation({
     mutationFn: async (input: CreatePlanInput) => {
-      const { audience, title, dates, time, min, cap, location, notes, pollDraft } = input;
+      const { audience, title, dates, time, end, min, cap, location, notes, pollDraft } = input;
       if (!user) throw new Error('Sign in first');
       // The database refuses the mismatch too (plans_audience_matches_group);
       // this is the same rule said before the round trip.
@@ -64,7 +62,6 @@ export function useCreatePlan() {
       });
       if (violation) throw new UserFacingError(violation);
       const fixed = dates.length === 1;
-      const [h, m] = time.split(':').map(Number);
 
       const { data: plan, error } = await supabase
         .from('plans')
@@ -76,7 +73,8 @@ export function useCreatePlan() {
           description: notes.trim() || null,
           location: location.trim() || null,
           plan_type: fixed ? 'fixed' : 'flexible',
-          event_date: fixed ? localDate(dates[0]!, h, m).toISOString() : null,
+          event_date: fixed ? dayTimeToIso(dates[0]!, time) : null,
+          ends_at: fixed && end ? planEndIso(dates[0]!, time, end) : null,
           min_people: min,
           max_people: cap,
           status: 'open',

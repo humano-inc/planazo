@@ -89,6 +89,10 @@ describe('deriveGroupPlanRows', () => {
     });
 
     it('treats a cancelled plan as past on the day it was going to happen', () => {
+      const running = rows([plan({ event_date: iso(-2), ends_at: iso(1) })]);
+      expect(running.live).toHaveLength(1);
+      expect(running.past).toHaveLength(0);
+
       const { live, past } = rows([plan({ status: 'cancelled', event_date: iso(5) })]);
 
       expect(live).toEqual([]);

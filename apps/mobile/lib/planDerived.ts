@@ -125,14 +125,16 @@ export function derivePlanDetail({
   const confirmed = isPlanConfirmed(planData);
   const gap = plan.min_people - going;
 
-  // Endings (19a–19c): past = the end of the plan's last possible day has
-  // gone by. Expired ("didn't happen") = past without reaching the minimum.
+  // Endings (19a–19c): past = the plan has ended (isPlanPast says how that is
+  // decided). Expired ("didn't happen") = past without reaching the minimum.
   // A past plan that reached it simply happened — detail stays as-is (MVP).
   const optionDates = (dateOptions ?? []).map((o) => o.date);
   const isPast = isPlanPast(plan, optionDates);
   const isExpired = isPast && !isCancelled && !confirmed;
   const isEnded = isCancelled || isExpired;
-  const lastDate = planLastDate(plan, optionDates);
+  // The last day this plan can come back on, which on a plan with an end is
+  // that end rather than its start.
+  const lastDate = plan.ends_at ?? planLastDate(plan, optionDates);
 
   let headline: string;
   if (isCancelled) headline = 'Called off';

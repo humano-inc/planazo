@@ -20,6 +20,7 @@ export interface GroupPlan {
   status?: string | null;
   event_date?: string | null;
   locked_date?: string | null;
+  ends_at?: string | null;
   min_people: number;
   cancelled_by?: string | null;
   canceller?: { display_name?: string | null } | null;
