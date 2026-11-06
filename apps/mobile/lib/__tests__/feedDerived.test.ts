@@ -1,4 +1,4 @@
-import type { NestedDateOption } from '@planazo/shared';
+import { NO_MINIMUM, type NestedDateOption } from '@planazo/shared';
 import { fmtDay, fmtTime } from '../dates';
 import { deriveFeedItems, type FeedPlanSource } from '../feedDerived';
 import { iso } from '../testing/dates';
@@ -75,6 +75,26 @@ describe('deriveFeedItems', () => {
     expect(item.confirmed).toBe(true);
     expect(item.goingCount).toBe(2);
     expect(item.goingNames).toEqual(['Marta', 'Jordi']);
+  });
+
+  it('a plan with no minimum is confirmed and still asks you whether you are joining', () => {
+    const item = derive(plan({ min_people: NO_MINIMUM, rsvps: [yes(HOST, 'Marta')] }));
+    expect(item.confirmed).toBe(true);
+    expect(item.needs).toBe(true);
+    expect(item.goingCount).toBe(1);
+  });
+
+  it('sorts a date vote with no minimum by its earliest date, free or not', () => {
+    const early = iso(2);
+    const item = derive(
+      plan({
+        plan_type: 'flexible',
+        event_date: null,
+        min_people: NO_MINIMUM,
+        plan_date_options: [option('d1', 2), option('d2', 5, [HOST])],
+      })
+    );
+    expect(item.sortKey).toBe(new Date(early).getTime());
   });
 
   it('a running date vote is not RSVP-driven and counts the best single date', () => {

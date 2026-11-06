@@ -29,4 +29,18 @@ describe('SlotBar', () => {
 
     expect(screen.getByLabelText('2 in, minimum 3, room for 6')).toBeTruthy();
   });
+
+  it('asks for nobody when there is no minimum: every empty place is optional', async () => {
+    await render(<SlotBar going={1} min={0} cap={4} />);
+
+    expect(screen.getAllByTestId('slot-filled')).toHaveLength(1);
+    expect(screen.queryAllByTestId('slot-required')).toHaveLength(0);
+    expect(screen.getAllByTestId('slot-optional')).toHaveLength(3);
+  });
+
+  it('says no minimum to a screen reader rather than minimum 0', async () => {
+    await render(<SlotBar going={1} min={0} cap={4} />);
+
+    expect(screen.getByLabelText('1 in, no minimum, room for 4')).toBeTruthy();
+  });
 });

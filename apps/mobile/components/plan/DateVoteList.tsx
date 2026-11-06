@@ -28,7 +28,9 @@ export function DateVoteList({ dateOptions, countByDate, leadId, picked, minPeop
         const count = countByDate[opt.id]?.count ?? 0;
         const mine = picked.includes(opt.id);
         const isLead = opt.id === leadId && count > 0;
-        const ratio = Math.min(count / minPeople, 1);
+        // No minimum has no distance to measure, so any availability fills the
+        // track. The max also keeps 0 / 0 out of the width below.
+        const ratio = Math.min(count / Math.max(minPeople, 1), 1);
         return (
           <Pressable
             key={opt.id}
@@ -60,6 +62,7 @@ export function DateVoteList({ dateOptions, countByDate, leadId, picked, minPeop
             </View>
             <View style={styles.track}>
               <View
+                testID={`vote-fill-${opt.id}`}
                 style={[
                   styles.trackFill,
                   {

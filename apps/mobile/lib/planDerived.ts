@@ -1,4 +1,5 @@
 import {
+  NO_MINIMUM,
   type PlanAudience,
   bestViableOption,
   canAddPhotos,
@@ -163,6 +164,7 @@ export function derivePlanDetail({
   // "room for 0 more" was the old wording once a capped plan filled up —
   // technically true, and a strange way to say the door is shut (PLA-20).
   const room = plan.max_people ? Math.max(plan.max_people - going, 0) : null;
+  const noMinimum = plan.min_people === NO_MINIMUM;
   const capLine = isExpired
     ? 'The date passed before it reached its minimum'
     : plan.max_people
@@ -171,7 +173,14 @@ export function derivePlanDetail({
           ? `${going} in · that's everyone`
           : `${going} in · room for ${room} more`
         : `Happens with ${plan.min_people} · caps at ${plan.max_people}`
-      : `Happens with ${plan.min_people}`;
+      : noMinimum
+        ? 'Happens either way'
+        : `Happens with ${plan.min_people}`;
+
+  // The bar draws the distance to a floor and the room under a ceiling. A plan
+  // with neither has no distance to draw, only a row of filled slots that would
+  // read as a plan that has run out of room.
+  const hasSlots = !noMinimum || !!plan.max_people;
 
   const myAvail = (availabilities ?? []).filter((a) => a.user_id === userId);
   const myPickIds: string[] = myAvail.map((a) => a.date_option_id);
@@ -251,6 +260,7 @@ export function derivePlanDetail({
     headline,
     statusBadge,
     capLine,
+    hasSlots,
     isFull,
     going,
     yesCount,

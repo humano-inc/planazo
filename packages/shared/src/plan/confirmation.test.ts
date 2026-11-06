@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  NO_MINIMUM,
   isPlanConfirmed,
   isVoteRunning,
   goingLabel,
@@ -98,6 +99,27 @@ describe('isPlanConfirmed', () => {
     ).toBe(false);
     expect(
       isPlanConfirmed({ plan_type: 'flexible', status: 'open', min_people: 2 })
+    ).toBe(false);
+  });
+
+  it('confirms a plan with no minimum before anyone has answered', () => {
+    expect(
+      isPlanConfirmed({ plan_type: 'fixed', status: 'open', min_people: NO_MINIMUM, rsvps: [] })
+    ).toBe(true);
+    expect(
+      isPlanConfirmed({
+        plan_type: 'flexible',
+        status: 'open',
+        min_people: NO_MINIMUM,
+        dateOptions: [{ id: 'date-1', date: '2025-01-15' }],
+        availabilities: [],
+      })
+    ).toBe(true);
+  });
+
+  it('still lets a plan with no minimum be called off', () => {
+    expect(
+      isPlanConfirmed({ plan_type: 'fixed', status: 'cancelled', min_people: NO_MINIMUM })
     ).toBe(false);
   });
 });
